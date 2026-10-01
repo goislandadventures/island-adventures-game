@@ -16,7 +16,12 @@ export const marinas: Marina[] = [
   { id: 'pelican-pier', islandId: 'harbor', name: 'Pelican Pier', monthlySlip: 560, maxBoatFt: 24, reputationBonus: 0, stormProtection: 0.62, fuelAvailable: false },
   { id: 'old-cut-docks', islandId: 'harbor', name: 'Old Cut Docks', monthlySlip: 420, maxBoatFt: 22, reputationBonus: -0.01, stormProtection: 0.45, fuelAvailable: true },
   { id: 'sunset-basin', islandId: 'sunset', name: 'Sunset Basin', monthlySlip: 1280, maxBoatFt: 34, reputationBonus: 0.06, stormProtection: 0.90, fuelAvailable: true },
-  { id: 'reef-run', islandId: 'reef', name: 'Reef Run Marina', monthlySlip: 1450, maxBoatFt: 36, reputationBonus: 0.08, stormProtection: 0.55, fuelAvailable: true }
+  { id: 'reef-run', islandId: 'reef', name: 'Reef Run Marina', monthlySlip: 1450, maxBoatFt: 36, reputationBonus: 0.08, stormProtection: 0.55, fuelAvailable: true },
+  { id: 'sandbar-harbor', islandId: 'sandbar', name: 'Sandbar Harbor', monthlySlip: 1180, maxBoatFt: 32, reputationBonus: 0.05, stormProtection: 0.68, fuelAvailable: true },
+  { id: 'mangrove-basin', islandId: 'mangrove', name: 'Mangrove Basin', monthlySlip: 980, maxBoatFt: 30, reputationBonus: 0.04, stormProtection: 0.92, fuelAvailable: true },
+  { id: 'pelican-yacht', islandId: 'pelican', name: 'Pelican Yacht Basin', monthlySlip: 1850, maxBoatFt: 40, reputationBonus: 0.09, stormProtection: 0.82, fuelAvailable: true },
+  { id: 'lighthouse-docks', islandId: 'lighthouse', name: 'Lighthouse Docks', monthlySlip: 1640, maxBoatFt: 38, reputationBonus: 0.08, stormProtection: 0.50, fuelAvailable: true },
+  { id: 'captains-yard', islandId: 'captains', name: "Captain's Yard", monthlySlip: 720, maxBoatFt: 42, reputationBonus: 0.03, stormProtection: 0.86, fuelAvailable: true }
 ];
 
 export const boatTemplates: BoatTemplate[] = [
