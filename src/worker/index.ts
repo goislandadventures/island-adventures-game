@@ -41,7 +41,7 @@ function metricSql(metric:string) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'0.3.0' });
+    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'0.4.0' });
 
     if (url.pathname === '/api/leaderboard' && request.method==='GET') {
       const metric=url.searchParams.get('metric')||'value';
@@ -81,6 +81,12 @@ export default {
     if (url.pathname === '/api/auth/logout' && request.method==='POST') {
       const token=cookieToken(request); if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run();
       return json({ok:true},200,{'Set-Cookie':'ia_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});
+    }
+
+    if (url.pathname === '/api/company' && request.method==='GET') {
+      const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
+      const row:any=await env.DB.prepare('SELECT state_json FROM companies WHERE player_id=?').bind(player.id).first();
+      return json({state:row?.state_json?JSON.parse(row.state_json):null});
     }
 
     if (url.pathname === '/api/company/sync' && request.method==='POST') {
