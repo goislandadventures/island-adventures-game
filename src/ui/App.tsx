@@ -13,6 +13,7 @@ import GrowthPanel from './GrowthPanel';
 import MarketingPanel from './MarketingPanel';
 import MarketplacePanel from './MarketplacePanel';
 import BusinessEventCard from './BusinessEventCard';
+import ProgressGoals from './ProgressGoals';
 import './styles.css';
 
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
@@ -146,7 +147,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='fleet'&&<><section className="card page"><span className="eyebrow">FLEET</span><h2>{state.boats.length?`${state.boats.length} boat${state.boats.length>1?'s':''}`:'No boat yet'}</h2>{state.boats.map(b=><div key={b.instanceId} className="fleetSummary"><div className="bigBoat">🚤</div><h3>{b.name}</h3><div className="stats"><div><span>Year</span><b>{b.year}</b></div><div><span>Condition</span><b>{pct(b.condition)}</b></div><div><span>Reliability</span><b>{pct(b.reliability)}</b></div><div><span>Hours</span><b>{Math.round(b.engineHours)}</b></div><div><span>Fuel burn</span><b>{b.fuelBurnGph} gph</b></div><div><span>Insured</span><b>{b.insured?'Yes':'No'}</b></div></div></div>)}</section><MarketplacePanel state={state} onChange={commit}/><GrowthPanel state={state} onChange={commit}/></>}
 
-    {tab==='books'&&<section className="card page"><span className="eyebrow">COMPANY BOOKS</span><h2>{state.companyName}</h2><div className="resultGrid"><div><span>Lifetime revenue</span><b>{money(state.lifetimeRevenue)}</b></div><div><span>Lifetime profit</span><b>{money(state.lifetimeProfit)}</b></div><div><span>Debt</span><b>{money(state.debt)}</b></div><div><span>Daily loan payments</span><b>{money((state.loans??[]).reduce((s,l)=>s+l.dailyPayment,0))}</b></div><div><span>Days operated</span><b>{state.daysOperated}</b></div></div><h3>Recent ledger</h3>{state.ledger.slice(-8).reverse().map((x,i)=><div className="ledger" key={`${x.day}-${i}`}><span>Day {x.day} · {x.memo}</span><b className={x.amount>=0?'positive':'negative'}>{x.amount>=0?'+':''}{money(x.amount)}</b></div>)}{mode==='owner'&&<button className="dangerBtn" onClick={reset}>Reset Development Save</button>}</section>}
+    {tab==='books'&&<><ProgressGoals state={state}/><section className="card page"><span className="eyebrow">COMPANY BOOKS</span><h2>{state.companyName}</h2><div className="resultGrid"><div><span>Lifetime revenue</span><b>{money(state.lifetimeRevenue)}</b></div><div><span>Lifetime profit</span><b>{money(state.lifetimeProfit)}</b></div><div><span>Debt</span><b>{money(state.debt)}</b></div><div><span>Daily loan payments</span><b>{money((state.loans??[]).reduce((s,l)=>s+l.dailyPayment,0))}</b></div><div><span>Days operated</span><b>{state.daysOperated}</b></div></div><h3>Recent ledger</h3>{state.ledger.slice(-8).reverse().map((x,i)=><div className="ledger" key={`${x.day}-${i}`}><span>Day {x.day} · {x.memo}</span><b className={x.amount>=0?'positive':'negative'}>{x.amount>=0?'+':''}{money(x.amount)}</b></div>)}{mode==='owner'&&<button className="dangerBtn" onClick={reset}>Reset Development Save</button>}</section></>}
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
