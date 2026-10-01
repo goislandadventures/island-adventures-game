@@ -1,0 +1,100 @@
+export interface Env { DB: D1Database; }
+
+const enc = new TextEncoder();
+const SESSION_DAYS = 30;
+
+function json(data: unknown, status = 200, headers: Record<string,string> = {}) {
+  return Response.json(data, { status, headers });
+}
+function b64(bytes: Uint8Array) { return btoa(String.fromCharCode(...bytes)); }
+function unb64(s: string) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+async function sha256(value: string) { const d=await crypto.subtle.digest('SHA-256',enc.encode(value)); return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function hashPassword(password: string, salt?: string) {
+  const saltBytes = salt ? unb64(salt) : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:saltBytes,iterations:120000},key,256);
+  return { hash:b64(new Uint8Array(bits)), salt:b64(saltBytes) };
+}
+function cookieToken(request: Request) {
+  const cookie=request.headers.get('cookie')||'';
+  return cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('ia_session='))?.split('=')[1] || null;
+}
+async function currentPlayer(request: Request, env: Env) {
+  const token=cookieToken(request); if (!token) return null;
+  const tokenHash=await sha256(token); const now=Date.now();
+  return env.DB.prepare(`SELECT p.id,p.email,p.display_name,p.marketing_opt_in FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash,now).first();
+}
+async function createSession(playerId:string, env:Env) {
+  const raw=b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  const tokenHash=await sha256(raw), now=Date.now(), expires=now+SESSION_DAYS*86400000;
+  await env.DB.prepare('INSERT INTO sessions(token_hash,player_id,expires_at,created_at) VALUES(?,?,?,?)').bind(tokenHash,playerId,expires,now).run();
+  return `ia_session=${raw}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_DAYS*86400}`;
+}
+function metricSql(metric:string) {
+  if (metric==='reviews') return `SELECT company_name,company_value,rating,review_count,lifetime_revenue,lifetime_profit FROM companies ORDER BY review_count DESC, rating DESC LIMIT 50`;
+  if (metric==='rating') return `SELECT company_name,company_value,rating,review_count,lifetime_revenue,lifetime_profit FROM companies WHERE review_count>=10 ORDER BY rating DESC, review_count DESC LIMIT 50`;
+  if (metric==='revenue') return `SELECT company_name,company_value,rating,review_count,lifetime_revenue,lifetime_profit FROM companies ORDER BY lifetime_revenue DESC LIMIT 50`;
+  if (metric==='profit') return `SELECT company_name,company_value,rating,review_count,lifetime_revenue,lifetime_profit FROM companies ORDER BY lifetime_profit DESC LIMIT 50`;
+  return `SELECT company_name,company_value,rating,review_count,lifetime_revenue,lifetime_profit FROM companies ORDER BY company_value DESC LIMIT 50`;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'0.3.0' });
+
+    if (url.pathname === '/api/leaderboard' && request.method==='GET') {
+      const metric=url.searchParams.get('metric')||'value';
+      const rows=await env.DB.prepare(metricSql(metric)).all();
+      return json({metric,results:rows.results});
+    }
+
+    if (url.pathname === '/api/auth/register' && request.method==='POST') {
+      const body:any=await request.json();
+      const email=String(body.email||'').trim().toLowerCase();
+      const displayName=String(body.displayName||'').trim().slice(0,30);
+      const password=String(body.password||'');
+      const marketingOptIn=body.marketingOptIn===true;
+      if (!/^\S+@\S+\.\S+$/.test(email) || displayName.length<2 || password.length<10) return json({error:'Valid email, display name and a 10+ character password are required.'},400);
+      const exists=await env.DB.prepare('SELECT id FROM players WHERE email=?').bind(email).first();
+      if (exists) return json({error:'That email already has an account.'},409);
+      const id=crypto.randomUUID(), now=Date.now(), pw=await hashPassword(password);
+      await env.DB.prepare('INSERT INTO players(id,email,display_name,password_hash,password_salt,marketing_opt_in,marketing_opt_in_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?)')
+        .bind(id,email,displayName,pw.hash,pw.salt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
+      const cookie=await createSession(id,env);
+      return json({ok:true,player:{id,email,displayName,marketingOptIn}},201,{'Set-Cookie':cookie});
+    }
+
+    if (url.pathname === '/api/auth/login' && request.method==='POST') {
+      const body:any=await request.json(); const email=String(body.email||'').trim().toLowerCase(), password=String(body.password||'');
+      const p:any=await env.DB.prepare('SELECT * FROM players WHERE email=?').bind(email).first();
+      if (!p) return json({error:'Invalid email or password.'},401);
+      const pw=await hashPassword(password,p.password_salt);
+      if (pw.hash!==p.password_hash) return json({error:'Invalid email or password.'},401);
+      await env.DB.prepare('UPDATE players SET last_seen_at=? WHERE id=?').bind(Date.now(),p.id).run();
+      const cookie=await createSession(p.id,env);
+      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in)}},200,{'Set-Cookie':cookie});
+    }
+
+    if (url.pathname === '/api/auth/me' && request.method==='GET') return json({player:await currentPlayer(request,env)});
+
+    if (url.pathname === '/api/auth/logout' && request.method==='POST') {
+      const token=cookieToken(request); if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run();
+      return json({ok:true},200,{'Set-Cookie':'ia_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});
+    }
+
+    if (url.pathname === '/api/company/sync' && request.method==='POST') {
+      const player:any=await currentPlayer(request,env); if (!player) return json({error:'Login required.'},401);
+      const body:any=await request.json(); const s=body.state;
+      if (!s || typeof s.companyName!=='string') return json({error:'Invalid game state.'},400);
+      const now=Date.now();
+      await env.DB.prepare(`INSERT INTO companies(id,player_id,company_name,day,cash,debt,reputation,rating,review_count,company_value,lifetime_revenue,lifetime_profit,island_id,state_json,updated_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(player_id) DO UPDATE SET company_name=excluded.company_name,day=excluded.day,cash=excluded.cash,debt=excluded.debt,reputation=excluded.reputation,rating=excluded.rating,review_count=excluded.review_count,company_value=excluded.company_value,lifetime_revenue=excluded.lifetime_revenue,lifetime_profit=excluded.lifetime_profit,island_id=excluded.island_id,state_json=excluded.state_json,updated_at=excluded.updated_at`)
+        .bind(crypto.randomUUID(),player.id,s.companyName,s.day,s.cash,s.debt,s.reputation,s.rating,s.reviewCount,s.companyValue,s.lifetimeRevenue,s.lifetimeProfit,s.islandId,JSON.stringify(s),now).run();
+      return json({ok:true});
+    }
+
+    return new Response('Island Adventures API', { status: 200 });
+  }
+};
