@@ -16,8 +16,9 @@ export default function MarketplacePanel({state,onChange}:{state:CompanyState;on
     {listings.length?listings.map(l=><div className="marketCard" key={l.listingId}>
       <div className="marketBoat">🚤</div>
       <div className="grow">
-        <b>{l.year} {l.name}</b>
-        <small>{Math.round(l.engineHours)} hrs · condition {pct(l.condition)} · reliability {pct(l.reliability)}</small>
+        <b>{l.name}</b>
+        <small>Hull {l.year} · engine {l.engineYear} · {Math.round(l.engineHours)} hrs</small>
+        <small>condition {pct(l.condition)} · reliability {pct(l.reliability)}</small>
         <p>{l.inspectionNote}</p>
       </div>
       <div className="marketActions">
@@ -26,6 +27,6 @@ export default function MarketplacePanel({state,onChange}:{state:CompanyState;on
         <button type="button" onClick={()=>act(l.listingId,true)}>25% down</button>
       </div>
     </div>):<p className="muted">You bought every listing available today. Check again tomorrow.</p>}
-    <p className="fine">Financed boats create a 90-day game loan at 9.9% APR. Daily payments begin immediately.</p>
+    <p className="fine">Financed boats require 25% down and use expensive 24.99% APR financing over 2 game years. Payments come out every day.</p>
   </section>;
 }
