@@ -3,9 +3,9 @@ export type WeatherExposure = 'protected' | 'moderate' | 'exposed';
 export type BoatClass = 'deck' | 'center-console' | 'pontoon' | 'catamaran' | 'fishing' | 'cruiser';
 export type TripDecision = 'run' | 'protected' | 'cancel';
 export type TimeSlot = 'morning' | 'afternoon' | 'evening';
-export type MarketingFocus = 'organic' | 'maps' | 'social' | 'hotel';
+export type MarketingFocus = 'organic' | 'maps' | 'social' | 'hotel' | 'content';
 export type CustomerType = 'family' | 'couple' | 'celebration' | 'snorkeler' | 'luxury' | 'bargain' | 'repeat';
-export type MaintenanceLevel = 'quick' | 'routine' | 'major';
+export type MaintenanceLevel = 'dock' | '100hr' | '300hr';
 
 export interface Island {
   id:string; name:string; unlockValue:number; tourism:number; adCompetition:number; fuelPrice:number;
@@ -13,7 +13,7 @@ export interface Island {
 }
 export interface Marina {
   id:string; islandId:string; name:string; monthlySlip:number; maxBoatFt:number; reputationBonus:number;
-  stormProtection:number; fuelAvailable:boolean;
+  stormProtection:number; fuelAvailable:boolean; insuranceMultiplier:number; tipBonus:number;
 }
 export interface BoatTemplate {
   id:string; name:string; class:BoatClass; lengthFt:number; seats:number; basePrice:number; fuelBurnGph:number;
@@ -21,7 +21,8 @@ export interface BoatTemplate {
 }
 export interface OwnedBoat extends BoatTemplate {
   instanceId:string; year:number; condition:number; engineHours:number; purchasePrice:number; insured:boolean;
-  marinaId?:string;
+  insuranceDeclined?:boolean; insuranceRenewalDay?:number; marinaId?:string;
+  next100Service:number; next300Service:number;
 }
 export interface UsedBoatListing {
   listingId:string; templateId:string; name:string; year:number; condition:number; engineHours:number;
@@ -39,36 +40,44 @@ export interface WeatherDay {
 }
 export interface CalendarInfo {
   day:number; week:number; dayOfWeek:'Mon'|'Tue'|'Wed'|'Thu'|'Fri'|'Sat'|'Sun';
-  season:'peak'|'shoulder'|'slow'; demandMultiplier:number; note:string;
+  month:number; monthName:string; dayOfMonth:number; gameYear:number;
+  season:'warmup'|'busy'|'slow'; demandMultiplier:number; note:string;
+  marketingStrength:number; marketingLabel:'Strong'|'Okay'|'Weak';
 }
 export interface Booking {
   id:string; tripType:TripType; partySize:number; revenue:number;
-  source:'organic'|'paid'|'maps'|'referral'|'repeat'|'hotel'|'marketplace'|'social';
+  source:'organic'|'paid'|'maps'|'referral'|'repeat'|'hotel'|'marketplace'|'social'|'content';
   guestExpectation:number; timeSlot:TimeSlot; customerType:CustomerType; customerLabel:string;
+  boatsRequired:number; neverTips:boolean; tipCeiling:number;
 }
 export interface Review { stars:number; text:string; reasons:string[]; }
 export interface LedgerEntry { day:number; category:string; amount:number; memo:string; }
 export interface StaffMember { id:string; name:string; role:'captain'; skill:number; reliability:number; hourlyRate:number; }
-export interface MarketingSettings { dailyBudget:number; focus:MarketingFocus; }
+export interface MarketingSettings { dailyBudget:number; focus:MarketingFocus; reviewAsk:boolean; }
+export interface HurricanePlan { day:number; haulBoats:boolean; }
 export interface CompanyState {
   day:number; seed:number; captainName:string; companyName:string; companyColor:string; cash:number; debt:number;
   reputation:number; rating:number; reviewCount:number; islandId:string; marinaId?:string; boats:OwnedBoat[];
   products:TripProduct[]; bookings:Booking[]; ledger:LedgerEntry[]; companyValue:number; lifetimeRevenue:number;
   lifetimeProfit:number; daysOperated:number; staff:StaffMember[]; marketing:MarketingSettings; loans:Loan[];
-  lastBusinessEventDay?:number;
+  lastBusinessEventDay?:number; hurricanePlan?:HurricanePlan;
 }
 export interface TripOutcome {
   bookingId:string; tripType:TripType; timeSlot:TimeSlot; decision:TripDecision; revenue:number; expenses:number;
-  satisfaction:number; review?:Review; note:string; boatInstanceId?:string;
+  tip:number; satisfaction:number; review?:Review; note:string; boatInstanceId?:string; boatInstanceIds?:string[];
 }
 export interface DayResult {
   weather:WeatherDay; calendar:CalendarInfo; decisions:Record<string,TripDecision>; bookingsGenerated:Booking[];
-  tripsRun:number; reviews:Review[]; tripOutcomes:TripOutcome[]; revenue:number; expenses:number; refunds:number;
-  maintenanceEvent?:string; wildlifeEvent?:string; loanPayment:number; summary:string;
+  tripsRun:number; reviews:Review[]; tripOutcomes:TripOutcome[]; revenue:number; tips:number; expenses:number; refunds:number;
+  maintenanceEvent?:string; wildlifeEvent?:string; loanPayment:number; fixedCosts:number;
+  hurricaneSummary?:string; destroyedBoatNames?:string[]; summary:string;
 }
 export interface BusinessEventChoice {
   id:string; label:string; detail:string; cashDelta:number; reputationDelta:number;
 }
 export interface BusinessEvent {
   id:string; day:number; title:string; description:string; choices:BusinessEventChoice[];
+}
+export interface HurricaneEvent {
+  day:number; category:1|2|3|4|5; name:string; warning:string;
 }
