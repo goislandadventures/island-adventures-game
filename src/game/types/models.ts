@@ -18,14 +18,15 @@ export interface Marina {
 export interface BoatTemplate {
   id:string; name:string; class:BoatClass; lengthFt:number; seats:number; basePrice:number; fuelBurnGph:number;
   cruiseMph:number; reliability:number; comfort:number; appeal:number; offshore:number;
+  hullYear:number; engineYear:number; startingEngineHours:number;
 }
 export interface OwnedBoat extends BoatTemplate {
-  instanceId:string; year:number; condition:number; engineHours:number; purchasePrice:number; insured:boolean;
+  instanceId:string; year:number; engineYear:number; condition:number; engineHours:number; purchasePrice:number; insured:boolean;
   insuranceDeclined?:boolean; insuranceRenewalDay?:number; marinaId?:string;
   next100Service:number; next300Service:number;
 }
 export interface UsedBoatListing {
-  listingId:string; templateId:string; name:string; year:number; condition:number; engineHours:number;
+  listingId:string; templateId:string; name:string; year:number; engineYear:number; condition:number; engineHours:number;
   askingPrice:number; reliability:number; inspectionNote:string;
 }
 export interface Loan {
@@ -60,7 +61,7 @@ export interface CompanyState {
   reputation:number; rating:number; reviewCount:number; islandId:string; marinaId?:string; boats:OwnedBoat[];
   products:TripProduct[]; bookings:Booking[]; ledger:LedgerEntry[]; companyValue:number; lifetimeRevenue:number;
   lifetimeProfit:number; daysOperated:number; staff:StaffMember[]; marketing:MarketingSettings; loans:Loan[];
-  lastBusinessEventDay?:number; hurricanePlan?:HurricanePlan;
+  lastBusinessEventDay?:number; hurricanePlan?:HurricanePlan; startupLoanTaken?:boolean;
 }
 export interface TripOutcome {
   bookingId:string; tripType:TripType; timeSlot:TimeSlot; decision:TripDecision; revenue:number; expenses:number;
