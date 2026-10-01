@@ -57,7 +57,7 @@ Demo and owner-test saves are excluded from public ranking until intentionally s
 
 ## Development rule
 
-Owner testing remains login-free until Gold. Public players may try Day 1 in demo mode without creating an account.
+Owner testing remains login-free until Gold. Public players may play the full seven-day Captain School tutorial in demo mode without creating an account.
 
 
 ## Deployment
