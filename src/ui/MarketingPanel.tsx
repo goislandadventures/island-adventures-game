@@ -17,7 +17,7 @@ export default function MarketingPanel({state,onChange}:{state:CompanyState;onCh
   return <section className="marketingPanel">
     <div className="sectionHead"><div><span className="eyebrow">GET FOUND</span><h3>Help people discover you</h3></div><strong>${m.dailyBudget}/day</strong></div>
     <p className="fine">Marketing costs money every day, but weak marketing gets crushed in slow season. Current marketing strength: <b>{strengthLabel}</b> ({Math.round(strength*100)}%).</p>
-    <div className="budgetButtons">{[0,25,50,100,150,250].map(v=><button type="button" className={m.dailyBudget===v?'selected':''} key={v} onClick={()=>onChange(setMarketing(state,v,m.focus))}>${v}</button>)}</div>
+    <div className="budgetButtons">{[0,10,25,50,100,150].map(v=><button type="button" className={m.dailyBudget===v?'selected':''} key={v} onClick={()=>onChange(setMarketing(state,v,m.focus))}>${v}</button>)}</div>
     <div className="focusButtons">{focuses.map(f=><button type="button" className={m.focus===f.id?'selected':''} key={f.id} onClick={()=>onChange(setMarketing(state,m.dailyBudget,f.id))}><b>{f.label}</b><small>{f.detail}</small></button>)}</div>
     <label className="reviewAskToggle"><input type="checkbox" checked={m.reviewAsk} onChange={e=>onChange(setReviewAsk(state,e.target.checked))}/><span><b>Ask happy guests for a review</b><small>This costs nothing. Happy guests are much more likely to leave a review when you actually ask.</small></span></label>
   </section>;
