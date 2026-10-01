@@ -41,10 +41,15 @@ jobs:
         run: |
           DB_ID=$(npx wrangler d1 list --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=JSON.parse(s);const x=a.find(v=>v.name==='island-adventures-game');if(x)process.stdout.write(x.uuid||x.id||'')})")
           if [ -z "$DB_ID" ]; then
-            npx wrangler d1 create island-adventures-game --binding DB --update-config --jurisdiction us
-          else
-            sed -i "s/REPLACE_AFTER_D1_CREATE/$DB_ID/g" wrangler.toml
+            npx wrangler d1 create island-adventures-game --jurisdiction us
+            DB_ID=$(npx wrangler d1 list --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=JSON.parse(s);const x=a.find(v=>v.name==='island-adventures-game');if(x)process.stdout.write(x.uuid||x.id||'')})")
           fi
+          if [ -z "$DB_ID" ]; then
+            echo "Could not resolve D1 database ID" >&2
+            exit 1
+          fi
+          sed -i "s/REPLACE_AFTER_D1_CREATE/$DB_ID/g" wrangler.toml
+          grep -q "$DB_ID" wrangler.toml
 
       - name: Apply database migrations
         if: steps.cf.outputs.ready == 'true'
