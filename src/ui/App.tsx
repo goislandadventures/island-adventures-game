@@ -109,6 +109,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {!demoComplete&&<TutorialCard day={state.day}/>}
+    {state.day===8&&mode!=='demo'&&<section className="card weekTwoUnlock"><span className="eyebrow">CAPTAIN SCHOOL COMPLETE</span><h2>Week 2: now you own the decisions.</h2><p>Customer types, seasonal demand, rotating used boats, financing, deeper maintenance and owner events are now active. There is no tutorial answer anymore—grow without sinking the company.</p></section>}
     {setupStarted&&<section className="calendarStrip"><div><span>WEEK {calendar.week} · {calendar.dayOfWeek}</span><strong>{calendar.season.toUpperCase()} SEASON</strong></div><p>{calendar.note}</p><b>Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
 
     {tab==='dock'&&<>
