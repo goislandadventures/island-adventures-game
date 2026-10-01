@@ -12,9 +12,11 @@ export function normalizeState(parsed:CompanyState):CompanyState{
     marketing:{dailyBudget:parsed.marketing?.dailyBudget??0,focus:parsed.marketing?.focus??'organic',reviewAsk:parsed.marketing?.reviewAsk??true},
     loans:parsed.loans??[],
     debt:parsed.debt??0,
+    startupLoanTaken:parsed.startupLoanTaken??false,
     boats:(parsed.boats??[]).map(b=>({
       ...b,
       insuranceDeclined:b.insuranceDeclined??false,
+      engineYear:b.engineYear??b.year,
       next100Service:b.next100Service??((Math.floor((b.engineHours??0)/100)+1)*100),
       next300Service:b.next300Service??((Math.floor((b.engineHours??0)/300)+1)*300)
     }))
