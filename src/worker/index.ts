@@ -94,10 +94,32 @@ export default {
       const body:any=await request.json(); const s=body.state;
       if (!s || typeof s.companyName!=='string') return json({error:'Invalid game state.'},400);
       const now=Date.now();
+      const nums=[s.day,s.cash,s.debt,s.reputation,s.rating,s.reviewCount,s.companyValue,s.lifetimeRevenue,s.lifetimeProfit];
+      if(nums.some((n:any)=>typeof n!=='number'||!Number.isFinite(n))) return json({error:'Invalid numeric game state.'},400);
+      if(s.day<1||s.rating<0||s.rating>5||s.reviewCount<0||s.lifetimeRevenue<0) return json({error:'Invalid game state.'},400);
+
+      const prior:any=await env.DB.prepare('SELECT day,rating,review_count,company_value,lifetime_revenue,lifetime_profit FROM companies WHERE player_id=?').bind(player.id).first();
+      if(!prior){
+        if(s.day!==1||s.reviewCount!==0||s.lifetimeRevenue!==0||s.lifetimeProfit!==0||s.companyValue>60000) return json({error:'New companies must begin from the official starting state.'},409);
+      }else{
+        const dayDelta=s.day-prior.day;
+        if(dayDelta<0||dayDelta>1) return json({error:'Invalid day progression.'},409);
+        const revenueDelta=s.lifetimeRevenue-prior.lifetime_revenue;
+        const profitDelta=s.lifetimeProfit-prior.lifetime_profit;
+        const reviewDelta=s.reviewCount-prior.review_count;
+        if(dayDelta===0&&(revenueDelta!==0||profitDelta!==0||reviewDelta!==0)) return json({error:'Operating results can only advance with a completed game day.'},409);
+        if(dayDelta===1){
+          if(revenueDelta<0||revenueDelta>3500) return json({error:'Revenue change exceeded daily game limits.'},409);
+          if(profitDelta < -6000 || profitDelta > 3500) return json({error:'Profit change exceeded daily game limits.'},409);
+          if(reviewDelta<0||reviewDelta>4) return json({error:'Review change exceeded daily game limits.'},409);
+          if(s.companyValue-prior.company_value>30000+Math.max(0,profitDelta)) return json({error:'Company value change exceeded daily game limits.'},409);
+        }
+      }
+
       await env.DB.prepare(`INSERT INTO companies(id,player_id,company_name,day,cash,debt,reputation,rating,review_count,company_value,lifetime_revenue,lifetime_profit,island_id,state_json,updated_at)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(player_id) DO UPDATE SET company_name=excluded.company_name,day=excluded.day,cash=excluded.cash,debt=excluded.debt,reputation=excluded.reputation,rating=excluded.rating,review_count=excluded.review_count,company_value=excluded.company_value,lifetime_revenue=excluded.lifetime_revenue,lifetime_profit=excluded.lifetime_profit,island_id=excluded.island_id,state_json=excluded.state_json,updated_at=excluded.updated_at`)
-        .bind(crypto.randomUUID(),player.id,s.companyName,s.day,s.cash,s.debt,s.reputation,s.rating,s.reviewCount,s.companyValue,s.lifetimeRevenue,s.lifetimeProfit,s.islandId,JSON.stringify(s),now).run();
+        .bind(crypto.randomUUID(),player.id,String(s.companyName).slice(0,40),s.day,s.cash,s.debt,s.reputation,s.rating,s.reviewCount,s.companyValue,s.lifetimeRevenue,s.lifetimeProfit,String(s.islandId).slice(0,30),JSON.stringify(s),now).run();
       return json({ok:true});
     }
 
