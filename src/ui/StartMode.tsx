@@ -46,6 +46,6 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     <button className="modeChoice primary" onClick={()=>setView('account')}><b>🏆 Play & Compete</b><span>Create an account, save in the cloud and chase the leaderboards.</span></button>
     <button className="modeChoice" onClick={()=>onStart('demo')}><b>🎮 Try One Day</b><span>No account. Run Day 1 and see if you can make the right captain calls.</span></button>
     <button className="modeChoice devChoice" onClick={()=>onStart('owner')}><b>🧪 Development Test</b><span>Full local testing with no login. Never enters public rankings.</span></button>
-    <p className="fine">Account email is used for your game account. Marketing email is optional and requires the separate checkbox above.</p>
+    <p className="fine">Account email is used for your game account. Marketing email is optional and requires the separate checkbox above. <a href="https://www.goislandadventures.com/privacy-policy-2/" target="_blank" rel="noreferrer">Privacy Policy</a></p>
   </section></main>;
 }
