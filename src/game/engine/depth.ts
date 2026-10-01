@@ -1,4 +1,4 @@
-import { boatTemplates } from '../data/content';
+import { boatTemplates,marinas } from '../data/content';
 import type {
   Booking, BusinessEvent, BusinessEventChoice, CalendarInfo, CompanyState, CustomerType,
   Loan, MaintenanceLevel, OwnedBoat, TripType, UsedBoatListing
@@ -96,6 +96,11 @@ export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):C
   if(!state.marinaId)throw new Error('You need a marina before buying another boat.');
   const listing=generateUsedBoatMarket(state).find(x=>x.listingId===listingId);
   if(!listing)throw new Error('That listing is no longer available.');
+  if(state.boats.some(b=>b.instanceId===`used-${listingId}`))throw new Error('You already bought this listing.');
+  const marina=marinas.find(m=>m.id===state.marinaId);
+  const template=boatTemplates.find(b=>b.id===listing.templateId);
+  if(!marina||!template)throw new Error('Marina or boat data unavailable.');
+  if(template.lengthFt>marina.maxBoatFt)throw new Error('That boat is too large for your current marina.');
   const owned=ownedFromListing(state,listing);
   const cashRequired=finance?Math.ceil(listing.askingPrice*.25):listing.askingPrice;
   if(state.cash<cashRequired)throw new Error('Not enough cash for this purchase.');
@@ -196,7 +201,8 @@ export function businessEventForDay(state:CompanyState):BusinessEvent|null{
       ]
     }
   ];
-  return {...rng.pick(events),day:state.day};
+  const eligible=events.filter(e=>e.id!=='captain-callout'||state.staff.length>0);
+  return {...rng.pick(eligible),day:state.day};
 }
 
 export function resolveBusinessEvent(state:CompanyState,event:BusinessEvent,choiceId:string):CompanyState{
