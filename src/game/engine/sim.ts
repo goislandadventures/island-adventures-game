@@ -239,104 +239,188 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
 function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean,booking:Booking):Review{
   const profile=customerProfiles[booking.customerType];
   const five=protectedWater
-    ? [`${booking.customerLabel}: Captain changed the plan for the weather and absolutely nailed it.`,`${booking.customerLabel}: Protected water was perfect and we still had an amazing day.`]
-    : [`${booking.customerLabel}: Best day of our trip.`,`${booking.customerLabel}: Captain knew exactly where to go.`,`${booking.customerLabel}: Exactly what we wanted — ${profile.likes}.`];
-  const text=assessment.stars===5?rng.pick(five):assessment.reasons[0]??'One part of the trip fell short of expectations.';
+    ? [`${booking.customerLabel}: The captain changed the plan for the weather and absolutely nailed it.`,`${booking.customerLabel}: Calmer water was the right call and we still had an amazing day.`]
+    : [`${booking.customerLabel}: Best day of our trip.`,`${booking.customerLabel}: The captain knew exactly where to go.`,`${booking.customerLabel}: Exactly what we wanted — ${profile.likes}.`];
+  const text=assessment.stars===5?rng.pick(five):assessment.reasons[0]??'One part of the trip missed the mark.';
   return {stars:assessment.stars,text,reasons:assessment.reasons};
+}
+
+function shouldLeaveReview(rng:RNG,state:CompanyState,stars:number):boolean{
+  const ask=state.marketing?.reviewAsk??true;
+  if(stars<5)return rng.chance(ask?.75:.62);
+  return rng.chance(ask?.86:.34);
+}
+
+function channelCommission(source:Booking['source']):number{
+  if(source==='marketplace')return .25;
+  if(source==='hotel')return .15;
+  return 0;
+}
+
+function calculateTip(rng:RNG,state:CompanyState,booking:Booking,stars:number,marina?:Marina):number{
+  if(stars<5||booking.neverTips)return 0;
+  const profile=customerProfiles[booking.customerType];
+  const base=.04+rng.next()*Math.max(.01,booking.tipCeiling-.04);
+  const rate=clamp(base+profile.tipBias+(marina?.tipBonus??0),0,.40);
+  return Math.round(booking.revenue*rate);
+}
+
+function renewalExpense(state:CompanyState):{state:CompanyState;expense:number}{
+  const marina=marinas.find(m=>m.id===state.marinaId);
+  let expense=0;
+  const boats=state.boats.map(b=>{
+    if(!b.insured||!b.insuranceRenewalDay||b.insuranceRenewalDay>state.day)return b;
+    const premium=insuranceQuote(b,marina);
+    expense+=premium;
+    return {...b,insuranceRenewalDay:state.day+365};
+  });
+  const ledger=[...state.ledger];
+  if(expense)ledger.push({day:state.day,category:'insurance',amount:-expense,memo:'Annual insurance renewal'});
+  if(state.day>1&&(state.day-1)%30===0&&marina){
+    expense+=marina.monthlySlip;
+    ledger.push({day:state.day,category:'marina',amount:-marina.monthlySlip,memo:`Monthly slip: ${marina.name}`});
+  }
+  return {state:{...state,boats,ledger},expense};
+}
+
+function computeCompanyValue(state:CompanyState):number{
+  return Math.round(state.cash+state.boats.reduce((sum,b)=>sum+b.purchasePrice*b.condition*.8,0)-state.debt+state.reputation*25000+state.lifetimeProfit*.25);
 }
 
 export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>):{state:CompanyState;result:DayResult}{
   let state=structuredClone(input);
   state.staff=state.staff??[];
-  state.marketing=state.marketing??{dailyBudget:0,focus:'organic'};
+  state.marketing=state.marketing??{dailyBudget:0,focus:'organic',reviewAsk:true};
   state.loans=state.loans??[];
   const weather=generateWeather(state);
-  const calendar=calendarForDay(state.day);
-  const bookings=generateDemand(state,weather);
+  const calendar=calendarForDay(state.day,state);
+  const hurricane=hurricaneForDay(state);
   const rng=new RNG(state.seed+state.day*12347);
-  const availableBoats=state.boats.filter(b=>b.insured).slice(0,operatingBoatCount(state));
-  let revenue=0,expenses=0,refunds=0,tripsRun=0;
+  let revenue=0,tips=0,expenses=0,refunds=0,tripsRun=0,fixedCosts=0;
   const reviews:Review[]=[];
   const tripOutcomes:TripOutcome[]=[];
   const usage:Record<string,number>={};
 
-  const marketingSpend=Math.min(state.cash,state.marketing.dailyBudget);
-  if(marketingSpend>0)expenses+=marketingSpend;
+  const renew=renewalExpense(state);
+  state=renew.state;expenses+=renew.expense;fixedCosts+=renew.expense;
+  const marketingSpend=Math.min(Math.max(0,state.cash),state.marketing.dailyBudget);
+  if(marketingSpend>0){expenses+=marketingSpend;fixedCosts+=marketingSpend;}
 
-  if(!availableBoats.length){
-    const loanResult=applyLoanPayments(state);
-    state=loanResult.state;
-    return {state:{...state,day:state.day+1},result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:[],tripOutcomes:[],revenue:0,expenses:loanResult.payment,refunds:0,loanPayment:loanResult.payment,summary:'No insured boat was available, so no trips ran.'}};
+  if(hurricane){
+    const storm=applyHurricane(state,hurricane);
+    state=storm.state;expenses+=storm.expenses;fixedCosts+=storm.expenses;
+    state.cash-=renew.expense+marketingSpend;
+    if(marketingSpend)state.ledger.push({day:state.day,category:'marketing',amount:-marketingSpend,memo:`${state.marketing.focus} marketing`});
+    const loanResult=applyLoanPayments(state);state=loanResult.state;expenses+=loanResult.payment;fixedCosts+=loanResult.payment;
+    state.lifetimeProfit-=expenses;state.daysOperated+=1;state.companyValue=computeCompanyValue(state);state.day+=1;
+    return {state,result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:[],tripOutcomes:[],revenue:0,tips:0,expenses,refunds:0,loanPayment:loanResult.payment,fixedCosts,hurricaneSummary:storm.summary,destroyedBoatNames:storm.destroyedBoatNames,summary:storm.summary}};
   }
 
-  bookings.forEach((booking,index)=>{
+  const bookings=generateDemand(state,weather);
+  const availableBoats=state.boats.slice(0,operatingBoatCount(state));
+  if(!availableBoats.length){
+    state.cash-=renew.expense+marketingSpend;
+    if(marketingSpend)state.ledger.push({day:state.day,category:'marketing',amount:-marketingSpend,memo:`${state.marketing.focus} marketing`});
+    const loanResult=applyLoanPayments(state);state=loanResult.state;expenses+=loanResult.payment;fixedCosts+=loanResult.payment;
+    state.lifetimeProfit-=expenses;state.daysOperated+=1;state.companyValue=computeCompanyValue(state);state.day+=1;
+    return {state,result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:[],tripOutcomes:[],revenue:0,tips:0,expenses,refunds:0,loanPayment:loanResult.payment,fixedCosts,summary:'No boat was available, so no trips ran.'}};
+  }
+
+  bookings.forEach(booking=>{
     const decision=decisions[booking.id]??'run';
     const product=state.products.find(p=>p.type===booking.tripType)!;
-    const boat=availableBoats[index%availableBoats.length];
-
     if(decision==='cancel'){
       const fee=Math.round(booking.revenue*.08);
       expenses+=fee;refunds+=fee;
       const safeCall=weather.windKts>=18||weather.stormRisk>.23||(booking.tripType==='snorkel'&&weather.windKts>=15);
       state.reputation=clamp(state.reputation+(safeCall ? .003 : -.005),.1,1);
-      tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,satisfaction:0,note:safeCall?'Rescheduled for safety; guests understood the captain’s call.':'Rescheduled even though conditions were workable.'});
+      tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,tip:0,satisfaction:0,note:safeCall?'You moved the trip for safety. Guests understood.':'You moved a trip that probably could have run.'});
+      return;
+    }
+
+    const needed=Math.min(booking.boatsRequired,availableBoats.length);
+    const chosen=[...availableBoats].sort((a,b)=>(usage[a.instanceId]??0)-(usage[b.instanceId]??0)).filter(b=>(usage[b.instanceId]??0)<2).slice(0,needed);
+    if(chosen.length<needed){
+      state.reputation=clamp(state.reputation-.01,.1,1);
+      tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:0,tip:0,satisfaction:0,note:'You accepted this booking but did not have enough boats and captains to run it.'});
       return;
     }
 
     const protectedWater=decision==='protected';
-    const assessment=assessTripPlan(state,booking,decision,weather,boat);
-    const fuelGallons=boat.fuelBurnGph*product.durationHours*product.fuelMultiplier*(protectedWater ? .78 : 1);
+    const worstBoat=[...chosen].sort((a,b)=>a.condition-b.condition)[0];
+    const assessment=assessTripPlan(state,booking,decision,weather,worstBoat);
     const island=islands.find(i=>i.id===state.islandId)!;
-    let tripExpense=Math.round(fuelGallons*island.fuelPrice);
-    const boatIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
-    const hiredCaptain=boatIndex>0?state.staff[boatIndex-1]:undefined;
-    if(hiredCaptain)tripExpense+=Math.round(hiredCaptain.hourlyRate*product.durationHours);
+    const marina=marinas.find(m=>m.id===state.marinaId);
+    let tripExpense=0;
 
-    revenue+=booking.revenue;expenses+=tripExpense;tripsRun+=1;
-    usage[boat.instanceId]=(usage[boat.instanceId]??0)+1;
-    const review=createReview(rng,assessment,protectedWater,booking);
-    reviews.push(review);
+    chosen.forEach(boat=>{
+      const fuelGallons=boat.fuelBurnGph*product.durationHours*product.fuelMultiplier*(protectedWater ? .78 : 1);
+      tripExpense+=Math.round(fuelGallons*island.fuelPrice);
+      tripExpense+=Math.round(HOURS_PER_TRIP*RUNNING_COST_PER_ENGINE_HOUR);
+      const fleetIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
+      const hiredCaptain=fleetIndex>0?state.staff[fleetIndex-1]:undefined;
+      if(hiredCaptain)tripExpense+=Math.round(hiredCaptain.hourlyRate*product.durationHours);
+      usage[boat.instanceId]=(usage[boat.instanceId]??0)+1;
+    });
 
-    const captainNote=hiredCaptain?` Captain ${hiredCaptain.name} ran this boat.`:'';
-    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,satisfaction:assessment.stars/5,review,boatInstanceId:boat.instanceId,note:`${protectedWater?'Moved this trip to protected water.':'Ran this trip as booked.'}${captainNote}`});
+    tripExpense+=Math.round(booking.revenue*channelCommission(booking.source));
+    const tip=calculateTip(rng,state,booking,assessment.stars,marina);
+    revenue+=booking.revenue;tips+=tip;expenses+=tripExpense;tripsRun+=1;
+
+    let review:Review|undefined;
+    if(shouldLeaveReview(rng,state,assessment.stars)){review=createReview(rng,assessment,protectedWater,booking);reviews.push(review);}
+    const captainNote=chosen.length>1?` Two boats worked together for this ${booking.partySize}-guest group.`:'';
+    const tipNote=tip>0?` Tip: $${tip}.`:assessment.stars<5?' No tip because the trip was below 5★.':booking.neverTips?' Great trip, but this group simply did not tip.':' No tip this time.';
+    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.stars/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${captainNote}${tipNote}`});
   });
 
   let maintenanceEvent:string|undefined;
   state.boats=state.boats.map(boat=>{
     const used=usage[boat.instanceId]??0;
     if(!used)return boat;
-    const exposed=tripOutcomes.filter(x=>x.boatInstanceId===boat.instanceId&&x.decision==='run').length;
-    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,boat.engineHours-1000)/10000+(exposed&&weather.windKts>16?.025:0),.01,.28);
-    let condition=clamp(boat.condition-used*.003,.25,1);
+    const exposed=tripOutcomes.filter(x=>x.boatInstanceIds?.includes(boat.instanceId)&&x.decision==='run').length;
+    const newHours=boat.engineHours+used*HOURS_PER_TRIP;
+    const overdue100=newHours>=boat.next100Service;
+    const overdue300=newHours>=boat.next300Service;
+    const serviceRisk=overdue300?.16:overdue100?.07:0;
+    const overdueWear=overdue300?.014:overdue100?.007:0;
+    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk,.01,.42);
+    let condition=clamp(boat.condition-used*.003-overdueWear*used,.20,1);
+    let reliability=clamp(boat.reliability-overdueWear*.55*used,.25,.99);
     if(!maintenanceEvent&&rng.chance(failureRisk)){
-      const event=rng.pick([{text:'Battery gave up after the last trip.',cost:240},{text:'Prop found something expensive underwater.',cost:520},{text:'Bilge pump chose today to retire.',cost:310},{text:'Steering needed an unexpected repair.',cost:690}]);
-      maintenanceEvent=`${boat.name}: ${event.text}`;expenses+=event.cost;condition=clamp(condition-.04,.25,1);
+      const event=rng.pick([{text:'The battery quit.',cost:240},{text:'The prop hit something expensive.',cost:520},{text:'The bilge pump gave up.',cost:310},{text:'The steering needed a surprise repair.',cost:690}]);
+      maintenanceEvent=`${boat.name}: ${event.text}`;expenses+=event.cost;condition=clamp(condition-.04,.20,1);reliability=clamp(reliability-.02,.25,.99);
+    }else if((overdue300||overdue100)&&!maintenanceEvent){
+      const due=overdue300?boat.next300Service:boat.next100Service;
+      maintenanceEvent=`${boat.name}: engine service is overdue past ${due} hours. Reliability is dropping.`;
     }
-    return {...boat,condition,engineHours:boat.engineHours+used*3};
+    return {...boat,condition,reliability,engineHours:newHours};
   });
 
   let wildlifeEvent:string|undefined;
   if(tripsRun&&rng.chance(.22))wildlifeEvent=rng.pick(['Dolphins cruised alongside the boat.','A sea turtle surfaced beside the guests.','An eagle ray glided under the boat.','A manatee caused a very slow marina departure.']);
 
-  const netBeforeDebt=revenue-expenses;
   const oldStars=state.rating*state.reviewCount;
   const newStars=reviews.reduce((s,r)=>s+r.stars,0);
   state.reviewCount+=reviews.length;
   state.rating=state.reviewCount?Number(((oldStars+newStars)/state.reviewCount).toFixed(2)):state.rating;
   if(reviews.length)state.reputation=clamp(state.reputation+reviews.reduce((s,r)=>s+(r.stars-3)*.006,0),.1,1);
-  state.cash+=netBeforeDebt;state.lifetimeRevenue+=revenue;state.lifetimeProfit+=netBeforeDebt;state.daysOperated+=1;
-  const loanResult=applyLoanPayments(state);
-  state=loanResult.state;
-  const loanPayment=loanResult.payment;
-  state.lifetimeProfit-=loanPayment;
-  expenses+=loanPayment;
+  state.cash+=revenue+tips-expenses;
+  state.lifetimeRevenue+=revenue+tips;
+  state.lifetimeProfit+=revenue+tips-expenses;
+  state.daysOperated+=1;
 
   if(revenue)state.ledger.push({day:state.day,category:'charters',amount:revenue,memo:`${tripsRun} charter(s)`});
+  if(tips)state.ledger.push({day:state.day,category:'tips',amount:tips,memo:'Guest tips'});
   if(marketingSpend)state.ledger.push({day:state.day,category:'marketing',amount:-marketingSpend,memo:`${state.marketing.focus} marketing`});
-  const nonMarketingExpenses=expenses-marketingSpend;
-  if(nonMarketingExpenses)state.ledger.push({day:state.day,category:'operating',amount:-nonMarketingExpenses,memo:'Fuel, payroll, reschedules and maintenance'});
-  state.companyValue=Math.round(state.cash+state.boats.reduce((sum,b)=>sum+b.purchasePrice*b.condition*.8,0)-state.debt+state.reputation*25000+state.lifetimeProfit*.25);
+  const variableExpenses=expenses-marketingSpend-renew.expense;
+  if(variableExpenses)state.ledger.push({day:state.day,category:'operating',amount:-variableExpenses,memo:'Fuel, boat wear, commissions, payroll, reschedules and repairs'});
+
+  const loanResult=applyLoanPayments(state);
+  state=loanResult.state;
+  expenses+=loanResult.payment;fixedCosts+=loanResult.payment;state.lifetimeProfit-=loanResult.payment;
+  state.companyValue=computeCompanyValue(state);
   state.day+=1;
 
-  return {state,result:{weather,calendar,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,expenses,refunds,maintenanceEvent,wildlifeEvent,loanPayment,summary:`${calendar.dayOfWeek}, Week ${calendar.week}: ${tripsRun} trip(s), ${revenue} revenue, ${expenses} total cash out, ${reviews.length} review(s).`}};
+  return {state,result:{weather,calendar,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,tips,expenses,refunds,maintenanceEvent,wildlifeEvent,loanPayment:loanResult.payment,fixedCosts,summary:`${calendar.monthName} ${calendar.dayOfMonth}: ${tripsRun} trip(s), $${revenue} fares, $${tips} tips, $${expenses} expenses, ${reviews.length} review(s).`}};
 }
