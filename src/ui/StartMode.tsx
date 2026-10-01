@@ -28,7 +28,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   };
 
   if(view==='account') return <main className="modeShell"><section className="modeCard accountCard">
-    <img src="/branding/island-adventures-logo.jpg" alt="Island Adventures" className="modeLogo"/>
+    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
     <span className="eyebrow">PLAY & COMPETE</span><h2>{kind==='register'?'Create your owner account':'Welcome back, Captain'}</h2>
     {kind==='register'&&<label>Owner display name<input value={displayName} maxLength={30} onChange={e=>setDisplayName(e.target.value)} placeholder="Captain Jim"/></label>}
     <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
@@ -41,7 +41,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   </section></main>;
 
   return <main className="modeShell"><section className="modeCard">
-    <img src="/branding/island-adventures-logo.jpg" alt="Island Adventures" className="modeLogo"/>
+    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
     <h2>How do you want to play?</h2>
     <button className="modeChoice primary" onClick={()=>setView('account')}><b>🏆 Play & Compete</b><span>Create an account, save in the cloud and chase the leaderboards.</span></button>
     <button className="modeChoice" onClick={()=>onStart('demo')}><b>🎮 Try One Day</b><span>No account. Run Day 1 and see if you can make the right captain calls.</span></button>
