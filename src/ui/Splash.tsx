@@ -21,13 +21,12 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
 
   const enter = () => {
     const audio = audioRef.current;
-    if (!audio || audio.paused) return onEnter();
-    const fade = window.setInterval(() => {
-      audio.volume = Math.max(0, audio.volume - 0.12);
-      if (audio.volume <= 0.01) {
-        window.clearInterval(fade); audio.pause(); audio.currentTime = 0; onEnter();
-      }
-    }, 70);
+    // iOS Safari does not reliably support programmatic volume fades.
+    // Enter the game immediately, then stop/reset the splash theme.
+    onEnter();
+    if (audio) {
+      try { audio.pause(); audio.currentTime = 0; } catch {}
+    }
   };
 
   return <main className="splash"><div className="splashOcean">
