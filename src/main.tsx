@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect,useState } from 'react';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './ui/App';
@@ -13,6 +13,18 @@ function Root(){
   const [mode,setMode]=useState<GameMode|null>(null);
   const [player,setPlayer]=useState<Player|undefined>();
   const [initialState,setInitialState]=useState<CompanyState|null|undefined>();
+
+  useLayoutEffect(()=>{
+    if('scrollRestoration' in window.history) window.history.scrollRestoration='manual';
+    const reset=()=>{
+      window.scrollTo(0,0);
+      document.documentElement.scrollTop=0;
+      document.body.scrollTop=0;
+    };
+    reset();
+    const frame=window.requestAnimationFrame(reset);
+    return()=>window.cancelAnimationFrame(frame);
+  },[entered,mode]);
 
   if(!entered)return <Splash onEnter={()=>setEntered(true)}/>;
   if(!mode)return <StartMode onStart={(nextMode,nextPlayer,nextState)=>{setMode(nextMode);setPlayer(nextPlayer);setInitialState(nextState);}}/>;
