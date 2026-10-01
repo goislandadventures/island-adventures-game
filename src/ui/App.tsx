@@ -70,7 +70,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
   if(!setupStarted)return <main className="shell onboarding">
     <header className="heroBrand"><img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
-    <section className="mapCard introMap"><IslandMap active={0}/></section>
+    <section className="mapCard introMap"><IslandMap active={0} companyValue={0}/></section>
     <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-DAY DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $40,000 and a dream</h2>
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
       <label>Charter company<input value={companyName} maxLength={28} placeholder="Keys Adventure Co." onChange={e=>setCompanyName(e.target.value)}/></label>
@@ -87,7 +87,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     {!demoComplete&&<TutorialCard day={state.day}/>} 
 
     {tab==='dock'&&<>
-      <section className="mapCard"><IslandMap active={0} boat={state.boats.length>0}/><div className="mapText"><b>{currentIsland.name}</b><span>{currentIsland.description}</span></div></section>
+      <section className="mapCard"><IslandMap active={Math.max(0,islands.findIndex(i=>i.id===state.islandId))} boat={state.boats.length>0} companyValue={state.companyValue}/><div className="mapText"><b>{currentIsland.name}</b><span>{currentIsland.description}</span></div></section>
 
       {!state.marinaId&&<section className="card"><span className="eyebrow">STEP 1</span><h2>Pick your first slip</h2><p className="muted">Cheaper docks save cash. Better marinas protect boats and help your reputation.</p>{marinas.filter(m=>m.islandId==='harbor').map(m=><div className="choice" key={m.id}><div><b>{m.name}</b><small>{money(m.monthlySlip)}/mo · up to {m.maxBoatFt}′ · storm protection {pct(m.stormProtection)}</small></div><button onClick={()=>chooseMarina(m.id)}>Rent</button></div>)}</section>}
 
@@ -127,6 +127,6 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   </main>;
 }
 
-function IslandMap({active,boat=false}:{active:number;boat?:boolean}){
-  return <div className="ocean">{islands.slice(0,5).map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''}`}><span>{idx===3?'🪸':'🌴'}</span><small>{i.name}</small>{idx>0&&<em>🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤<i/></div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
+function IslandMap({active,boat=false,companyValue=0}:{active:number;boat?:boolean;companyValue?:number}){
+  return <div className="ocean">{islands.map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''} ${companyValue>=i.unlockValue?'unlocked':'locked'}`}><span>{i.id==='reef'?'🪸':'🌴'}</span><small>{i.name}</small>{companyValue<i.unlockValue&&<em>🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤</div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
 }
