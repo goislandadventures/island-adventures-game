@@ -48,6 +48,7 @@ export function customerForTrip(rng:RNG,tripType:TripType,source:Booking['source
 
 export function generateUsedBoatMarket(state:CompanyState):UsedBoatListing[]{
   const rng=new RNG(state.seed+state.day*4409+state.islandId.length*97);
+  const marketFactor=state.islandId==='captains'?.82:state.islandId==='pelican'?1.08:state.islandId==='reef'||state.islandId==='lighthouse'?1.04:1;
   const candidates=[...boatTemplates];
   const listings:UsedBoatListing[]=[];
   while(candidates.length&&listings.length<5){
@@ -58,7 +59,7 @@ export function generateUsedBoatMarket(state:CompanyState):UsedBoatListing[]{
     const condition=Number((.48+rng.next()*.48).toFixed(2));
     const engineHours=rng.int(220,2100);
     const reliability=Number(clamp(template.reliability*(.74+condition*.28)-(engineHours>1400?.06:0),.42,.98).toFixed(2));
-    const askingPrice=Math.round(template.basePrice*(.38+condition*.48)*(.88+rng.next()*.22)/250)*250;
+    const askingPrice=Math.round(template.basePrice*(.38+condition*.48)*(.88+rng.next()*.22)*marketFactor/250)*250;
     const inspectionNote=condition>.84
       ? 'Clean survey. Mostly cosmetic wear.'
       : engineHours>1400
