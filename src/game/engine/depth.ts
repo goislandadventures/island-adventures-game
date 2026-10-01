@@ -149,10 +149,11 @@ export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):C
   let memo=`Bought used ${listing.name}`;
   if(finance){
     const principal=listing.askingPrice-cashRequired;
-    const apr=.099;
-    const dailyPayment=Math.ceil((principal*(1+apr*.25))/90);
+    const apr=.2499;
+    const dailyRate=apr/365;
+    const dailyPayment=Math.ceil(principal*dailyRate/(1-Math.pow(1+dailyRate,-730)));
     const loan:Loan={id:`loan-${owned.instanceId}`,originalPrincipal:principal,balance:principal,apr,dailyPayment,boatInstanceId:owned.instanceId};
-    loans.push(loan); debt+=principal; memo=`Financed used ${listing.name}; 25% down`;
+    loans.push(loan); debt+=principal; memo=`Financed used ${listing.name}; 25% down · 24.99% APR · 2 game years`;
   }
   return {
     ...state,cash:state.cash-cashRequired,debt,loans,boats:[...state.boats,owned],
@@ -179,18 +180,20 @@ export function maintainBoat(state:CompanyState,instanceId:string,level:Maintena
   const boat=state.boats.find(b=>b.instanceId===instanceId);
   if(!boat)throw new Error('Boat not found.');
   const plans={
-    dock:{cost:120,condition:.03,reliability:.005,label:'Dock check & cleanup'},
-    '100hr':{cost:450,condition:.05,reliability:.025,label:'100-hour engine service'},
-    '300hr':{cost:900,condition:.10,reliability:.065,label:'300-hour engine service'}
+    dock:{cost:75,condition:.03,reliability:.005,label:'Dock check & cleanup'},
+    '100hr':{cost:350,condition:.05,reliability:.025,label:'100-hour engine service'},
+    '300hr':{cost:700,condition:.10,reliability:.065,label:'300-hour engine service'}
   } as const;
   const plan=plans[level];
   if(state.cash<plan.cost)throw new Error('Not enough cash for that service.');
   const currentHours=boat.engineHours;
   const next100=level==='100hr'||level==='300hr'?Number((currentHours+100).toFixed(1)):boat.next100Service;
   const next300=level==='300hr'?Number((currentHours+300).toFixed(1)):boat.next300Service;
+  const cash=state.cash-plan.cost;
   return {
     ...state,
-    cash:state.cash-plan.cost,
+    cash,
+    companyValue:state.daysOperated===0?Math.round(cash-state.debt):state.companyValue,
     boats:state.boats.map(b=>b.instanceId===instanceId?{
       ...b,
       condition:clamp(b.condition+plan.condition,.25,1),
