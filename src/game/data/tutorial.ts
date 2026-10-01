@@ -22,13 +22,14 @@ export const weekOneTutorial: TutorialDay[] = [
   {
     day:2,
     title:'Price for profit',
-    summary:'Learn how your charter menu affects demand and margin.',
+    summary:'Learn how pricing and marketing affect demand and margin.',
     lessons:[
       'Trip prices affect both revenue per booking and how easily customers convert.',
       'Sandbar, snorkel, and sunset trips have different demand and weather tolerance.',
-      'A full calendar at bad prices can be worse than fewer profitable trips.'
+      'A full calendar at bad prices can be worse than fewer profitable trips.',
+      'Marketing budget increases booking probability; focus changes where more customers come from.'
     ],
-    goal:'Review your trip prices before running the day.'
+    goal:'Set prices and choose a marketing budget/focus before running the day.'
   },
   {
     day:3,
@@ -38,20 +39,22 @@ export const weekOneTutorial: TutorialDay[] = [
       'Fuel burn changes the real profit from every trip.',
       'Condition and reliability affect maintenance risk.',
       'Rougher operating choices can increase wear.',
-      'Leaving cash in reserve matters when something breaks.'
+      'Leaving cash in reserve matters when something breaks.',
+      'Routine service costs cash now but restores condition and protects future reviews.'
     ],
     goal:'Finish the day with enough cash to absorb an unexpected repair.'
   },
   {
     day:4,
-    title:'Know where bookings come from',
-    summary:'Not every customer arrives the same way.',
+    title:'Build beyond one boat',
+    summary:'Growth requires both boats and people to run them.',
     lessons:[
-      'Bookings can come from organic search, maps, referrals, social, hotels, repeat guests, paid ads, and marketplaces.',
-      'The source matters because future marketing systems will have different costs and conversion quality.',
-      'Strong reviews and reputation make future demand easier to win.'
+      'You always captain boat one yourself.',
+      'Each hired captain unlocks one additional insured boat for daily operations.',
+      'Extra boats without captains do not create extra daily capacity.',
+      'Captain wages are charged only when that hired captain actually runs a trip.'
     ],
-    goal:'Notice the source attached to each booking and start learning which customers are most valuable.'
+    goal:'Understand what you need before a second boat can actually earn money.'
   },
   {
     day:5,
@@ -69,8 +72,9 @@ export const weekOneTutorial: TutorialDay[] = [
     title:'Build a reputation',
     summary:'Reviews compound over time and affect your ability to compete.',
     lessons:[
-      'Guest satisfaction comes from the actual trip: conditions, boat quality, captain decisions, and expectations.',
-      'Adapting intelligently to weather can protect both reviews and equipment.',
+      'Every completed charter starts as a 5★ experience.',
+      'Stars are deducted only for visible causes: bad weather decisions, poor visibility choices, neglected boat condition, or unnecessary downgrades.',
+      'The trip card previews what will cost a star before you run it.',
       'Public leaderboards compare registered owners by value, revenue, profit, review count, and rating.'
     ],
     goal:'Make decisions that protect long-term reputation instead of chasing one day of revenue.'
@@ -83,6 +87,7 @@ export const weekOneTutorial: TutorialDay[] = [
       'Check conditions, demand, cash, and boat condition before committing the day.',
       'Choose the right plan for each charter instead of using one rule for every trip.',
       'Reinvest carefully and grow only when the business can support it.',
+      'Company value unlocks new islands and markets; relocating also means paying for the new marina.',
       'New systems added to Island Adventures will be introduced through this Week 1 guide.'
     ],
     goal:'Run Day 7 without relying on the tutorial. From here, build the best charter company in the islands.'
