@@ -9,9 +9,15 @@ export function normalizeState(parsed:CompanyState):CompanyState{
     companyColor:parsed.companyColor||'#f6c453',
     daysOperated:parsed.daysOperated??0,
     staff:parsed.staff??[],
-    marketing:parsed.marketing??{dailyBudget:0,focus:'organic'},
+    marketing:{dailyBudget:parsed.marketing?.dailyBudget??0,focus:parsed.marketing?.focus??'organic',reviewAsk:parsed.marketing?.reviewAsk??true},
     loans:parsed.loans??[],
-    debt:parsed.debt??0
+    debt:parsed.debt??0,
+    boats:(parsed.boats??[]).map(b=>({
+      ...b,
+      insuranceDeclined:b.insuranceDeclined??false,
+      next100Service:b.next100Service??((Math.floor((b.engineHours??0)/100)+1)*100),
+      next300Service:b.next300Service??((Math.floor((b.engineHours??0)/300)+1)*300)
+    }))
   };
 }
 
