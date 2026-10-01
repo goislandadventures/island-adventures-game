@@ -9,7 +9,9 @@ export function normalizeState(parsed:CompanyState):CompanyState{
     companyColor:parsed.companyColor||'#f6c453',
     daysOperated:parsed.daysOperated??0,
     staff:parsed.staff??[],
-    marketing:parsed.marketing??{dailyBudget:0,focus:'organic'}
+    marketing:parsed.marketing??{dailyBudget:0,focus:'organic'},
+    loans:parsed.loans??[],
+    debt:parsed.debt??0
   };
 }
 
