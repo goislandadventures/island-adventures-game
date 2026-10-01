@@ -36,5 +36,6 @@ export const boatTemplates: BoatTemplate[] = [
 export const defaultProducts: TripProduct[] = [
   { type: 'sandbar', name: 'Private Sandbar', durationHours: 3, price: 489, baseDemand: 1.00, weatherTolerance: 0.82, fuelMultiplier: 0.75 },
   { type: 'snorkel', name: 'Private Snorkel', durationHours: 4, price: 649, baseDemand: 0.90, weatherTolerance: 0.55, fuelMultiplier: 1.15 },
-  { type: 'sunset', name: 'Sunset Cruise', durationHours: 1.5, price: 319, baseDemand: 0.78, weatherTolerance: 0.72, fuelMultiplier: 0.45 }
+  { type: 'sunset', name: 'Sunset Cruise', durationHours: 1.5, price: 319, baseDemand: 0.78, weatherTolerance: 0.72, fuelMultiplier: 0.45 },
+  { type: 'custom', name: 'Build-Your-Own Adventure', durationHours: 5, price: 749, baseDemand: 0.42, weatherTolerance: 0.68, fuelMultiplier: 1.20 }
 ];
