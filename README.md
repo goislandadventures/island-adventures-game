@@ -58,3 +58,11 @@ Demo and owner-test saves are excluded from public ranking until intentionally s
 ## Development rule
 
 Owner testing remains login-free until Gold. Public players may try Day 1 in demo mode without creating an account.
+
+
+## Deployment
+
+Production deploys are handled by GitHub Actions using Cloudflare Workers and D1. Required repository secrets:
+
+- CLOUDFLARE_ACCOUNT_ID
+- CLOUDFLARE_API_TOKEN
