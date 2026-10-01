@@ -10,14 +10,15 @@ export const weekOneTutorial: TutorialDay[] = [
   {
     day:1,
     title:'Get a boat. Get some guests.',
-    summary:'You have some cash, no boat, and one week to figure this out. Start simple.',
+    summary:'You have $10,000, no boat, and one week to figure this out. Start simple.',
     lessons:[
       'Pick a marina. A slip is just a parking spot for your boat.',
-      'Buy a boat you can actually afford. Cheap boats save money today but can get cranky later.',
+      'Look at the hull year, engine year, and engine hours separately. An old boat with a newer low-hour engine can be a great deal.',
+      'You can stay debt-free or take one startup loan up to $20,000. The interest is painful and the payment comes every day.',
       'Insurance is your choice. It costs money, but an uninsured boat can become a total loss later.',
       'Check the weather before every trip. A sandbar trip and a snorkel trip can need totally different plans.'
     ],
-    goal:'Get through Day 1 with happy guests and money still in the bank.'
+    goal:'Get a marina, pick a boat, decide on insurance and debt, then finish Day 1 with cash still in the bank.'
   },
   {
     day:2,
@@ -26,6 +27,7 @@ export const weekOneTutorial: TutorialDay[] = [
     lessons:[
       'You can spend money on Search, Maps, Social, Hotels, or Content to help people find you.',
       'More marketing can bring more bookings, but the money leaves your bank account whether the phone rings or not.',
+      'If nobody books today, you are not stuck. Work on the boat or close the day and try again tomorrow.',
       'A good price helps you get booked. A good trip helps people come back.',
       'Ask happy guests for reviews. Great reviews make future bookings easier.'
     ],
@@ -60,7 +62,7 @@ export const weekOneTutorial: TutorialDay[] = [
     title:'Where did all the money go?',
     summary:'A day can look busy and still barely make money.',
     lessons:[
-      'Fares come in, then fuel, boat wear, captain pay, marketing and booking fees start taking bites out of it.',
+      'Fares come in, then fuel, boat wear, loan payments, captain pay, marketing and booking fees start taking bites out of it.',
       'Some websites can take a big cut of a booking. Direct bookings keep more money in your pocket.',
       'Tips help, but never count on them. Some guests do not tip even after a perfect day.',
       'Any trip below 5★ gets no tip at all.'
