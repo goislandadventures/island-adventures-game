@@ -6,32 +6,64 @@ import type {
 import { RNG } from './rng';
 
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
+const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthLengths=[31,28,31,30,31,30,31,31,30,31,30,31];
 
-export const customerProfiles:Record<CustomerType,{label:string;likes:string;warning:string}> = {
-  family:{label:'Family Crew',likes:'comfort, safety and an easy pace',warning:'Poor boat condition and rough rides matter more to families.'},
-  couple:{label:'Couple Getaway',likes:'privacy, comfort and memorable scenery',warning:'Unnecessary plan downgrades hurt more when conditions are actually good.'},
-  celebration:{label:'Celebration Group',likes:'fun, energy and the trip they booked',warning:'They tolerate some chop, but hate losing the main experience without a reason.'},
-  snorkeler:{label:'Serious Snorkelers',likes:'clear water, reef quality and good conditions',warning:'Visibility and exposed wind matter more than almost anything else.'},
-  luxury:{label:'Premium Private Guests',likes:'polish, comfort and flexibility',warning:'Boat condition and service quality have a higher bar.'},
-  bargain:{label:'Value Hunters',likes:'getting what they paid for',warning:'They are less demanding on luxury but react strongly to unnecessary changes.'},
-  repeat:{label:'Repeat Guests',likes:'consistency and smart captain judgment',warning:'They compare today with the good experience that brought them back.'}
+export const customerProfiles:Record<CustomerType,{label:string;likes:string;warning:string;tipBias:number}> = {
+  family:{label:'Family Crew',likes:'a smooth, safe, easy day',warning:'Families notice rough rides and tired-looking boats.',tipBias:.02},
+  couple:{label:'Couple Getaway',likes:'privacy, comfort and a memorable view',warning:'They dislike changes that were not really needed.',tipBias:.05},
+  celebration:{label:'Celebration Group',likes:'fun, music and getting the trip they booked',warning:'They can handle some chop, but hate losing the main event for no reason.',tipBias:.04},
+  snorkeler:{label:'Serious Snorkelers',likes:'clear water and a great place to snorkel',warning:'Bad visibility hurts this group fast.',tipBias:.03},
+  luxury:{label:'Premium Private Guests',likes:'a polished boat and flexible service',warning:'They expect the boat and service to look sharp.',tipBias:.08},
+  bargain:{label:'Value Hunters',likes:'feeling like they got their money’s worth',warning:'They care less about fancy extras and more about value.',tipBias:-.02},
+  repeat:{label:'Repeat Guests',likes:'another great day like last time',warning:'They notice when today feels worse than the trip that brought them back.',tipBias:.06}
 };
 
-export function calendarForDay(day:number):CalendarInfo{
+export function nextHundred(hours:number):number{
+  return (Math.floor(hours/100)+1)*100;
+}
+export function nextThreeHundred(hours:number):number{
+  return (Math.floor(hours/300)+1)*300;
+}
+
+export function marketingStrength(state:CompanyState):number{
+  const m=state.marketing??{dailyBudget:0,focus:'organic' as const,reviewAsk:true};
+  const budget=Math.min(1,m.dailyBudget/250);
+  const reviews=Math.min(1,(state.reviewCount??0)/100);
+  const reputation=clamp(state.reputation??.5,0,1);
+  const reviewHabit=m.reviewAsk?.10:0;
+  return clamp(.12+budget*.43+reputation*.22+reviews*.13+reviewHabit,0,1);
+}
+
+export function calendarForDay(day:number,state?:CompanyState):CalendarInfo{
   const dayNames:CalendarInfo['dayOfWeek'][]=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const week=Math.ceil(day/7);
   const dayOfWeek=dayNames[(day-1)%7];
-  const cycle=((week-1)%12)+1;
-  const season:CalendarInfo['season']=cycle<=4?'peak':cycle<=8?'shoulder':'slow';
-  const seasonMult=season==='peak'?1.20:season==='shoulder'?1:.78;
+  const week=Math.ceil(day/7);
+  const gameYear=Math.floor((day-1)/365)+1;
+  let offset=(31+((day-1)%365))%365; // game always begins February 1
+  let month=1;
+  while(offset>=monthLengths[month]){offset-=monthLengths[month];month=(month+1)%12;}
+  const dayOfMonth=offset+1;
+  const monthNumber=month+1;
+  const strength=state?marketingStrength(state):.45;
+  const marketingLabel:CalendarInfo['marketingLabel']=strength>=.62?'Strong':strength>=.42?'Okay':'Weak';
+  const afterFeb14=monthNumber>2||(monthNumber===2&&dayOfMonth>=14);
+  const throughSep1=monthNumber<9||(monthNumber===9&&dayOfMonth<=1);
+  const season:CalendarInfo['season']=monthNumber===2&&dayOfMonth<14?'warmup':afterFeb14&&throughSep1?'busy':'slow';
+  let seasonMult:number;
+  if(season==='busy')seasonMult=.88+strength*.55;
+  else if(season==='warmup')seasonMult=.42+strength*.34;
+  else seasonMult=strength>=.62?.50:strength>=.42?.34:.20;
   const weekend=dayOfWeek==='Fri'||dayOfWeek==='Sat'||dayOfWeek==='Sun';
-  const demandMultiplier=Number((seasonMult*(weekend?1.14:.94)).toFixed(2));
-  const note=season==='peak'
-    ? `${dayOfWeek}: peak-season demand${weekend?' plus weekend traffic':''}.`
-    : season==='slow'
-      ? `${dayOfWeek}: slow-season demand. Protect cash and avoid overexpanding.`
-      : `${dayOfWeek}: shoulder-season demand${weekend?' with a weekend bump':''}.`;
-  return {day,week,dayOfWeek,season,demandMultiplier,note};
+  const weekendMult=weekend?1.10:.95;
+  const demandMultiplier=Number((seasonMult*weekendMult).toFixed(2));
+  const date=`${monthNames[month]} ${dayOfMonth}`;
+  const note=season==='busy'
+    ? `${date}: busy season. Strong marketing can keep the calendar packed.`
+    : season==='warmup'
+      ? `${date}: the year starts slowly, but things wake up around February 14.`
+      : `${date}: slow season. Strong marketers can hold about half their busy-season demand; weak marketing can fall near one-fifth.`;
+  return {day,week,dayOfWeek,month:monthNumber,monthName:monthNames[month],dayOfMonth,gameYear,season,demandMultiplier,note,marketingStrength:strength,marketingLabel};
 }
 
 export function customerForTrip(rng:RNG,tripType:TripType,source:Booking['source']):{type:CustomerType;label:string}{
@@ -60,13 +92,15 @@ export function generateUsedBoatMarket(state:CompanyState):UsedBoatListing[]{
     const engineHours=rng.int(220,2100);
     const reliability=Number(clamp(template.reliability*(.74+condition*.28)-(engineHours>1400?.06:0),.42,.98).toFixed(2));
     const askingPrice=Math.round(template.basePrice*(.38+condition*.48)*(.88+rng.next()*.22)*marketFactor/250)*250;
+    const next100=nextHundred(engineHours);
+    const next300=nextThreeHundred(engineHours);
     const inspectionNote=condition>.84
-      ? 'Clean survey. Mostly cosmetic wear.'
+      ? `Clean survey. Next engine service: ${Math.min(next100,next300)} hours.`
       : engineHours>1400
-        ? 'High hours. Budget for preventive maintenance.'
+        ? `High hours. Watch the engine service clock: ${Math.min(next100,next300)} hours next.`
         : condition<.62
           ? 'Cheap for a reason. Deferred maintenance is visible.'
-          : 'Average used-boat condition with normal wear.';
+          : `Normal used-boat wear. Next engine service: ${Math.min(next100,next300)} hours.`;
     listings.push({
       listingId:`MKT-${state.day}-${template.id}-${listings.length+1}`,
       templateId:template.id,name:template.name,year,condition,engineHours,askingPrice,reliability,inspectionNote
@@ -87,27 +121,30 @@ function ownedFromListing(state:CompanyState,listing:UsedBoatListing):OwnedBoat{
     purchasePrice:listing.askingPrice,
     reliability:listing.reliability,
     insured:false,
+    insuranceDeclined:false,
+    next100Service:nextHundred(listing.engineHours),
+    next300Service:nextThreeHundred(listing.engineHours),
     marinaId:state.marinaId
   };
 }
 
 export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):CompanyState{
-  if(state.day<=7)throw new Error('The used-boat market unlocks after Captain School.');
-  if(!state.marinaId)throw new Error('You need a marina before buying another boat.');
+  if(state.day<=7)throw new Error('The used-boat market opens after Captain School.');
+  if(!state.marinaId)throw new Error('Pick a marina before buying another boat.');
   const listing=generateUsedBoatMarket(state).find(x=>x.listingId===listingId);
-  if(!listing)throw new Error('That listing is no longer available.');
-  if(state.boats.some(b=>b.instanceId===`used-${listingId}`))throw new Error('You already bought this listing.');
+  if(!listing)throw new Error('That boat is gone. Check the market again tomorrow.');
+  if(state.boats.some(b=>b.instanceId===`used-${listingId}`))throw new Error('You already bought this boat.');
   const marina=marinas.find(m=>m.id===state.marinaId);
   const template=boatTemplates.find(b=>b.id===listing.templateId);
   if(!marina||!template)throw new Error('Marina or boat data unavailable.');
-  if(template.lengthFt>marina.maxBoatFt)throw new Error('That boat is too large for your current marina.');
+  if(template.lengthFt>marina.maxBoatFt)throw new Error('That boat is too big for your current marina.');
   const owned=ownedFromListing(state,listing);
   const cashRequired=finance?Math.ceil(listing.askingPrice*.25):listing.askingPrice;
-  if(state.cash<cashRequired)throw new Error('Not enough cash for this purchase.');
+  if(state.cash<cashRequired)throw new Error('Not enough cash for this boat.');
 
   let loans=[...(state.loans??[])];
   let debt=state.debt??0;
-  let memo=`Purchased used ${listing.name}`;
+  let memo=`Bought used ${listing.name}`;
   if(finance){
     const principal=listing.askingPrice-cashRequired;
     const apr=.099;
@@ -116,30 +153,48 @@ export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):C
     loans.push(loan); debt+=principal; memo=`Financed used ${listing.name}; 25% down`;
   }
   return {
-    ...state,
-    cash:state.cash-cashRequired,
-    debt,
-    loans,
-    boats:[...state.boats,owned],
+    ...state,cash:state.cash-cashRequired,debt,loans,boats:[...state.boats,owned],
     ledger:[...state.ledger,{day:state.day,category:'boat',amount:-cashRequired,memo}]
   };
+}
+
+export function serviceStatus(boat:OwnedBoat):{kind:'300hr'|'100hr'|'ok';dueAt:number;overdue:number;label:string}{
+  const due300=boat.engineHours>=boat.next300Service;
+  const due100=boat.engineHours>=boat.next100Service;
+  if(due300){
+    const overdue=Math.max(0,boat.engineHours-boat.next300Service);
+    return {kind:'300hr',dueAt:boat.next300Service,overdue,label:`300-hour service ${overdue>0?`${Math.round(overdue)} hours overdue`:'due now'}`};
+  }
+  if(due100){
+    const overdue=Math.max(0,boat.engineHours-boat.next100Service);
+    return {kind:'100hr',dueAt:boat.next100Service,overdue,label:`100-hour service ${overdue>0?`${Math.round(overdue)} hours overdue`:'due now'}`};
+  }
+  const dueAt=Math.min(boat.next100Service,boat.next300Service);
+  return {kind:'ok',dueAt,overdue:0,label:`Next engine service at ${dueAt} hours`};
 }
 
 export function maintainBoat(state:CompanyState,instanceId:string,level:MaintenanceLevel):CompanyState{
   const boat=state.boats.find(b=>b.instanceId===instanceId);
   if(!boat)throw new Error('Boat not found.');
   const plans={
-    quick:{cost:120,condition:.03,reliability:.005,label:'Quick dockside service'},
-    routine:{cost:450,condition:.10,reliability:.02,label:'Routine preventive service'},
-    major:{cost:1200,condition:.22,reliability:.06,label:'Major preventive service'}
+    dock:{cost:120,condition:.03,reliability:.005,label:'Dock check & cleanup'},
+    '100hr':{cost:450,condition:.05,reliability:.025,label:'100-hour engine service'},
+    '300hr':{cost:900,condition:.10,reliability:.065,label:'300-hour engine service'}
   } as const;
   const plan=plans[level];
-  if(state.cash<plan.cost)throw new Error('Not enough cash for that maintenance.');
+  if(state.cash<plan.cost)throw new Error('Not enough cash for that service.');
+  const currentHours=boat.engineHours;
+  const next100=level==='100hr'||level==='300hr'?nextHundred(currentHours):boat.next100Service;
+  const next300=level==='300hr'?nextThreeHundred(currentHours):boat.next300Service;
   return {
     ...state,
     cash:state.cash-plan.cost,
     boats:state.boats.map(b=>b.instanceId===instanceId?{
-      ...b,condition:clamp(b.condition+plan.condition,.25,1),reliability:clamp(b.reliability+plan.reliability,.25,.99)
+      ...b,
+      condition:clamp(b.condition+plan.condition,.25,1),
+      reliability:clamp(b.reliability+plan.reliability,.25,.99),
+      next100Service:next100,
+      next300Service:next300
     }:b),
     ledger:[...state.ledger,{day:state.day,category:'maintenance',amount:-plan.cost,memo:`${plan.label}: ${boat.name}`}]
   };
@@ -169,35 +224,35 @@ export function businessEventForDay(state:CompanyState):BusinessEvent|null{
   const rng=new RNG(state.seed+state.day*661);
   const events:Omit<BusinessEvent,'day'>[]=[
     {
-      id:'hotel-partner',title:'Hotel concierge partnership',
-      description:'A nearby hotel wants a preferred-charter partner. They can send volume, but expect fast response and a referral fee.',
+      id:'hotel-partner',title:'A hotel wants to send you guests',
+      description:'A nearby hotel likes your reviews. They will send visitors your way, but they want a cut.',
       choices:[
-        {id:'accept',label:'Accept partnership',detail:'Pay $250 setup; gain reputation for professional distribution.',cashDelta:-250,reputationDelta:.018},
-        {id:'pass',label:'Pass for now',detail:'Keep your margins and stay independent.',cashDelta:0,reputationDelta:0}
+        {id:'accept',label:'Make the deal',detail:'Pay $250 to get set up and gain a little reputation.',cashDelta:-250,reputationDelta:.018},
+        {id:'pass',label:'Skip it',detail:'Keep your cash and do your own marketing.',cashDelta:0,reputationDelta:0}
       ]
     },
     {
-      id:'captain-callout',title:'Captain calls out',
-      description:'One hired captain cannot work today. You can pay a replacement premium or absorb the disruption.',
+      id:'captain-callout',title:'Your other captain calls out',
+      description:'The second boat needs a driver today. Pay for emergency help or deal with fewer trips.',
       choices:[
-        {id:'cover',label:'Hire emergency coverage',detail:'Pay $350 and protect operating reputation.',cashDelta:-350,reputationDelta:.006},
-        {id:'absorb',label:'Absorb the disruption',detail:'Save cash but take a small reputation hit.',cashDelta:0,reputationDelta:-.012}
+        {id:'cover',label:'Find a replacement',detail:'Pay $350 and keep your reputation steady.',cashDelta:-350,reputationDelta:.006},
+        {id:'absorb',label:'Run short-handed',detail:'Save the cash, but guests notice the disruption.',cashDelta:0,reputationDelta:-.012}
       ]
     },
     {
-      id:'viral-post',title:'A guest post is taking off',
-      description:'Yesterday’s trip is getting shared. You can put a little money behind the attention or let it run organically.',
+      id:'viral-post',title:'A guest video is blowing up',
+      description:'People are suddenly sharing yesterday’s trip. Spend a little to push it farther, or enjoy the free attention.',
       choices:[
-        {id:'boost',label:'Boost the momentum',detail:'Spend $180; gain a stronger reputation bump.',cashDelta:-180,reputationDelta:.025},
-        {id:'organic',label:'Let it run',detail:'Free, with a smaller reputation gain.',cashDelta:0,reputationDelta:.010}
+        {id:'boost',label:'Give it a boost',detail:'Spend $180 for a bigger reputation bump.',cashDelta:-180,reputationDelta:.025},
+        {id:'organic',label:'Let it ride',detail:'Free attention, smaller reputation bump.',cashDelta:0,reputationDelta:.010}
       ]
     },
     {
-      id:'marina-increase',title:'Marina rate increase',
-      description:'The marina announces a rate increase. You can pay a short-term retention fee to lock your current rate or accept higher overhead later.',
+      id:'marina-increase',title:'The marina raises the rent',
+      description:'Dock space just got more expensive. You can pay now to lock your old rate for a while or keep the cash.',
       choices:[
-        {id:'lock',label:'Lock current rate',detail:'Pay $300 now for stability.',cashDelta:-300,reputationDelta:.004},
-        {id:'accept',label:'Accept the increase',detail:'Keep cash today.',cashDelta:0,reputationDelta:0}
+        {id:'lock',label:'Lock the old rate',detail:'Pay $300 now for some breathing room.',cashDelta:-300,reputationDelta:.004},
+        {id:'accept',label:'Keep the cash',detail:'No cost today.',cashDelta:0,reputationDelta:0}
       ]
     }
   ];
@@ -207,8 +262,8 @@ export function businessEventForDay(state:CompanyState):BusinessEvent|null{
 
 export function resolveBusinessEvent(state:CompanyState,event:BusinessEvent,choiceId:string):CompanyState{
   const choice:BusinessEventChoice|undefined=event.choices.find(c=>c.id===choiceId);
-  if(!choice)throw new Error('Event choice not found.');
-  if(choice.cashDelta<0&&state.cash<Math.abs(choice.cashDelta))throw new Error('Not enough cash for that choice.');
+  if(!choice)throw new Error('That choice is not available.');
+  if(choice.cashDelta<0&&state.cash<Math.abs(choice.cashDelta))throw new Error('You do not have enough cash for that choice.');
   return {
     ...state,
     cash:state.cash+choice.cashDelta,
