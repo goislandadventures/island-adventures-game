@@ -1,10 +1,13 @@
 import { boatTemplates, defaultProducts, islands, marinas } from '../data/content';
-import type { Booking, CompanyState, DayResult, MarketingFocus, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
+import type { Booking, CompanyState, DayResult, MarketingFocus, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
 import { RNG } from './rng';
-import { applyLoanPayments, calendarForDay, customerForTrip, customerProfiles } from './depth';
+import { applyLoanPayments, calendarForDay, customerForTrip, customerProfiles, nextHundred, nextThreeHundred, serviceStatus } from './depth';
+import { applyHurricane, hurricaneForDay } from './hurricane';
 
 const clamp = (n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const referencePrice:Record<string,number>={sandbar:489,snorkel:649,sunset:319,custom:449,eco:399,fishing:699,cruise:399};
+const RUNNING_COST_PER_ENGINE_HOUR=179;
+const HOURS_PER_TRIP=1.5;
 
 export const captainCandidates:StaffMember[]=[
   {id:'capt-casey',name:'Casey Morgan',role:'captain',skill:.78,reliability:.91,hourlyRate:35},
@@ -15,7 +18,7 @@ export const captainCandidates:StaffMember[]=[
 export interface PlanAssessment { stars:number; reasons:string[]; headline:string; }
 
 export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
-  return {day:1,seed,captainName,companyName,companyColor,cash:40000,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:40000,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic'},loans:[]};
+  return {day:1,seed,captainName,companyName,companyColor,cash:40000,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:40000,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic',reviewAsk:true},loans:[]};
 }
 
 export function rentSlip(state:CompanyState,marinaId:string):CompanyState{
@@ -50,21 +53,28 @@ export function buyBoat(state:CompanyState,templateId='old-deck-19'):CompanyStat
     'old-deck-19':{year:1999,condition:.68,hours:1460},'bay-deck-21':{year:2007,condition:.75,hours:1030},'deck-24':{year:2017,condition:.88,hours:510},'cc-25':{year:2021,condition:.92,hours:340},'pontoon-24':{year:2020,condition:.90,hours:410},'cat-28':{year:2022,condition:.94,hours:260}
   };
   const age=ageMap[templateId]??{year:2018,condition:.86,hours:500};
-  const owned:OwnedBoat={...boat,instanceId:`${boat.id}-${state.day}-${state.boats.length+1}`,year:age.year,condition:age.condition,engineHours:age.hours,purchasePrice:boat.basePrice,insured:false,marinaId:state.marinaId};
+  const owned:OwnedBoat={...boat,instanceId:`${boat.id}-${state.day}-${state.boats.length+1}`,year:age.year,condition:age.condition,engineHours:age.hours,purchasePrice:boat.basePrice,insured:false,insuranceDeclined:false,marinaId:state.marinaId,next100Service:nextHundred(age.hours),next300Service:nextThreeHundred(age.hours)};
   return {...state,cash:state.cash-boat.basePrice,boats:[...state.boats,owned],ledger:[...state.ledger,{day:state.day,category:'boat',amount:-boat.basePrice,memo:`Purchased ${boat.name}`}]};
 }
 
-export function insuranceQuote(boat:OwnedBoat):number{return Math.max(950,Math.round(boat.purchasePrice*.055));}
+export function insuranceQuote(boat:OwnedBoat,marina?:Marina):number{
+  const base=Math.max(950,Math.round(boat.purchasePrice*.06));
+  return Math.round(base*(marina?.insuranceMultiplier??1));
+}
 
 export function insureFleet(state:CompanyState):CompanyState{
   const uninsured=state.boats.filter(b=>!b.insured);
-  if(!state.boats.length)throw new Error('No boat to insure.');
+  if(!state.boats.length)throw new Error('You need a boat first.');
   if(!uninsured.length)return state;
-  const premium=uninsured.reduce((sum,b)=>sum+insuranceQuote(b),0);
-  if(state.cash<premium)throw new Error('Not enough cash for insurance.');
-  return {...state,cash:state.cash-premium,boats:state.boats.map(b=>({...b,insured:true})),ledger:[...state.ledger,{day:state.day,category:'insurance',amount:-premium,memo:'Fleet insurance'}]};
+  const marina=marinas.find(m=>m.id===state.marinaId);
+  const premium=uninsured.reduce((sum,b)=>sum+insuranceQuote(b,marina),0);
+  if(state.cash<premium)throw new Error('You do not have enough cash for that insurance.');
+  return {...state,cash:state.cash-premium,boats:state.boats.map(b=>b.insured?b:{...b,insured:true,insuranceDeclined:false,insuranceRenewalDay:state.day+365}),ledger:[...state.ledger,{day:state.day,category:'insurance',amount:-premium,memo:`One year of boat insurance at ${marina?.name??'the marina'}`}]};
 }
 
+export function declineInsurance(state:CompanyState,instanceId:string):CompanyState{
+  return {...state,boats:state.boats.map(b=>b.instanceId===instanceId?{...b,insured:false,insuranceDeclined:true}:b)};
+}
 export function serviceBoat(state:CompanyState,instanceId:string):CompanyState{
   const boat=state.boats.find(b=>b.instanceId===instanceId);
   if(!boat)throw new Error('Boat not found.');
@@ -83,9 +93,11 @@ export function hireCaptain(state:CompanyState,candidateId:string):CompanyState{
 }
 
 export function setMarketing(state:CompanyState,dailyBudget:number,focus:MarketingFocus):CompanyState{
-  return {...state,marketing:{dailyBudget:clamp(Math.round(dailyBudget),0,250),focus}};
+  return {...state,marketing:{...(state.marketing??{reviewAsk:true}),dailyBudget:clamp(Math.round(dailyBudget),0,250),focus}};
 }
-
+export function setReviewAsk(state:CompanyState,reviewAsk:boolean):CompanyState{
+  return {...state,marketing:{...(state.marketing??{dailyBudget:0,focus:'organic'}),reviewAsk}};
+}
 export function setPrice(state:CompanyState,type:TripProduct['type'],price:number):CompanyState{
   return {...state,products:state.products.map(p=>p.type===type?{...p,price:Math.max(99,Math.round(price))}:p)};
 }
@@ -124,45 +136,59 @@ export function weatherLabel(weather:WeatherDay):{level:'good'|'caution'|'rough'
 }
 
 function operatingBoatCount(state:CompanyState):number{
-  const insured=state.boats.filter(b=>b.insured).length;
-  if(!insured)return 0;
-  return Math.min(insured,1+(state.staff?.length??0));
+  if(!state.boats.length)return 0;
+  return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
-
 export function generateDemand(state:CompanyState,weather=generateWeather(state)):Booking[]{
-  if(!state.boats.some(b=>b.insured))return [];
+  if(!state.boats.length||hurricaneForDay(state))return [];
   if(state.day===1){
     const sandbar=state.products.find(p=>p.type==='sandbar')!;
     const snorkel=state.products.find(p=>p.type==='snorkel')!;
     return [
-      {id:'D1-sandbar-0900',tripType:'sandbar',partySize:5,revenue:sandbar.price,source:'maps',guestExpectation:.72,timeSlot:'morning',customerType:'family',customerLabel:'Family Crew'},
-      {id:'D1-snorkel-1330',tripType:'snorkel',partySize:4,revenue:snorkel.price,source:'organic',guestExpectation:.82,timeSlot:'afternoon',customerType:'snorkeler',customerLabel:'Serious Snorkelers'}
+      {id:'D1-sandbar-0900',tripType:'sandbar',partySize:5,revenue:sandbar.price,source:'maps',guestExpectation:.72,timeSlot:'morning',customerType:'family',customerLabel:'Family Crew',boatsRequired:1,neverTips:false,tipCeiling:.28},
+      {id:'D1-snorkel-1330',tripType:'snorkel',partySize:4,revenue:snorkel.price,source:'organic',guestExpectation:.82,timeSlot:'afternoon',customerType:'snorkeler',customerLabel:'Serious Snorkelers',boatsRequired:1,neverTips:false,tipCeiling:.32}
     ];
   }
   const island=islands.find(i=>i.id===state.islandId)!;
   const rng=new RNG(state.seed^(state.day*7919));
-  const sources:Booking['source'][]=['organic','maps','referral','social','hotel','repeat','paid','marketplace'];
   const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
   const bookings:Booking[]=[];
-  const marketing=state.marketing??{dailyBudget:0,focus:'organic' as const};
+  const marketing=state.marketing??{dailyBudget:0,focus:'organic' as const,reviewAsk:true};
   const competition=Math.max(.35,island.adCompetition);
-  const marketingBoost=1+Math.min(.48,(marketing.dailyBudget/250*.45)/competition);
-  const calendar=calendarForDay(state.day);
+  const paidBoost=1+Math.min(.42,(marketing.dailyBudget/250*.42)/competition);
+  const calendar=calendarForDay(state.day,state);
+  const capacity=operatingBoatCount(state);
   for(const product of state.products){
     const ref=referencePrice[product.type]??product.price;
     const priceFit=clamp(1.15-Math.max(0,product.price-ref)/ref*1.2,.25,1.2);
-    const reputationFit=.55+state.reputation*.85;
-    const probability=clamp(product.baseDemand*island.tourism*weatherFit(product.type,weather)*priceFit*reputationFit*.62*marketingBoost*calendar.demandMultiplier,.06,.98);
+    const reputationFit=.50+state.reputation*.82;
+    const probability=clamp(product.baseDemand*island.tourism*weatherFit(product.type,weather)*priceFit*reputationFit*.62*paidBoost*calendar.demandMultiplier,.025,.98);
     if(rng.chance(probability)){
-      let source=rng.pick(sources);
-      if(marketing.dailyBudget>0&&rng.chance(.48))source=marketing.focus;
+      let source:Booking['source'];
+      if(state.reviewCount>=10&&state.reputation>.65&&rng.chance(.20))source=rng.chance(.55)?'repeat':'referral';
+      else if(rng.chance(.10))source='marketplace';
+      else if(marketing.dailyBudget>0&&rng.chance(.55))source=marketing.focus==='content'?'content':marketing.focus;
+      else source=rng.pick<Booking['source']>(['organic','maps','social','hotel','paid']);
       const customer=customerForTrip(rng,product.type,source);
-      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize:rng.int(2,6),revenue:product.price,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:rng.pick(slots),customerType:customer.type,customerLabel:customer.label});
+      const largeGroup=capacity>=2&&product.type!=='sunset'&&rng.chance(.16);
+      const boatsRequired=largeGroup?2:1;
+      const partySize=largeGroup?rng.int(7,12):rng.int(2,6);
+      const noTipChance=customer.type==='bargain'?.30:customer.type==='luxury'?.10:.18;
+      const neverTips=rng.chance(noTipChance);
+      const baseTip=customer.type==='luxury'?.40:customer.type==='couple'||customer.type==='repeat'?.34:customer.type==='celebration'?.36:.28;
+      const tipCeiling=Number(clamp(baseTip*(.80+rng.next()*.35),.12,.40).toFixed(2));
+      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize,revenue:product.price*boatsRequired,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:rng.pick(slots),customerType:customer.type,customerLabel:customer.label,boatsRequired,neverTips,tipCeiling});
     }
   }
-  return bookings.slice(0,Math.max(1,operatingBoatCount(state)*2));
+  const maxBoatTrips=capacity*2;
+  const kept:Booking[]=[];
+  let boatTrips=0;
+  for(const booking of bookings){
+    if(boatTrips+booking.boatsRequired>maxBoatTrips)continue;
+    kept.push(booking);boatTrips+=booking.boatsRequired;
+  }
+  return kept;
 }
-
 export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripDecision,weather:WeatherDay,boatOverride?:OwnedBoat):PlanAssessment{
   if(decision==='cancel')return {stars:0,reasons:['Rescheduled trips do not receive a trip review.'],headline:'No trip review'};
   const boat=boatOverride??state.boats.find(b=>b.insured)??state.boats[0];
