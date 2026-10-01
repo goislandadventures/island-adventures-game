@@ -3,7 +3,7 @@
 ## Modes
 
 ### Demo
-Public visitors can play Day 1 without an account. Demo state is local only and never enters leaderboards.
+Public visitors can play the full seven-day Week 1 Captain School tutorial without an account. Demo state is local only and never enters leaderboards. After completing Day 7, the player is invited to create an account to continue beyond the tutorial.
 
 ### Registered player
 Players may create an account with email, display name and password. Marketing email consent is stored separately and defaults off. Registered company state can sync to D1 and appear in leaderboards.
