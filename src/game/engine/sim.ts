@@ -94,7 +94,19 @@ export function generateWeather(state:CompanyState):WeatherDay{
   if(state.day===1)return {day:1,windKts:17,windDirection:'E',rainChance:20,stormRisk:.08,waterClarity:.72,temperatureF:82};
   const rng=new RNG(state.seed+state.day*9973);
   const directions=['N','NE','E','SE','S','SW','W','NW'] as const;
-  return {day:state.day,windKts:rng.int(4,22),windDirection:rng.pick(directions),rainChance:rng.int(5,75),stormRisk:Number((rng.next()*.32).toFixed(2)),waterClarity:Number((.45+rng.next()*.5).toFixed(2)),temperatureF:rng.int(74,90)};
+  const island=islands.find(i=>i.id===state.islandId);
+  const exposure=island?.weatherExposure??'moderate';
+  const windShift=exposure==='protected'?-2:exposure==='exposed'?2:0;
+  const stormShift=exposure==='protected'?-.04:exposure==='exposed'?.04:0;
+  return {
+    day:state.day,
+    windKts:clamp(rng.int(4,22)+windShift,3,25),
+    windDirection:rng.pick(directions),
+    rainChance:rng.int(5,75),
+    stormRisk:Number(clamp(rng.next()*.32+stormShift,.02,.42).toFixed(2)),
+    waterClarity:Number((.45+rng.next()*.5).toFixed(2)),
+    temperatureF:rng.int(74,90)
+  };
 }
 
 function weatherFit(type:TripProduct['type'],w:WeatherDay,protectedWater=false):number{
@@ -133,7 +145,8 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
   const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
   const bookings:Booking[]=[];
   const marketing=state.marketing??{dailyBudget:0,focus:'organic' as const};
-  const marketingBoost=1+Math.min(.45,marketing.dailyBudget/250*.45);
+  const competition=Math.max(.35,island.adCompetition);
+  const marketingBoost=1+Math.min(.48,(marketing.dailyBudget/250*.45)/competition);
   const calendar=calendarForDay(state.day);
   for(const product of state.products){
     const ref=referencePrice[product.type]??product.price;
