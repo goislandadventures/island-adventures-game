@@ -67,7 +67,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   };
 
   if(!setupStarted)return <main className="shell onboarding">
-    <header className="heroBrand"><img src="/branding/island-adventures-logo.jpg" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
+    <header className="heroBrand"><img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
     <section className="mapCard introMap"><IslandMap active={0}/></section>
     <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-DAY DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $40,000 and a dream</h2>
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
