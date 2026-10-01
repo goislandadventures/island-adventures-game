@@ -53,7 +53,7 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
     <div className="splashBoat boatThree">⛵</div>
     <div className="splashBoat boatFour">🛶</div>
 
-    <img src="/branding/island-adventures-logo.jpg" alt="Island Adventures" className="splashLogoImage"/>
+    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashLogoImage"/>
     <div className="splashTag">Build your fleet. Rule the islands.</div>
     {soundBlocked && <button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
     <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
