@@ -24,7 +24,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [captainName,setCaptainName]=useState(state.captainName);
   const [companyName,setCompanyName]=useState(state.companyName);
   const [companyColor,setCompanyColor]=useState(state.companyColor||'#f6c453');
-  const [demoComplete,setDemoComplete]=useState(mode==='demo'&&state.day>1);
+  const [demoComplete,setDemoComplete]=useState(mode==='demo'&&state.day>7);
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
 
   const setupStarted=Boolean(state.captainName&&state.companyName);
@@ -79,7 +79,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     if(mode==='demo'&&demoComplete)return;
     const out=simulateDay(state,tripDecisions);
     commit(out.state);setLast(out.result);setTab('dock');
-    if(mode==='demo')setDemoComplete(true);
+    if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
   };
   const reset=()=>{
     if(mode!=='owner')return;
@@ -89,12 +89,12 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   if(!setupStarted)return <main className="shell onboarding">
     <header className="heroBrand"><img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
     <section className="mapCard introMap"><IslandMap active={0} companyValue={0}/></section>
-    <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-DAY DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $40,000 and a dream</h2>
+    <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-WEEK DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $40,000 and a dream</h2>
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
       <label>Charter company<input value={companyName} maxLength={28} placeholder="Keys Adventure Co." onChange={e=>setCompanyName(e.target.value)}/></label>
       <fieldset className="colorField"><legend>Company color</legend><div className="colorRow">{['#f6c453','#ff8066','#62c8db','#67bb70','#9b7de3'].map(color=><label className={`colorChoice ${companyColor===color?'picked':''}`} key={color} style={{background:color}}><input type="radio" name="companyColor" value={color} checked={companyColor===color} onChange={()=>setCompanyColor(color)}/><span>{companyColor===color?'✓':''}</span></label>)}</div><small>Selected: <i className="selectedColorChip" style={{background:companyColor}}/> {companyColor}</small></fieldset>
       <button className="primary big" disabled={!captainName.trim()||!companyName.trim()} onClick={begin}>Launch Company →</button>
-      <p className="fine">{mode==='demo'?'No account. This demo ends after your first operating day.':mode==='owner'?'No login. Local save only and excluded from rankings.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
+      <p className="fine">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':mode==='owner'?'No login. Local save only and excluded from rankings.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
     </section>
   </main>;
 
@@ -130,7 +130,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
       {last&&<section className="card event"><span className="eyebrow">CAPTAIN'S LOG · DAY {last.weather.day}</span><h2>{last.tripsRun?'Boats are back at the dock':'Day closed out'}</h2>{last.tripOutcomes.map(x=><p className="story" key={x.bookingId}><b>{x.timeSlot} {state.products.find(p=>p.type===x.tripType)?.name}:</b> {x.note}</p>)}{last.wildlifeEvent&&<p className="story">🐬 {last.wildlifeEvent}</p>}{last.maintenanceEvent&&<p className="story danger">🔧 {last.maintenanceEvent}</p>}<div className="resultGrid"><div><span>Revenue</span><b>{money(last.revenue)}</b></div><div><span>Expenses</span><b>-{money(last.expenses)}</b></div><div><span>Net</span><b>{money(last.revenue-last.expenses)}</b></div></div>{last.reviews.map((r,i)=><blockquote key={i}><b>{'★'.repeat(r.stars)}{'☆'.repeat(5-r.stars)}</b> “{r.text}”{r.stars<5&&<div className="reviewCause"><strong>Why this wasn't 5★</strong><ul>{r.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div>}</blockquote>)}</section>}
 
-      {demoComplete&&<section className="card demoComplete"><span className="eyebrow">DAY 1 COMPLETE</span><h2>Your first charter day is in the books.</h2><p>You can keep building boats, reviews, revenue and company value with a free owner account. Registered companies are eligible for the Island leaderboards.</p><button className="primary big" onClick={onUpgrade}>Create Account & Keep Playing →</button><p className="fine">Your demo is intentionally not ranked.</p></section>}
+      {demoComplete&&<section className="card demoComplete"><span className="eyebrow">WEEK 1 COMPLETE</span><h2>You graduated from Captain School.</h2><p>You completed all seven tutorial days. Create a free owner account to keep building boats, reviews, revenue and company value. Registered companies are eligible for the Island leaderboards.</p><button className="primary big" onClick={onUpgrade}>Create Account & Keep Playing →</button><p className="fine">Your demo is intentionally not ranked.</p></section>}
     </>}
 
     {tab==='trips'&&<><section className="card page"><MarketingPanel state={state} onChange={commit}/><span className="eyebrow">PRICING</span><h2>Your charter menu</h2><p className="muted">Higher prices improve margin but can lower conversion.</p>{state.products.map(p=><div className="priceCard" key={p.type}><div className="tripEmoji">{tripIcon[p.type]}</div><div className="grow"><b>{p.name}</b><small>{p.durationHours} hours · demand {pct(p.baseDemand)}</small></div><label className="priceInput"><span>$</span><input type="number" min="99" step="10" value={p.price} disabled={demoComplete} onChange={e=>changePrice(p.type,Number(e.target.value))}/></label></div>)}</section></>}
