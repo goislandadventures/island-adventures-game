@@ -219,14 +219,14 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
       const fee=Math.round(booking.revenue*.08);
       expenses+=fee;refunds+=fee;
       const safeCall=weather.windKts>=18||weather.stormRisk>.23||(booking.tripType==='snorkel'&&weather.windKts>=15);
-      state.reputation=clamp(state.reputation+(safeCall?.003:-.005),.1,1);
+      state.reputation=clamp(state.reputation+(safeCall ? .003 : -.005),.1,1);
       tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,satisfaction:0,note:safeCall?'Rescheduled for safety; guests understood the captain’s call.':'Rescheduled even though conditions were workable.'});
       return;
     }
 
     const protectedWater=decision==='protected';
     const assessment=assessTripPlan(state,booking,decision,weather,boat);
-    const fuelGallons=boat.fuelBurnGph*product.durationHours*product.fuelMultiplier*(protectedWater?.78:1);
+    const fuelGallons=boat.fuelBurnGph*product.durationHours*product.fuelMultiplier*(protectedWater ? .78 : 1);
     const island=islands.find(i=>i.id===state.islandId)!;
     let tripExpense=Math.round(fuelGallons*island.fuelPrice);
     const boatIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
