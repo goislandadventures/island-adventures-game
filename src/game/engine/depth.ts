@@ -88,6 +88,7 @@ export function generateUsedBoatMarket(state:CompanyState):UsedBoatListing[]{
     const template=candidates.splice(idx,1)[0];
     const age=rng.int(3,27);
     const year=2026-age;
+    const engineYear=Math.max(year,template.engineYear);
     const condition=Number((.48+rng.next()*.48).toFixed(2));
     const engineHours=rng.int(220,2100);
     const reliability=Number(clamp(template.reliability*(.74+condition*.28)-(engineHours>1400?.06:0),.42,.98).toFixed(2));
@@ -103,7 +104,7 @@ export function generateUsedBoatMarket(state:CompanyState):UsedBoatListing[]{
           : `Normal used-boat wear. Next engine service: ${Math.min(next100,next300)} hours.`;
     listings.push({
       listingId:`MKT-${state.day}-${template.id}-${listings.length+1}`,
-      templateId:template.id,name:template.name,year,condition,engineHours,askingPrice,reliability,inspectionNote
+      templateId:template.id,name:template.name,year,engineYear,condition,engineHours,askingPrice,reliability,inspectionNote
     });
   }
   return listings;
@@ -116,6 +117,7 @@ function ownedFromListing(state:CompanyState,listing:UsedBoatListing):OwnedBoat{
     ...template,
     instanceId:`used-${listing.listingId}`,
     year:listing.year,
+    engineYear:listing.engineYear,
     condition:listing.condition,
     engineHours:listing.engineHours,
     purchasePrice:listing.askingPrice,
