@@ -42,3 +42,5 @@
 @media(max-width:520px){.calendarStrip{grid-template-columns:1fr auto}.calendarStrip p{grid-column:1/-1}.marketCard{grid-template-columns:auto 1fr}.marketActions{grid-column:1/-1;grid-template-columns:1fr 1fr 1fr;align-items:center;text-align:left}.maintenanceChoices{grid-template-columns:1fr}.marketActions strong{font-size:.9rem}}
 
 .weekTwoUnlock{background:linear-gradient(135deg,#fff1bd,#e6f7df);border-color:#245c37}.weekTwoUnlock h2{margin-bottom:6px}.weekTwoUnlock p{margin:0;color:#526d5b}
+
+.progressGoals{background:#f7fbff}.goalRow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:9px 0;border-top:1px solid #d8e1e5}.goalRow>span{font-size:1.15rem;font-weight:900;color:#7a8d98}.goalRow b{display:block}.goalRow small{display:block;color:#6d8291;margin-top:2px}.goalRow em{display:block;font-style:normal;font-size:.7rem;color:#2c7e8e;margin-top:3px;font-weight:800}.goalRow.done>span{color:#267149}.goalRow.done b{text-decoration:line-through;color:#587266}
