@@ -1,6 +1,7 @@
 import { boatTemplates, defaultProducts, islands, marinas } from '../data/content';
 import type { Booking, CompanyState, DayResult, MarketingFocus, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
 import { RNG } from './rng';
+import { applyLoanPayments, calendarForDay, customerForTrip, customerProfiles } from './depth';
 
 const clamp = (n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const referencePrice:Record<string,number>={sandbar:489,snorkel:649,sunset:319,custom:449,eco:399,fishing:699,cruise:399};
@@ -14,7 +15,7 @@ export const captainCandidates:StaffMember[]=[
 export interface PlanAssessment { stars:number; reasons:string[]; headline:string; }
 
 export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
-  return {day:1,seed,captainName,companyName,companyColor,cash:40000,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:40000,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic'}};
+  return {day:1,seed,captainName,companyName,companyColor,cash:40000,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:40000,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic'},loans:[]};
 }
 
 export function rentSlip(state:CompanyState,marinaId:string):CompanyState{
@@ -122,8 +123,8 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
     const sandbar=state.products.find(p=>p.type==='sandbar')!;
     const snorkel=state.products.find(p=>p.type==='snorkel')!;
     return [
-      {id:'D1-sandbar-0900',tripType:'sandbar',partySize:5,revenue:sandbar.price,source:'maps',guestExpectation:.72,timeSlot:'morning'},
-      {id:'D1-snorkel-1330',tripType:'snorkel',partySize:4,revenue:snorkel.price,source:'organic',guestExpectation:.82,timeSlot:'afternoon'}
+      {id:'D1-sandbar-0900',tripType:'sandbar',partySize:5,revenue:sandbar.price,source:'maps',guestExpectation:.72,timeSlot:'morning',customerType:'family',customerLabel:'Family Crew'},
+      {id:'D1-snorkel-1330',tripType:'snorkel',partySize:4,revenue:snorkel.price,source:'organic',guestExpectation:.82,timeSlot:'afternoon',customerType:'snorkeler',customerLabel:'Serious Snorkelers'}
     ];
   }
   const island=islands.find(i=>i.id===state.islandId)!;
@@ -133,15 +134,17 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
   const bookings:Booking[]=[];
   const marketing=state.marketing??{dailyBudget:0,focus:'organic' as const};
   const marketingBoost=1+Math.min(.45,marketing.dailyBudget/250*.45);
+  const calendar=calendarForDay(state.day);
   for(const product of state.products){
     const ref=referencePrice[product.type]??product.price;
     const priceFit=clamp(1.15-Math.max(0,product.price-ref)/ref*1.2,.25,1.2);
     const reputationFit=.55+state.reputation*.85;
-    const probability=clamp(product.baseDemand*island.tourism*weatherFit(product.type,weather)*priceFit*reputationFit*.62*marketingBoost,.08,.96);
+    const probability=clamp(product.baseDemand*island.tourism*weatherFit(product.type,weather)*priceFit*reputationFit*.62*marketingBoost*calendar.demandMultiplier,.06,.98);
     if(rng.chance(probability)){
       let source=rng.pick(sources);
       if(marketing.dailyBudget>0&&rng.chance(.48))source=marketing.focus;
-      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize:rng.int(2,6),revenue:product.price,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:rng.pick(slots)});
+      const customer=customerForTrip(rng,product.type,source);
+      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize:rng.int(2,6),revenue:product.price,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:rng.pick(slots),customerType:customer.type,customerLabel:customer.label});
     }
   }
   return bookings.slice(0,Math.max(1,operatingBoatCount(state)*2));
@@ -180,14 +183,25 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
     if(boat.reliability<.50)add(1,`${boat.name} was below 50% reliability and the trip felt less polished.`);
   }
 
+  if(booking.customerType==='family'&&decision==='run'&&weather.windKts>=16)add(1,'This family valued a comfortable ride, and the conditions were rough for their expectations.');
+  if(booking.customerType==='snorkeler'&&booking.tripType==='snorkel'&&decision==='run'&&weather.waterClarity<.65)add(1,`These serious snorkelers expected better visibility than ${Math.round(weather.waterClarity*100)}% clarity.`);
+  if(booking.customerType==='luxury'&&boat&&boat.condition<.75)add(1,'Premium private guests expected a more polished boat condition.');
+  if(booking.customerType==='celebration'&&booking.tripType==='sandbar'&&decision==='protected'&&weather.windKts<16)add(1,'The celebration group wanted the sandbar experience they booked, and conditions were still workable.');
+  if(booking.customerType==='bargain'){
+    const product=state.products.find(p=>p.type===booking.tripType);
+    const ref=referencePrice[booking.tripType]??product?.price??booking.revenue;
+    if((product?.price??booking.revenue)>ref*1.25)add(1,'Value-focused guests felt the trip price was high for the experience delivered.');
+  }
+
   const stars=clamp(5-penalty,1,5);
   return {stars,reasons,headline:stars===5?'5★ experience on plan':`${stars}★ risk: ${reasons[0]??'guest expectations are at risk'}`};
 }
 
-function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean):Review{
+function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean,booking:Booking):Review{
+  const profile=customerProfiles[booking.customerType];
   const five=protectedWater
-    ? ['Captain changed the plan for the weather and absolutely nailed it.','Protected water was perfect and we still had an amazing day.','Loved that the captain adapted instead of forcing a rough trip.']
-    : ['Best day of our trip.','Captain knew exactly where to go.','Private, relaxed and worth every penny.','We saw wildlife and never felt rushed.'];
+    ? [`${booking.customerLabel}: Captain changed the plan for the weather and absolutely nailed it.`,`${booking.customerLabel}: Protected water was perfect and we still had an amazing day.`]
+    : [`${booking.customerLabel}: Best day of our trip.`,`${booking.customerLabel}: Captain knew exactly where to go.`,`${booking.customerLabel}: Exactly what we wanted — ${profile.likes}.`];
   const text=assessment.stars===5?rng.pick(five):assessment.reasons[0]??'One part of the trip fell short of expectations.';
   return {stars:assessment.stars,text,reasons:assessment.reasons};
 }
@@ -196,7 +210,9 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   let state=structuredClone(input);
   state.staff=state.staff??[];
   state.marketing=state.marketing??{dailyBudget:0,focus:'organic'};
+  state.loans=state.loans??[];
   const weather=generateWeather(state);
+  const calendar=calendarForDay(state.day);
   const bookings=generateDemand(state,weather);
   const rng=new RNG(state.seed+state.day*12347);
   const availableBoats=state.boats.filter(b=>b.insured).slice(0,operatingBoatCount(state));
@@ -208,7 +224,11 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   const marketingSpend=Math.min(state.cash,state.marketing.dailyBudget);
   if(marketingSpend>0)expenses+=marketingSpend;
 
-  if(!availableBoats.length)return {state:{...state,day:state.day+1},result:{weather,decisions,bookingsGenerated:[],tripsRun:0,reviews:[],tripOutcomes:[],revenue:0,expenses:0,refunds:0,summary:'No insured boat was available, so no trips ran.'}};
+  if(!availableBoats.length){
+    const loanResult=applyLoanPayments(state);
+    state=loanResult.state;
+    return {state:{...state,day:state.day+1},result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:[],tripOutcomes:[],revenue:0,expenses:loanResult.payment,refunds:0,loanPayment:loanResult.payment,summary:'No insured boat was available, so no trips ran.'}};
+  }
 
   bookings.forEach((booking,index)=>{
     const decision=decisions[booking.id]??'run';
@@ -235,7 +255,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
 
     revenue+=booking.revenue;expenses+=tripExpense;tripsRun+=1;
     usage[boat.instanceId]=(usage[boat.instanceId]??0)+1;
-    const review=createReview(rng,assessment,protectedWater);
+    const review=createReview(rng,assessment,protectedWater,booking);
     reviews.push(review);
 
     const captainNote=hiredCaptain?` Captain ${hiredCaptain.name} ran this boat.`:'';
@@ -259,13 +279,18 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   let wildlifeEvent:string|undefined;
   if(tripsRun&&rng.chance(.22))wildlifeEvent=rng.pick(['Dolphins cruised alongside the boat.','A sea turtle surfaced beside the guests.','An eagle ray glided under the boat.','A manatee caused a very slow marina departure.']);
 
-  const net=revenue-expenses;
+  const netBeforeDebt=revenue-expenses;
   const oldStars=state.rating*state.reviewCount;
   const newStars=reviews.reduce((s,r)=>s+r.stars,0);
   state.reviewCount+=reviews.length;
   state.rating=state.reviewCount?Number(((oldStars+newStars)/state.reviewCount).toFixed(2)):state.rating;
   if(reviews.length)state.reputation=clamp(state.reputation+reviews.reduce((s,r)=>s+(r.stars-3)*.006,0),.1,1);
-  state.cash+=net;state.lifetimeRevenue+=revenue;state.lifetimeProfit+=net;state.daysOperated+=1;
+  state.cash+=netBeforeDebt;state.lifetimeRevenue+=revenue;state.lifetimeProfit+=netBeforeDebt;state.daysOperated+=1;
+  const loanResult=applyLoanPayments(state);
+  state=loanResult.state;
+  const loanPayment=loanResult.payment;
+  state.lifetimeProfit-=loanPayment;
+  expenses+=loanPayment;
 
   if(revenue)state.ledger.push({day:state.day,category:'charters',amount:revenue,memo:`${tripsRun} charter(s)`});
   if(marketingSpend)state.ledger.push({day:state.day,category:'marketing',amount:-marketingSpend,memo:`${state.marketing.focus} marketing`});
@@ -274,5 +299,5 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   state.companyValue=Math.round(state.cash+state.boats.reduce((sum,b)=>sum+b.purchasePrice*b.condition*.8,0)-state.debt+state.reputation*25000+state.lifetimeProfit*.25);
   state.day+=1;
 
-  return {state,result:{weather,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,expenses,refunds,maintenanceEvent,wildlifeEvent,summary:`${tripsRun} trip(s), $${revenue} revenue, $${expenses} expenses, ${reviews.length} review(s).`}};
+  return {state,result:{weather,calendar,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,expenses,refunds,maintenanceEvent,wildlifeEvent,loanPayment,summary:`${calendar.dayOfWeek}, Week ${calendar.week}: ${tripsRun} trip(s), ${revenue} revenue, ${expenses} total cash out, ${reviews.length} review(s).`}};
 }
