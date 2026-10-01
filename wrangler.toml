@@ -9,3 +9,8 @@ directory = "./dist"
 binding = "DB"
 database_name = "island-adventures-game"
 database_id = "REPLACE_AFTER_D1_CREATE"
+
+
+[[routes]]
+pattern = "theislandadventures.com"
+custom_domain = true
