@@ -7,6 +7,7 @@ import type { GameMode } from './StartMode';
 import type { Player } from './api';
 import { syncCompany } from './api';
 import Leaderboard from './Leaderboard';
+import TutorialCard from './TutorialCard';
 import './styles.css';
 
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
@@ -81,6 +82,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     <header className="brand"><div className="logo" style={{background:state.companyColor}}>IA</div><div className="brandText"><h1>{state.companyName}</h1><p>{state.captainName} · {currentIsland.name}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
+    {!demoComplete&&<TutorialCard day={state.day}/>} 
 
     {tab==='dock'&&<>
       <section className="mapCard"><IslandMap active={0} boat={state.boats.length>0}/><div className="mapText"><b>{currentIsland.name}</b><span>{currentIsland.description}</span></div></section>
