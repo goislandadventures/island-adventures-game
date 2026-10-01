@@ -109,10 +109,14 @@ export default {
         const reviewDelta=s.reviewCount-prior.review_count;
         if(dayDelta===0&&(revenueDelta!==0||profitDelta!==0||reviewDelta!==0)) return json({error:'Operating results can only advance with a completed game day.'},409);
         if(dayDelta===1){
-          if(revenueDelta<0||revenueDelta>3500) return json({error:'Revenue change exceeded daily game limits.'},409);
-          if(profitDelta < -6000 || profitDelta > 3500) return json({error:'Profit change exceeded daily game limits.'},409);
-          if(reviewDelta<0||reviewDelta>4) return json({error:'Review change exceeded daily game limits.'},409);
-          if(s.companyValue-prior.company_value>30000+Math.max(0,profitDelta)) return json({error:'Company value change exceeded daily game limits.'},409);
+          const boatCount=Array.isArray(s.boats)?Math.max(1,s.boats.length):1;
+          const maxDailyTrips=Math.min(20,boatCount*2);
+          const maxDailyRevenue=Math.max(3500,maxDailyTrips*1500);
+          const maxDailyProfit=Math.max(3500,maxDailyTrips*1500);
+          if(revenueDelta<0||revenueDelta>maxDailyRevenue) return json({error:'Revenue change exceeded daily game limits.'},409);
+          if(profitDelta < -12000 || profitDelta > maxDailyProfit) return json({error:'Profit change exceeded daily game limits.'},409);
+          if(reviewDelta<0||reviewDelta>maxDailyTrips) return json({error:'Review change exceeded daily fleet limits.'},409);
+          if(s.companyValue-prior.company_value>60000+Math.max(0,profitDelta)) return json({error:'Company value change exceeded daily game limits.'},409);
         }
       }
 
