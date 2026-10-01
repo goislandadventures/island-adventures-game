@@ -6,8 +6,7 @@ import type {
 import { RNG } from './rng';
 
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
-const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const monthLengths=[31,28,31,30,31,30,31,31,30,31,30,31];
+const gameMonths=[{name:'Feb',num:2,len:28},{name:'Mar',num:3,len:31},{name:'Apr',num:4,len:30},{name:'May',num:5,len:31},{name:'Jun',num:6,len:30},{name:'Jul',num:7,len:31},{name:'Aug',num:8,len:31},{name:'Sep',num:9,len:30},{name:'Oct',num:10,len:31},{name:'Nov',num:11,len:30},{name:'Dec',num:12,len:31},{name:'Jan',num:1,len:31}];
 
 export const customerProfiles:Record<CustomerType,{label:string;likes:string;warning:string;tipBias:number}> = {
   family:{label:'Family Crew',likes:'a smooth, safe, easy day',warning:'Families notice rough rides and tired-looking boats.',tipBias:.02},
@@ -40,11 +39,12 @@ export function calendarForDay(day:number,state?:CompanyState):CalendarInfo{
   const dayOfWeek=dayNames[(day-1)%7];
   const week=Math.ceil(day/7);
   const gameYear=Math.floor((day-1)/365)+1;
-  let offset=(31+((day-1)%365))%365; // game always begins February 1
-  let month=1;
-  while(offset>=monthLengths[month]){offset-=monthLengths[month];month=(month+1)%12;}
+  let offset=(day-1)%365; // game always begins February 1
+  let monthIndex=0;
+  while(offset>=gameMonths[monthIndex].len){offset-=gameMonths[monthIndex].len;monthIndex+=1;}
+  const monthInfo=gameMonths[monthIndex];
   const dayOfMonth=offset+1;
-  const monthNumber=month+1;
+  const monthNumber=monthInfo.num;
   const strength=state?marketingStrength(state):.45;
   const marketingLabel:CalendarInfo['marketingLabel']=strength>=.62?'Strong':strength>=.42?'Okay':'Weak';
   const afterFeb14=monthNumber>2||(monthNumber===2&&dayOfMonth>=14);
@@ -57,13 +57,13 @@ export function calendarForDay(day:number,state?:CompanyState):CalendarInfo{
   const weekend=dayOfWeek==='Fri'||dayOfWeek==='Sat'||dayOfWeek==='Sun';
   const weekendMult=weekend?1.10:.95;
   const demandMultiplier=Number((seasonMult*weekendMult).toFixed(2));
-  const date=`${monthNames[month]} ${dayOfMonth}`;
+  const date=`${monthInfo.name} ${dayOfMonth}`;
   const note=season==='busy'
     ? `${date}: busy season. Strong marketing can keep the calendar packed.`
     : season==='warmup'
       ? `${date}: the year starts slowly, but things wake up around February 14.`
       : `${date}: slow season. Strong marketers can hold about half their busy-season demand; weak marketing can fall near one-fifth.`;
-  return {day,week,dayOfWeek,month:monthNumber,monthName:monthNames[month],dayOfMonth,gameYear,season,demandMultiplier,note,marketingStrength:strength,marketingLabel};
+  return {day,week,dayOfWeek,month:monthNumber,monthName:monthInfo.name,dayOfMonth,gameYear,season,demandMultiplier,note,marketingStrength:strength,marketingLabel};
 }
 
 export function customerForTrip(rng:RNG,tripType:TripType,source:Booking['source']):{type:CustomerType;label:string}{
@@ -184,8 +184,8 @@ export function maintainBoat(state:CompanyState,instanceId:string,level:Maintena
   const plan=plans[level];
   if(state.cash<plan.cost)throw new Error('Not enough cash for that service.');
   const currentHours=boat.engineHours;
-  const next100=level==='100hr'||level==='300hr'?nextHundred(currentHours):boat.next100Service;
-  const next300=level==='300hr'?nextThreeHundred(currentHours):boat.next300Service;
+  const next100=level==='100hr'||level==='300hr'?Number((currentHours+100).toFixed(1)):boat.next100Service;
+  const next300=level==='300hr'?Number((currentHours+300).toFixed(1)):boat.next300Service;
   return {
     ...state,
     cash:state.cash-plan.cost,
