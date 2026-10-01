@@ -1,5 +1,6 @@
 import { boatTemplates,islands,marinas } from '../game/data/content';
-import { buyBoat,captainCandidates,expandToIsland,hireCaptain,insureFleet,serviceBoat } from '../game/engine/sim';
+import { buyBoat,captainCandidates,expandToIsland,hireCaptain,insureFleet } from '../game/engine/sim';
+import { maintainBoat } from '../game/engine/depth';
 import type { CompanyState } from '../game/types/models';
 
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
@@ -19,7 +20,7 @@ export default function GrowthPanel({state,onChange}:{state:CompanyState;onChang
 
     <section className="card growthSection">
       <span className="eyebrow">FLEET GROWTH</span><h2>Boats & maintenance</h2>
-      {state.boats.map(b=><div className="boatManage" key={b.instanceId}><div className="growthRow"><div><b>{b.name}</b><small>{b.year} · condition {pct(b.condition)} · reliability {pct(b.reliability)} · {b.insured?'insured':'UNINSURED'}</small></div><button type="button" disabled={b.condition>=.98} onClick={()=>act(()=>serviceBoat(state,b.instanceId))}>Service $450</button></div></div>)}
+      {state.boats.map(b=><div className="boatManage" key={b.instanceId}><div className="growthRow"><div><b>{b.name}</b><small>{b.year} · condition {pct(b.condition)} · reliability {pct(b.reliability)} · {b.insured?'insured':'UNINSURED'}</small></div></div><div className="maintenanceChoices"><button type="button" disabled={b.condition>=.99} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'quick'))}>Quick $120</button><button type="button" disabled={b.condition>=.98} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'routine'))}>Routine $450</button><button type="button" disabled={b.condition>=.96} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'major'))}>Major $1,200</button></div></div>)}
       {state.boats.some(b=>!b.insured)&&<button type="button" className="primary big" onClick={()=>act(()=>insureFleet(state))}>Insure New Boat(s)</button>}
       <h3>Add another boat</h3>
       <p className="fine">Additional boats only create extra daily capacity when you have captains to run them.</p>
@@ -28,12 +29,12 @@ export default function GrowthPanel({state,onChange}:{state:CompanyState;onChang
 
     <section className="card growthSection">
       <span className="eyebrow">EXPANSION</span><h2>Island chain</h2>
-      <p className="muted">New markets unlock from company value. Relocating moves your fleet to that island’s primary marina.</p>
+      <p className="muted">New markets unlock from company value. Each island changes tourism demand, fuel cost and weather exposure. Relocating moves your fleet to that island’s primary marina.</p>
       {islands.map(i=>{
         const unlocked=state.companyValue>=i.unlockValue;
         const current=i.id===state.islandId;
         const marina=marinas.find(m=>m.islandId===i.id);
-        return <div className={`growthRow islandGrowth ${current?'current':''}`} key={i.id}><div><b>{i.name}{current?' · Current base':''}</b><small>{i.description}{!unlocked?` · Unlock at ${money(i.unlockValue)}`:marina?` · ${money(marina.monthlySlip)}/mo slip`:''}</small></div>{!current&&<button type="button" disabled={!unlocked} onClick={()=>act(()=>expandToIsland(state,i.id))}>{unlocked?'Relocate':'Locked'}</button>}</div>;
+        return <div className={`growthRow islandGrowth ${current?'current':''}`} key={i.id}><div><b>{i.name}{current?' · Current base':''}</b><small>{i.description} · tourism {Math.round(i.tourism*100)} · fuel {money(i.fuelPrice)}/gal · {i.weatherExposure} exposure{!unlocked?` · Unlock at ${money(i.unlockValue)}`:marina?` · ${money(marina.monthlySlip)}/mo slip`:''}</small></div>{!current&&<button type="button" disabled={!unlocked} onClick={()=>act(()=>expandToIsland(state,i.id))}>{unlocked?'Relocate':'Locked'}</button>}</div>;
       })}
     </section>
   </>;
