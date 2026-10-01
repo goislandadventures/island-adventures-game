@@ -8,6 +8,10 @@ const clamp = (n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 const referencePrice:Record<string,number>={sandbar:489,snorkel:649,sunset:319,custom:449,eco:399,fishing:699,cruise:399};
 const RUNNING_COST_PER_ENGINE_HOUR=179;
 const HOURS_PER_TRIP=1.5;
+const STARTING_CASH=10000;
+const STARTUP_LOAN_APR=.2499;
+const STARTUP_LOAN_DAYS=730;
+const startupValue=(cash:number,debt:number)=>Math.round(cash-debt);
 
 export const captainCandidates:StaffMember[]=[
   {id:'capt-casey',name:'Casey Morgan',role:'captain',skill:.78,reliability:.91,hourlyRate:35},
@@ -18,7 +22,7 @@ export const captainCandidates:StaffMember[]=[
 export interface PlanAssessment { stars:number; reasons:string[]; headline:string; }
 
 export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
-  return {day:1,seed,captainName,companyName,companyColor,cash:40000,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:40000,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic',reviewAsk:true},loans:[]};
+  return {day:1,seed,captainName,companyName,companyColor,cash:STARTING_CASH,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:STARTING_CASH,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic',reviewAsk:true},loans:[],startupLoanTaken:false};
 }
 
 export function rentSlip(state:CompanyState,marinaId:string):CompanyState{
@@ -26,7 +30,8 @@ export function rentSlip(state:CompanyState,marinaId:string):CompanyState{
   const marina=marinas.find(m=>m.id===marinaId&&m.islandId===state.islandId);
   if(!marina)throw new Error('That marina is not available on this island.');
   if(state.cash<marina.monthlySlip)throw new Error('Not enough cash for slip rent.');
-  return {...state,cash:state.cash-marina.monthlySlip,marinaId:marina.id,reputation:clamp(state.reputation+marina.reputationBonus,.1,1),ledger:[...state.ledger,{day:state.day,category:'marina',amount:-marina.monthlySlip,memo:`First month at ${marina.name}`}]};
+  const cash=state.cash-marina.monthlySlip;
+  return {...state,cash,companyValue:state.daysOperated===0?startupValue(cash,state.debt):state.companyValue,marinaId:marina.id,reputation:clamp(state.reputation+marina.reputationBonus,.1,1),ledger:[...state.ledger,{day:state.day,category:'marina',amount:-marina.monthlySlip,memo:`First month at ${marina.name}`}]};
 }
 
 export function expandToIsland(state:CompanyState,islandId:string):CompanyState{
@@ -49,16 +54,14 @@ export function buyBoat(state:CompanyState,templateId='old-deck-19'):CompanyStat
   if(!boat)throw new Error('Boat not found.');
   if(boat.lengthFt>marina.maxBoatFt)throw new Error('That boat is too large for your current marina.');
   if(state.cash<boat.basePrice)throw new Error('Not enough cash to buy boat.');
-  const ageMap:Record<string,{year:number;condition:number;hours:number}>={
-    'old-deck-19':{year:1999,condition:.68,hours:1460},'bay-deck-21':{year:2007,condition:.75,hours:1030},'deck-24':{year:2017,condition:.88,hours:510},'cc-25':{year:2021,condition:.92,hours:340},'pontoon-24':{year:2020,condition:.90,hours:410},'cat-28':{year:2022,condition:.94,hours:260}
-  };
-  const age=ageMap[templateId]??{year:2018,condition:.86,hours:500};
-  const owned:OwnedBoat={...boat,instanceId:`${boat.id}-${state.day}-${state.boats.length+1}`,year:age.year,condition:age.condition,engineHours:age.hours,purchasePrice:boat.basePrice,insured:false,insuranceDeclined:false,marinaId:state.marinaId,next100Service:nextHundred(age.hours),next300Service:nextThreeHundred(age.hours)};
-  return {...state,cash:state.cash-boat.basePrice,boats:[...state.boats,owned],ledger:[...state.ledger,{day:state.day,category:'boat',amount:-boat.basePrice,memo:`Purchased ${boat.name}`}]};
+  const condition=clamp(boat.reliability+.08,.55,.91);
+  const owned:OwnedBoat={...boat,instanceId:`${boat.id}-${state.day}-${state.boats.length+1}`,year:boat.hullYear,engineYear:boat.engineYear,condition,engineHours:boat.startingEngineHours,purchasePrice:boat.basePrice,insured:false,insuranceDeclined:false,marinaId:state.marinaId,next100Service:nextHundred(boat.startingEngineHours),next300Service:nextThreeHundred(boat.startingEngineHours)};
+  const cash=state.cash-boat.basePrice;
+  return {...state,cash,companyValue:state.daysOperated===0?startupValue(cash,state.debt):state.companyValue,boats:[...state.boats,owned],ledger:[...state.ledger,{day:state.day,category:'boat',amount:-boat.basePrice,memo:`Purchased ${boat.name}`}]};
 }
 
 export function insuranceQuote(boat:OwnedBoat,marina?:Marina):number{
-  const base=Math.max(950,Math.round(boat.purchasePrice*.06));
+  const base=Math.max(650,Math.round(boat.purchasePrice*.06));
   return Math.round(base*(marina?.insuranceMultiplier??1));
 }
 
@@ -69,7 +72,8 @@ export function insureFleet(state:CompanyState):CompanyState{
   const marina=marinas.find(m=>m.id===state.marinaId);
   const premium=uninsured.reduce((sum,b)=>sum+insuranceQuote(b,marina),0);
   if(state.cash<premium)throw new Error('You do not have enough cash for that insurance.');
-  return {...state,cash:state.cash-premium,boats:state.boats.map(b=>b.insured?b:{...b,insured:true,insuranceDeclined:false,insuranceRenewalDay:state.day+365}),ledger:[...state.ledger,{day:state.day,category:'insurance',amount:-premium,memo:`One year of boat insurance at ${marina?.name??'the marina'}`}]};
+  const cash=state.cash-premium;
+  return {...state,cash,companyValue:state.daysOperated===0?startupValue(cash,state.debt):state.companyValue,boats:state.boats.map(b=>b.insured?b:{...b,insured:true,insuranceDeclined:false,insuranceRenewalDay:state.day+365}),ledger:[...state.ledger,{day:state.day,category:'insurance',amount:-premium,memo:`One year of boat insurance at ${marina?.name??'the marina'}`}]};
 }
 
 export function declineInsurance(state:CompanyState,instanceId:string):CompanyState{
@@ -81,6 +85,19 @@ export function serviceBoat(state:CompanyState,instanceId:string):CompanyState{
   const cost=450;
   if(state.cash<cost)throw new Error('Not enough cash for routine service.');
   return {...state,cash:state.cash-cost,boats:state.boats.map(b=>b.instanceId===instanceId?{...b,condition:clamp(b.condition+.10,.25,1),reliability:clamp(b.reliability+.02,.25,.98)}:b),ledger:[...state.ledger,{day:state.day,category:'maintenance',amount:-cost,memo:`Routine service: ${boat.name}`}]};
+}
+
+export function takeStartupLoan(state:CompanyState,amount:number):CompanyState{
+  if(state.daysOperated>0||state.day>1)throw new Error('Startup financing is only available before your first operating day.');
+  if(state.startupLoanTaken)throw new Error('You already took your one startup loan.');
+  const principal=Math.min(20000,Math.max(0,Math.round(amount/1000)*1000));
+  if(principal<5000)throw new Error('Choose a startup loan from $5,000 to $20,000.');
+  const dailyRate=STARTUP_LOAN_APR/365;
+  const payment=Math.ceil(principal*dailyRate/(1-Math.pow(1+dailyRate,-STARTUP_LOAN_DAYS)));
+  const loan={id:'startup-loan',originalPrincipal:principal,balance:principal,apr:STARTUP_LOAN_APR,dailyPayment:payment};
+  const cash=state.cash+principal;
+  const debt=state.debt+principal;
+  return {...state,cash,debt,companyValue:startupValue(cash,debt),startupLoanTaken:true,loans:[...state.loans,loan],ledger:[...state.ledger,{day:state.day,category:'loan',amount:principal,memo:`Startup loan · 24.99% APR · 2 game years`}]};
 }
 
 export function hireCaptain(state:CompanyState,candidateId:string):CompanyState{
@@ -284,7 +301,10 @@ function renewalExpense(state:CompanyState):{state:CompanyState;expense:number}{
 }
 
 function computeCompanyValue(state:CompanyState):number{
-  return Math.round(state.cash+state.boats.reduce((sum,b)=>sum+b.purchasePrice*b.condition*.8,0)-state.debt+state.reputation*25000+state.lifetimeProfit*.25);
+  const fleet=state.boats.reduce((sum,b)=>sum+b.purchasePrice*b.condition*.72,0);
+  const earnedReputation=state.reviewCount*Math.max(20,state.rating*18);
+  const profitValue=Math.max(0,state.lifetimeProfit*.20);
+  return Math.round(state.cash+fleet-state.debt+earnedReputation+profitValue);
 }
 
 export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>):{state:CompanyState;result:DayResult}{
