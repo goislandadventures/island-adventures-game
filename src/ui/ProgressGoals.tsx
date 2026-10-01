@@ -4,10 +4,10 @@ const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency
 
 export default function ProgressGoals({state}:{state:CompanyState}){
   if(state.day<=7)return null;
-  const insured=state.boats.filter(b=>b.insured).length;
+  const workingBoats=Math.min(state.boats.length,1+state.staff.length);
   const goals=[
     {id:'captain',title:'Crew Up',detail:'Hire your first captain.',done:state.staff.length>=1,progress:`${state.staff.length}/1 captain`},
-    {id:'two-boats',title:'Two-Boat Operator',detail:'Have two insured boats and enough crew to operate both.',done:insured>=2&&state.staff.length>=1,progress:`${insured}/2 insured boats · ${state.staff.length}/1 hired captain`},
+    {id:'two-boats',title:'Two-Boat Operator',detail:'Have two boats and enough crew to run both at the same time.',done:workingBoats>=2&&state.staff.length>=1,progress:`${state.boats.length}/2 boats · ${state.staff.length}/1 hired captain`},
     {id:'reviews',title:'Review Momentum',detail:'Build enough social proof to become established.',done:state.reviewCount>=25,progress:`${state.reviewCount}/25 reviews`},
     {id:'expand',title:'Island Hopper',detail:'Move your operation beyond Harbor Key.',done:state.islandId!=='harbor',progress:state.islandId==='harbor'?'Still based at Harbor Key':'Expanded'},
     {id:'six-figure',title:'Six-Figure Company',detail:'Reach $100,000 in company value.',done:state.companyValue>=100000,progress:`${money(state.companyValue)} / $100,000`},
