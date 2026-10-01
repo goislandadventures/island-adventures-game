@@ -32,9 +32,27 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
 
   return <main className="splash"><div className="splashOcean">
     <div className="splashSun" />
+
+    <div className="splashCloud cloudOne" />
+    <div className="splashCloud cloudTwo" />
+    <div className="splashCloud cloudThree" />
+
+    <div className="waterGlimmer glimmerOne" />
+    <div className="waterGlimmer glimmerTwo" />
+    <div className="waterGlimmer glimmerThree" />
+    <div className="waterGlimmer glimmerFour" />
+    <div className="waterGlimmer glimmerFive" />
+
+    <div className="splashDolphin dolphinOne">🐬</div>
+    <div className="splashDolphin dolphinTwo">🐬</div>
+
     <div className="splashIsland one">🌴</div>
-    <div className="splashIsland two">🌴</div>
-    <div className="splashBoat">🚤<i /></div>
+
+    <div className="splashBoat boatOne">🚤</div>
+    <div className="splashBoat boatTwo">🛥️</div>
+    <div className="splashBoat boatThree">⛵</div>
+    <div className="splashBoat boatFour">🛶</div>
+
     <img src="/branding/island-adventures-logo.jpg" alt="Island Adventures" className="splashLogoImage"/>
     <div className="splashTag">Build your fleet. Rule the islands.</div>
     {soundBlocked && <button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
