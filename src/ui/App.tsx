@@ -1,4 +1,4 @@
-import { useEffect,useMemo,useState } from 'react';
+import { useEffect,useLayoutEffect,useMemo,useRef,useState } from 'react';
 import { boatTemplates,islands,marinas } from '../game/data/content';
 import { assessTripPlan,buyBoat,createCompany,generateDemand,generateWeather,insuranceQuote,insureFleet,rentSlip,setPrice,simulateDay,weatherLabel } from '../game/engine/sim';
 import { clearGame,loadGame,normalizeState,saveGame } from '../game/engine/save';
@@ -28,6 +28,24 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
 
   const setupStarted=Boolean(state.captainName&&state.companyName);
+  const previousSetupStarted=useRef(setupStarted);
+
+  useLayoutEffect(()=>{
+    if(setupStarted && !previousSetupStarted.current){
+      window.scrollTo(0,0);
+      document.documentElement.scrollTop=0;
+      document.body.scrollTop=0;
+      const frame=window.requestAnimationFrame(()=>{
+        window.scrollTo(0,0);
+        document.documentElement.scrollTop=0;
+        document.body.scrollTop=0;
+      });
+      previousSetupStarted.current=setupStarted;
+      return()=>window.cancelAnimationFrame(frame);
+    }
+    previousSetupStarted.current=setupStarted;
+  },[setupStarted]);
+
   const weather=useMemo(()=>generateWeather(state),[state]);
   const forecast=useMemo(()=>weatherLabel(weather),[weather]);
   const todaysBookings=useMemo(()=>generateDemand(state,weather),[state,weather]);
