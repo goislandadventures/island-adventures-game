@@ -12,6 +12,5 @@ database_name = "island-adventures-game"
 database_id = "REPLACE_AFTER_D1_CREATE"
 
 
-[[routes]]
-pattern = "theislandadventures.com"
-custom_domain = true
+
+# Custom domain will be re-enabled after conflicting parking DNS records are removed.
