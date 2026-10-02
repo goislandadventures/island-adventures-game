@@ -1,10 +1,10 @@
 import { useEffect,useLayoutEffect,useMemo,useRef,useState } from 'react';
 import { boatTemplates,islands,marinas } from '../game/data/content';
-import { assessTripPlan,buyBoat,createCompany,declineInsurance,generateDemand,generateWeather,insuranceQuote,insureFleet,rentSlip,setPrice,simulateDay,takeStartupLoan,weatherLabel } from '../game/engine/sim';
+import { assessTripPlan,buyBoat,createCompany,declineInsurance,generateDemand,generateWeather,insuranceQuote,insureFleet,rentSlip,resolveMaintenanceIncident,setPrice,simulateDay,takeStartupLoan,weatherLabel } from '../game/engine/sim';
 import { businessEventForDay,calendarForDay,customerProfiles,maintainBoat,serviceStatus } from '../game/engine/depth';
 import { hurricaneForDay } from '../game/engine/hurricane';
 import { normalizeState } from '../game/engine/save';
-import type { CompanyState,DayResult,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
+import type { CompanyState,DayResult,MaintenanceDecision,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
 import type { GameMode } from './StartMode';
 import type { Player } from './api';
 import { completeTutorial,loadMarketingMarket,logout,syncCompany } from './api';
@@ -152,6 +152,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
 
   const setTripDecision=(id:string,decision:TripDecision)=>setTripDecisions(prev=>({...prev,[id]:decision}));
   const runDay=()=>{
+    if(state.pendingMaintenance)return;
     if(mode==='demo'&&demoComplete)return;
     if(businessEvent)return;
     if(hurricane&&state.hurricanePlan?.day!==state.day)return;
@@ -166,6 +167,15 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     commit(nextState);setLast(out.result);setTab('dock');
     playDayResultSounds(out.result,state.day);
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
+  };
+  const handleMaintenanceDecision=(decision:MaintenanceDecision)=>{
+    try{
+      const next=resolveMaintenanceIncident(state,decision);
+      commit(next);
+      if(decision!=='defer')playGameSound('service');
+    }catch(e){
+      alert((e as Error).message||'Could not complete that repair choice.');
+    }
   };
   const finishCaptainSchoolFarewell=()=>{
     if(mode!=='registered')return;
@@ -211,6 +221,23 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     setMenuOpen(false);
     setHelpOpen(true);
   };
+  const maintenanceDecisionCard=state.pendingMaintenance?(()=>{
+    const incident=state.pendingMaintenance!;
+    const phaseLabel:Record<string,string>={overnight:'Overnight',inspection:'During inspection','pre-departure':'Before departure',charter:'During the charter'};
+    return <section className="card maintenanceDecision">
+      <span className="eyebrow">EQUIPMENT FAILURE · OWNER DECISION</span>
+      <h2>🔧 {incident.title}</h2>
+      <p><b>{incident.boatName}</b> · {phaseLabel[incident.phase]??incident.phase}</p>
+      <p>{incident.description}</p>
+      <div className="maintenanceChoices">
+        <button type="button" disabled={state.cash<incident.cheapCost} onClick={()=>handleMaintenanceDecision('cheap')}><b>Budget repair · {money(incident.cheapCost)}</b><small>Get it operational for less. Minimal reliability recovery and more chance the problem comes back.</small></button>
+        <button type="button" disabled={state.cash<incident.premiumCost} onClick={()=>handleMaintenanceDecision('premium')}><b>Premium repair · {money(incident.premiumCost)}</b><small>Spend more for a stronger repair and better reliability recovery.</small></button>
+        <button type="button" disabled={state.cash<incident.replaceCost} onClick={()=>handleMaintenanceDecision('replace')}><b>Replace component · {money(incident.replaceCost)}</b><small>Highest upfront cost, strongest condition and reliability recovery.</small></button>
+        <button type="button" className="riskBtn" onClick={()=>handleMaintenanceDecision('defer')}><b>Defer repair · $0</b><small>Keep the cash today, but condition and reliability fall and future failure risk increases.</small></button>
+      </div>
+    </section>;
+  })():null;
+
   const modeControl=mode==='registered'
     ? <button type="button" className="gameHeaderControl signOutControl" disabled={signingOut} onClick={signOutAccount}>{signingOut?'Signing out…':'Sign out'}</button>
     : <button type="button" className="gameHeaderControl" onClick={()=>setMenuOpen(true)}>☰ Menu</button>;
@@ -229,11 +256,12 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
       {last.destroyedBoatNames?.length?<p className="story danger">Destroyed: {last.destroyedBoatNames.join(', ')}</p>:null}
       {last.wildlifeEvent&&<p className="story">🐬 {last.wildlifeEvent}</p>}
       {last.maintenanceEvent&&<p className="story danger">🔧 {last.maintenanceEvent}</p>}
+      {maintenanceDecisionCard}
       {last.loanPayment>0&&<p className="story financeStory">💳 Loan payments today: {money(last.loanPayment)}</p>}
       <div className="resultGrid"><div><span>Fares</span><b>{money(last.revenue)}</b></div><div><span>Tips</span><b>{money(last.tips)}</b></div><div><span>Expenses</span><b>-{money(last.expenses)}</b></div><div><span>Net cash</span><b>{money(last.revenue+last.tips-last.expenses)}</b></div></div>
       {last.reviews.length?<div className="dayReviews"><h3>Guest reviews</h3>{last.reviews.map((r,i)=><blockquote key={i}><b>{'★'.repeat(r.stars)}{'☆'.repeat(5-r.stars)}</b> “{r.text}”{mode==='demo'&&r.stars<5&&<div className="reviewCause"><strong>Why this wasn't 5★</strong><ul>{r.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div>}</blockquote>)}</div>:<p className="muted">No guest review was posted today.</p>}
-      <div className="dayAdvanceBox"><b>{demoComplete?'Captain School week complete.':`Next up: Day ${state.day}`}</b><span>{demoComplete?'Your graduation screen is next.':'The next forecast and bookings appear only after you continue.'}</span></div>
-      <button className="primary big" onClick={continueAfterResults}>{demoComplete?'See Captain School Graduation →':`Start Day ${state.day} →`}</button>
+      <div className="dayAdvanceBox"><b>{state.pendingMaintenance?'Resolve the equipment problem before moving on.':demoComplete?'Captain School week complete.':`Next up: Day ${state.day}`}</b><span>{state.pendingMaintenance?'The next operating day stays locked until you make the owner decision above.':demoComplete?'Your graduation screen is next.':'The next forecast and bookings appear only after you continue.'}</span></div>
+      <button className="primary big" disabled={Boolean(state.pendingMaintenance)} onClick={continueAfterResults}>{demoComplete?'See Captain School Graduation →':`Start Day ${state.day} →`}</button>
     </section>
     {menuOpen&&mode!=='registered'&&<GameMenu onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onHelp={openHelpFromMenu}/>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
@@ -287,7 +315,8 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
 
       {state.boats.length>0&&!state.boats[0].insured&&!state.boats[0].insuranceDeclined&&<section className="card attention"><span className="eyebrow">STEP 3 · YOUR CALL</span><h2>Insure it or risk it?</h2><p>You can run <b>{state.boats[0].name}</b> without insurance. That saves cash now, but a major hurricane can wipe the boat out completely.</p><div className="quote"><span>One-year premium here</span><strong>{money(insuranceQuote(state.boats[0],currentMarina))}</strong></div><div className="insuranceChoices"><button className="primary" onClick={insure}>🛡️ Buy Insurance</button><button className="riskBtn" onClick={()=>skipInsurance(state.boats[0].instanceId)}>🎲 Skip It & Take the Risk</button></div></section>}
 
-      {ready&&!demoComplete&&hurricane&&<HurricaneCard state={state} event={hurricane} onChange={commit} onRun={runDay}/>}
+      {state.pendingMaintenance&&maintenanceDecisionCard}
+      {ready&&!demoComplete&&!state.pendingMaintenance&&hurricane&&<HurricaneCard state={state} event={hurricane} onChange={commit} onRun={runDay}/>}
       {ready&&!demoComplete&&businessEvent&&<BusinessEventCard state={state} event={businessEvent} onChange={commit}/>} 
       {ready&&!demoComplete&&!hurricane&&<section className={`card forecast ${forecast.level}`}><div className="forecastTop"><div><span className="eyebrow">DAY {state.day} · CAPTAIN'S REPORT</span><h2>{forecast.title}</h2></div><div className="weatherIcon">{forecast.level==='good'?'☀️':forecast.level==='caution'?'🌤️':'🌬️'}</div></div><div className="weatherGrid"><div><span>Wind</span><b>{weather.windKts} kt {weather.windDirection}</b></div><div><span>Rain</span><b>{weather.rainChance}%</b></div><div><span>Water</span><b>{Math.round(weather.waterClarity*100)}% clear</b></div><div><span>Temp</span><b>{weather.temperatureF}°</b></div></div><p>{forecast.detail}</p></section>}
 
