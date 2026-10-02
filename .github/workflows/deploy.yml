@@ -82,10 +82,15 @@ jobs:
             BASE="$1"
             echo "Checking $BASE"
             BUILD=$(curl -fsS -H "Cache-Control: no-cache" "$BASE/api/build-id?verify=$GITHUB_SHA")
+            echo "Live build: $BUILD"
             test "$BUILD" = "$GITHUB_SHA"
 
             curl -fsS -D /tmp/headers.txt -o /tmp/root.html -H "Cache-Control: no-cache" "$BASE/?verify=$GITHUB_SHA"
             tr -d '\r' < /tmp/headers.txt > /tmp/headers-clean.txt
+            echo "--- response headers ---"
+            cat /tmp/headers-clean.txt
+            echo "--- root build markers ---"
+            grep -n 'pageshow\|build-id\|src="/assets/' /tmp/root.html || true
             grep -qi '^cache-control:.*no-store' /tmp/headers-clean.txt
             grep -qi "^x-island-build: $GITHUB_SHA$" /tmp/headers-clean.txt
             grep -q 'window.addEventListener.*pageshow' /tmp/root.html
