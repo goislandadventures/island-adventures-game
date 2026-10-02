@@ -561,12 +561,14 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     if(decision==='cancel'){
       const fee=Math.round(booking.revenue*.08);
       expenses+=fee;refunds+=fee;
-      const safeCall=weather.stormRisk>.23
-        ||((booking.tripType==='sandbar'||booking.tripType==='sunset')&&weather.windKts>25)
-        ||(booking.tripType==='snorkel'&&weather.windKts>=15)
-        ||(!['sandbar','sunset','snorkel'].includes(booking.tripType)&&weather.windKts>=18);
-      state.reputation=clamp(state.reputation+(safeCall ? .003 : -.005),.1,1);
-      tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,tip:0,satisfaction:0,note:safeCall?'You moved the trip for safety. Guests understood.':'You moved a trip that probably could have run.'});
+      let rescheduleSupport=.12+weather.stormRisk*.95+(weather.rainChance/100)*.08;
+      if(booking.tripType==='snorkel')rescheduleSupport+=Math.max(0,weather.windKts-9)*.035+Math.max(0,.62-weather.waterClarity)*.45;
+      else if(booking.tripType==='sandbar'||booking.tripType==='sunset')rescheduleSupport+=Math.max(0,weather.windKts-18)*.028;
+      else rescheduleSupport+=Math.max(0,weather.windKts-15)*.02;
+      if(booking.customerType==='family')rescheduleSupport+=Math.max(0,weather.windKts-14)*.01;
+      const guestsUnderstood=rng.chance(clamp(rescheduleSupport,.08,.88));
+      state.reputation=clamp(state.reputation+(guestsUnderstood ? .003 : -.005),.1,1);
+      tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,tip:0,satisfaction:0,note:guestsUnderstood?'You moved the trip and the guests understood the call.':'The guests were disappointed by the reschedule.'});
       return;
     }
 
@@ -580,7 +582,8 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
 
     const protectedWater=decision==='protected';
     const worstBoat=[...chosen].sort((a,b)=>a.condition-b.condition)[0];
-    const assessment=assessTripPlan(state,booking,decision,weather,worstBoat);
+    const resolved=resolveHiddenTripOutcome(rng,state,booking,decision,weather,worstBoat);
+    const assessment=resolved.assessment;
     const island=islands.find(i=>i.id===state.islandId)!;
     const marina=marinas.find(m=>m.id===state.marinaId);
     let tripExpense=0;
@@ -603,7 +606,8 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     if(shouldLeaveReview(rng,state,assessment.experienceScore)){review=createReview(rng,assessment,protectedWater,booking);reviews.push(review);}
     const captainNote=chosen.length>1?` Two boats worked together for this ${booking.partySize}-guest group.`:'';
     const tipNote=tip>0?` Tip: ${tip}.`:assessment.experienceScore<5?' No tip because the guest experience missed the mark.':booking.neverTips?' Great trip, but this group simply did not tip.':' No tip this time.';
-    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.experienceScore/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${captainNote}${tipNote}`});
+    const outcomeNote=resolved.eventNote?` ${resolved.eventNote}`:'';
+    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.experienceScore/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${outcomeNote}${captainNote}${tipNote}`});
   });
 
   let maintenanceEvent:string|undefined;
