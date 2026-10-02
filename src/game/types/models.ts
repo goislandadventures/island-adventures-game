@@ -65,7 +65,7 @@ export interface HurricanePlan { day:number; haulBoats:boolean; }
 export interface MaintenanceIncident {
   id:string; boatInstanceId:string; boatName:string; component:EquipmentSystem; phase:FailurePhase;
   title:string; description:string; severity:'minor'|'moderate'|'major';
-  cheapCost:number; premiumCost:number; replaceCost:number;
+  cheapCost:number; premiumCost:number; replaceCost:number; failureRisk:number; roll:number;
 }
 export interface MaintenanceIncident {
   id:string; boatInstanceId:string; boatName:string; component:EquipmentSystem; phase:FailurePhase;
@@ -83,6 +83,7 @@ export interface CompanyState {
 export interface TripOutcome {
   bookingId:string; tripType:TripType; timeSlot:TimeSlot; decision:TripDecision; revenue:number; expenses:number;
   tip:number; satisfaction:number; review?:Review; note:string; boatInstanceId?:string; boatInstanceIds?:string[];
+  outcomeRisk?:number; outcomeRoll?:number; outcomeTriggered?:boolean;
 }
 export interface DayResult {
   weather:WeatherDay; calendar:CalendarInfo; decisions:Record<string,TripDecision>; bookingsGenerated:Booking[];
