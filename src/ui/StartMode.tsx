@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { loadCompany, login, me, register, type Player } from './api';
+import { changePassword, loadCompany, login, me, register, type Player } from './api';
 import type { CompanyState } from '../game/types/models';
 
 export type GameMode='demo'|'owner'|'registered';
 
 export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Player,state?:CompanyState|null)=>void}){
-  const [view,setView]=useState<'choose'|'account'>('choose');
+  const [view,setView]=useState<'choose'|'account'|'change'>('choose');
   const [kind,setKind]=useState<'login'|'register'>('register');
   const [email,setEmail]=useState('');
   const [displayName,setDisplayName]=useState('');
@@ -17,6 +17,9 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   const [signedInPlayer,setSignedInPlayer]=useState<Player|undefined>();
   const [signedInState,setSignedInState]=useState<CompanyState|null>(null);
   const [checkingSession,setCheckingSession]=useState(true);
+  const [pendingPlayer,setPendingPlayer]=useState<Player|undefined>();
+  const [newPassword,setNewPassword]=useState('');
+  const [showNewPassword,setShowNewPassword]=useState(false);
 
   useEffect(()=>{
     let alive=true;
@@ -47,10 +50,33 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
       const r=kind==='register'
         ? await register({email,displayName,password,marketingOptIn:marketing})
         : await login({email,password});
+      if(r.player.mustChangePassword||r.player.force_password_change){
+        setPendingPlayer(r.player);
+        setView('change');
+        return;
+      }
       const c=await loadCompany().catch(()=>({state:null}));
       onStart('registered',r.player,c.state);
     }catch(e){setError((e as Error).message)} finally{setBusy(false)}
   };
+
+  const submitPasswordChange=async()=>{
+    setBusy(true);setError('');
+    try{
+      const r=await changePassword(newPassword);
+      const company=await loadCompany().catch(()=>({state:null}));
+      onStart('registered',r.player||pendingPlayer,company.state);
+    }catch(e){setError((e as Error).message)}finally{setBusy(false)}
+  };
+
+  if(view==='change') return <main className="modeShell"><section className="modeCard accountCard">
+    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
+    <span className="eyebrow">ACCOUNT RECOVERY</span><h2>Set a new password</h2>
+    <p>Your account and company were recovered. Choose a new password before continuing.</p>
+    <label>New password<div className="passwordWrap"><input type={showNewPassword?'text':'password'} value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="10+ characters" autoComplete="new-password"/><button type="button" className="showPasswordBtn" onClick={()=>setShowNewPassword(v=>!v)}>{showNewPassword?'Hide':'Show'}</button></div></label>
+    {error&&<p className="formError">{error}</p>}
+    <button className="primary big" disabled={busy||newPassword.length<10} onClick={submitPasswordChange}>{busy?'Saving…':'Save New Password & Continue'}</button>
+  </section></main>;
 
   if(view==='account') return <main className="modeShell"><section className="modeCard accountCard">
     <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
