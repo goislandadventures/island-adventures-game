@@ -1,150 +1,125 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import BoatArt from './BoatArt';
 
 function SunArt(){
-  return <svg className="splashSunSvg" viewBox="0 0 180 180" aria-hidden="true">
+  return <svg className="splashV3Sun" viewBox="0 0 180 180" aria-hidden="true">
     <defs>
-      <radialGradient id="sunFace" cx=".35" cy=".25"><stop stopColor="#fff47a"/><stop offset=".55" stopColor="#ffd92c"/><stop offset="1" stopColor="#f5a900"/></radialGradient>
-      <linearGradient id="sunGlass" x1="0" x2="1"><stop stopColor="#223b54"/><stop offset=".55" stopColor="#0f1c2c"/><stop offset="1" stopColor="#345d74"/></linearGradient>
-      <filter id="sunShadow"><feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity=".25"/></filter>
+      <radialGradient id="v3SunFace" cx=".35" cy=".25"><stop stopColor="#fff894"/><stop offset=".52" stopColor="#ffd82f"/><stop offset="1" stopColor="#f6a900"/></radialGradient>
+      <linearGradient id="v3SunGlass" x1="0" x2="1"><stop stopColor="#2e526c"/><stop offset=".5" stopColor="#101d2c"/><stop offset="1" stopColor="#315d77"/></linearGradient>
+      <filter id="v3SunShadow"><feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#d29000" floodOpacity=".22"/></filter>
     </defs>
-    <g filter="url(#sunShadow)">
-      {[0,45,90,135,180,225,270,315].map(a=><path key={a} d="M90 5 L103 27 L77 27 Z" fill="#ffc324" transform={`rotate(${a} 90 90)`}/>)}
-      <circle cx="90" cy="90" r="57" fill="url(#sunFace)" stroke="#e9a500" strokeWidth="3"/>
-      <path d="M48 68 Q65 59 84 66 L80 91 Q60 98 47 82 Z" fill="url(#sunGlass)" stroke="#17324d" strokeWidth="5"/>
-      <path d="M96 66 Q115 59 132 68 L133 82 Q120 98 100 91 Z" fill="url(#sunGlass)" stroke="#17324d" strokeWidth="5"/>
-      <path d="M83 70 Q90 66 97 70" fill="none" stroke="#17324d" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M61 107 Q90 132 121 106 Q115 136 90 140 Q66 136 61 107Z" fill="#fff" stroke="#d79b00" strokeWidth="3"/>
-      <path d="M58 76 Q66 69 75 69" fill="none" stroke="#8fe9ff" strokeWidth="5" strokeLinecap="round" opacity=".75"/>
-      <path d="M106 70 Q115 67 123 72" fill="none" stroke="#8fe9ff" strokeWidth="5" strokeLinecap="round" opacity=".7"/>
+    <g filter="url(#v3SunShadow)">
+      {[0,45,90,135,180,225,270,315].map(a=><path key={a} d="M90 4 L104 28 L76 28 Z" fill="#ffc42d" transform={`rotate(${a} 90 90)`}/>)}
+      <circle cx="90" cy="90" r="58" fill="url(#v3SunFace)" stroke="#e8a500" strokeWidth="3"/>
+      <path d="M48 69 Q65 59 84 66 L81 91 Q61 99 47 83Z" fill="url(#v3SunGlass)" stroke="#17324d" strokeWidth="5"/>
+      <path d="M96 66 Q115 59 133 69 L133 83 Q119 99 99 91Z" fill="url(#v3SunGlass)" stroke="#17324d" strokeWidth="5"/>
+      <path d="M83 71 Q90 67 97 71" fill="none" stroke="#17324d" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M61 108 Q90 132 121 107 Q115 137 90 140 Q66 136 61 108Z" fill="#fff" stroke="#d79b00" strokeWidth="3"/>
     </g>
   </svg>;
 }
 
 function CloudArt({className}:{className:string}){
-  return <svg className={`splashCloudSvg ${className}`} viewBox="0 0 240 120" aria-hidden="true">
+  return <svg className={`splashV3Cloud ${className}`} viewBox="0 0 250 130" aria-hidden="true">
     <defs>
-      <radialGradient id={`cloudGlow-${className}`} cx=".35" cy=".18"><stop stopColor="#fff"/><stop offset=".6" stopColor="#eef6ff"/><stop offset="1" stopColor="#b8d8f6"/></radialGradient>
-      <filter id={`cloudShadow-${className}`}><feDropShadow dx="0" dy="8" stdDeviation="7" floodColor="#397aa4" floodOpacity=".18"/></filter>
+      <radialGradient id={`v3Cloud-${className}`} cx=".35" cy=".16"><stop stopColor="#fff"/><stop offset=".56" stopColor="#f2f8ff"/><stop offset="1" stopColor="#b8d9f6"/></radialGradient>
+      <filter id={`v3CloudShadow-${className}`}><feDropShadow dx="0" dy="7" stdDeviation="6" floodColor="#2f7fa7" floodOpacity=".16"/></filter>
     </defs>
-    <g filter={`url(#cloudShadow-${className})`}>
-      <ellipse cx="119" cy="86" rx="89" ry="25" fill={`url(#cloudGlow-${className})`}/>
-      <circle cx="64" cy="72" r="34" fill={`url(#cloudGlow-${className})`}/>
-      <circle cx="108" cy="54" r="47" fill={`url(#cloudGlow-${className})`}/>
-      <circle cx="153" cy="61" r="40" fill={`url(#cloudGlow-${className})`}/>
-      <circle cx="190" cy="77" r="29" fill={`url(#cloudGlow-${className})`}/>
-      <ellipse cx="103" cy="43" rx="28" ry="12" fill="#fff" opacity=".62"/>
+    <g filter={`url(#v3CloudShadow-${className})`}>
+      <ellipse cx="124" cy="91" rx="92" ry="25" fill={`url(#v3Cloud-${className})`}/>
+      <circle cx="66" cy="76" r="35" fill={`url(#v3Cloud-${className})`}/>
+      <circle cx="111" cy="56" r="48" fill={`url(#v3Cloud-${className})`}/>
+      <circle cx="157" cy="64" r="41" fill={`url(#v3Cloud-${className})`}/>
+      <circle cx="196" cy="80" r="30" fill={`url(#v3Cloud-${className})`}/>
+      <ellipse cx="104" cy="43" rx="31" ry="12" fill="#fff" opacity=".7"/>
+    </g>
+  </svg>;
+}
+
+function Lighthouse(){
+  return <svg className="splashV3Lighthouse" viewBox="0 0 170 250" aria-hidden="true">
+    <defs>
+      <linearGradient id="v3Tower" x1="0" x2="1"><stop stopColor="#f8f6ef"/><stop offset=".45" stopColor="#bcc6c7"/><stop offset="1" stopColor="#718086"/></linearGradient>
+      <linearGradient id="v3Rust" x1="0" x2="1"><stop stopColor="#7f3a29"/><stop offset=".5" stopColor="#c77949"/><stop offset="1" stopColor="#743128"/></linearGradient>
+      <filter id="v3TowerShadow"><feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#0c6572" floodOpacity=".24"/></filter>
+    </defs>
+    <g filter="url(#v3TowerShadow)">
+      <ellipse cx="85" cy="222" rx="70" ry="22" fill="#e8e0a9" opacity=".88"/>
+      <ellipse cx="85" cy="225" rx="42" ry="14" fill="#8abf9c" opacity=".72"/>
+      <path d="M54 211 L73 52 M116 211 L97 52 M54 211 H116 M60 169 H110 M65 128 H105 M69 88 H101" stroke="url(#v3Tower)" strokeWidth="9" fill="none"/>
+      <path d="M54 211 L97 52 M116 211 L73 52 M60 169 L105 128 M110 169 L65 128 M65 128 L101 88 M105 128 L69 88" stroke="#718087" strokeWidth="4" opacity=".85"/>
+      <rect x="60" y="40" width="50" height="20" rx="4" fill="url(#v3Rust)"/>
+      <rect x="65" y="15" width="40" height="28" rx="5" fill="#243f4c"/>
+      <rect x="72" y="20" width="26" height="17" rx="2" fill="#8bd7e5"/>
+      <path d="M58 15 L85 -2 L112 15 Z" fill="#263943"/>
+      <circle cx="85" cy="8" r="4" fill="#ffe17a"/>
     </g>
   </svg>;
 }
 
 function KeysWater(){
-  return <svg className="keysWaterArt" viewBox="0 0 1000 1400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  return <svg className="splashV3Water" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="keysSea" x1="0" y1="0" x2=".25" y2="1">
-        <stop offset="0" stopColor="#79e5ed"/>
-        <stop offset=".34" stopColor="#38cdd8"/>
-        <stop offset=".72" stopColor="#23b9c8"/>
-        <stop offset="1" stopColor="#159baa"/>
-      </linearGradient>
-      <radialGradient id="sandShelf" cx=".45" cy=".4">
-        <stop offset="0" stopColor="#b9f3e8" stopOpacity=".88"/>
-        <stop offset=".6" stopColor="#7de0d6" stopOpacity=".46"/>
-        <stop offset="1" stopColor="#43c6c5" stopOpacity="0"/>
-      </radialGradient>
-      <filter id="reefBlur"><feGaussianBlur stdDeviation="9"/></filter>
-      <filter id="softBlur"><feGaussianBlur stdDeviation="18"/></filter>
-      <linearGradient id="towerMetal" x1="0" x2="1"><stop stopColor="#f6f0e6"/><stop offset=".5" stopColor="#b8c2c5"/><stop offset="1" stopColor="#5d7077"/></linearGradient>
-      <linearGradient id="rust" x1="0" x2="1"><stop stopColor="#81402d"/><stop offset=".5" stopColor="#c57b4c"/><stop offset="1" stopColor="#6d3328"/></linearGradient>
+      <linearGradient id="v3Sea" x1="0" y1="0" x2=".18" y2="1"><stop stopColor="#74ebee"/><stop offset=".34" stopColor="#48dce0"/><stop offset=".72" stopColor="#2bc9d1"/><stop offset="1" stopColor="#22b4c4"/></linearGradient>
+      <radialGradient id="v3Sand" cx=".5" cy=".5"><stop stopColor="#dff7db" stopOpacity=".88"/><stop offset=".5" stopColor="#bcebd8" stopOpacity=".56"/><stop offset="1" stopColor="#8edbce" stopOpacity="0"/></radialGradient>
+      <filter id="v3Soft"><feGaussianBlur stdDeviation="7"/></filter>
     </defs>
-    <rect width="1000" height="1400" fill="url(#keysSea)"/>
-    <ellipse cx="540" cy="810" rx="570" ry="360" fill="url(#sandShelf)"/>
-    <g filter="url(#softBlur)" fill="#0b6970" opacity=".34">
-      <path d="M-80 760 C90 670 190 710 290 640 C390 570 500 620 590 585 C730 530 860 600 1080 470 L1080 650 C840 720 720 700 580 760 C410 830 250 780 70 880 Z"/>
-      <path d="M-70 1070 C170 940 330 990 440 930 C570 860 670 870 790 820 C900 775 980 790 1070 755 L1070 1010 C930 1030 790 1080 650 1120 C430 1185 235 1145 50 1220 Z"/>
-      <path d="M20 340 C180 300 270 350 390 320 C560 280 650 170 840 180 C920 185 980 205 1040 220 L1040 410 C850 390 745 445 590 450 C405 455 250 420 40 500 Z"/>
+    <rect width="1000" height="1000" fill="url(#v3Sea)"/>
+    <ellipse cx="535" cy="500" rx="410" ry="245" fill="url(#v3Sand)"/>
+    <g fill="#137f82" opacity=".13" filter="url(#v3Soft)">
+      <path d="M62 330 C130 286 205 293 260 337 C302 372 294 424 238 451 C175 480 105 456 72 405 C51 373 49 350 62 330Z"/>
+      <path d="M700 302 C767 267 845 283 885 326 C918 361 899 403 844 424 C784 448 726 428 694 387 C675 362 678 325 700 302Z"/>
+      <path d="M114 687 C184 642 262 653 312 696 C349 728 338 775 281 802 C218 831 151 807 120 760 C99 729 98 705 114 687Z"/>
+      <path d="M690 712 C762 667 847 680 895 724 C930 756 914 802 854 828 C789 857 721 829 689 781 C669 751 672 727 690 712Z"/>
+      <path d="M420 820 C468 790 526 799 557 827 C581 850 571 884 531 903 C486 924 441 907 418 873 C404 852 406 832 420 820Z"/>
     </g>
-    <g fill="#0a5962" opacity=".48" filter="url(#reefBlur)">
-      <path d="M105 710 C190 642 278 665 330 719 C370 760 357 826 289 854 C214 887 133 842 105 784 C91 756 91 733 105 710Z"/>
-      <path d="M642 950 C736 877 835 892 900 951 C945 991 928 1061 847 1098 C760 1137 677 1100 636 1034 C617 1002 619 974 642 950Z"/>
-      <path d="M660 532 C731 472 832 480 890 540 C928 580 911 630 848 662 C766 703 689 680 644 620 C618 585 627 552 660 532Z"/>
-      <path d="M373 1030 C421 985 493 993 536 1035 C569 1068 558 1119 509 1146 C451 1178 394 1152 364 1107 C344 1078 350 1053 373 1030Z"/>
-      <path d="M245 455 C300 414 372 421 415 458 C449 487 441 531 397 558 C349 587 292 568 259 526 C240 502 232 476 245 455Z"/>
+    <g fill="#347c65" opacity=".11">
+      <path d="M265 560 C318 526 372 535 403 567 C427 591 418 626 379 643 C335 663 290 648 268 616 C255 597 254 576 265 560Z"/>
+      <path d="M608 576 C655 545 706 552 736 581 C758 603 750 633 714 650 C674 669 632 655 611 625 C598 606 597 590 608 576Z"/>
     </g>
-    <g fill="none" stroke="#d8fff8" strokeOpacity=".28" strokeWidth="5">
-      <path d="M0 860 C160 820 280 860 400 825 C565 776 655 795 790 750 C860 727 932 715 1000 716"/>
-      <path d="M0 890 C160 850 280 890 400 855 C565 806 655 825 790 780 C860 757 932 745 1000 746"/>
-      <path d="M65 565 C190 535 305 553 435 520 C585 482 690 497 835 470"/>
+    <g fill="none" stroke="#efffff" strokeOpacity=".34" strokeWidth="4">
+      <path d="M0 414 C160 386 275 406 405 381 C560 351 687 358 1000 314"/>
+      <path d="M0 443 C161 418 283 438 416 412 C579 380 716 387 1000 349"/>
+      <path d="M0 742 C178 708 298 727 434 695 C610 653 759 672 1000 632"/>
+      <path d="M0 775 C177 742 310 759 450 727 C619 688 768 701 1000 665"/>
     </g>
-    <g transform="translate(550 765)">
-      <ellipse cx="0" cy="124" rx="145" ry="47" fill="#164f59" opacity=".16"/>
-      <ellipse cx="0" cy="106" rx="70" ry="33" fill="#d6ecbd" opacity=".72"/>
-      <ellipse cx="0" cy="108" rx="45" ry="20" fill="#5d7d67" opacity=".6"/>
-      <g>
-        <path d="M-29 103 L-10 -88 M29 103 L10 -88 M-29 103 L29 103 M-23 60 L23 60 M-18 20 L18 20 M-13 -20 L13 -20 M-8 -60 L8 -60" stroke="url(#towerMetal)" strokeWidth="8" fill="none"/>
-        <path d="M-29 103 L10 -88 M29 103 L-10 -88 M-24 63 L24 20 M24 63 L-24 20 M-17 22 L17 -21 M17 22 L-17 -21" stroke="#7b8a8c" strokeWidth="4" opacity=".85"/>
-        <rect x="-23" y="-103" width="46" height="18" rx="4" fill="url(#rust)"/>
-        <rect x="-19" y="-126" width="38" height="26" rx="5" fill="#243f4c"/>
-        <rect x="-13" y="-121" width="26" height="17" rx="2" fill="#8bd7e5"/>
-        <path d="M-25 -127 L0 -145 L25 -127 Z" fill="#263943"/>
-        <circle cx="0" cy="-134" r="4" fill="#f7d95e"/>
-      </g>
+    <g fill="#fff" opacity=".22">
+      <ellipse cx="176" cy="523" rx="54" ry="4"/><ellipse cx="826" cy="514" rx="72" ry="4"/><ellipse cx="486" cy="731" rx="44" ry="3"/><ellipse cx="718" cy="865" rx="62" ry="3"/>
     </g>
   </svg>;
 }
 
-export default function Splash({ onEnter }: { onEnter: () => void }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [soundBlocked, setSoundBlocked] = useState(false);
+export default function Splash({onEnter}:{onEnter:()=>void}){
+  const audioRef=useRef<HTMLAudioElement|null>(null);
+  const [soundBlocked,setSoundBlocked]=useState(false);
+  useEffect(()=>{
+    const audio=new Audio('/audio/splash-theme.mp3');audio.preload='auto';audio.loop=true;audio.volume=.7;audioRef.current=audio;
+    audio.play().then(()=>setSoundBlocked(false)).catch(()=>setSoundBlocked(true));
+    return()=>{audio.pause();audio.currentTime=0};
+  },[]);
+  const startSound=async()=>{try{await audioRef.current?.play();setSoundBlocked(false)}catch{setSoundBlocked(true)}};
+  const enter=()=>{const audio=audioRef.current;onEnter();if(audio){try{audio.pause();audio.currentTime=0}catch{}}};
 
-  useEffect(() => {
-    const audio = new Audio('/audio/splash-theme.mp3');
-    audio.preload = 'auto';
-    audio.loop = true;
-    audio.volume = 0.7;
-    audioRef.current = audio;
-    audio.play().then(() => setSoundBlocked(false)).catch(() => setSoundBlocked(true));
-    return () => { audio.pause(); audio.currentTime = 0; };
-  }, []);
-
-  const startSound = async () => {
-    try { await audioRef.current?.play(); setSoundBlocked(false); }
-    catch { setSoundBlocked(true); }
-  };
-
-  const enter = () => {
-    const audio = audioRef.current;
-    onEnter();
-    if (audio) {
-      try { audio.pause(); audio.currentTime = 0; } catch {}
-    }
-  };
-
-  return <main className="splash"><div className="splashOcean">
-    <KeysWater/>
-
-    <div className="skyArt">
-      <CloudArt className="cloudOne"/>
-      <CloudArt className="cloudTwo"/>
-      <CloudArt className="cloudThree"/>
+  return <main className="splash splashV3"><div className="splashV3Scene">
+    <div className="splashV3Sky">
+      <CloudArt className="v3CloudLeft"/>
+      <CloudArt className="v3CloudMid"/>
       <SunArt/>
     </div>
-
-    <div className="waterGlint glintOne"/><div className="waterGlint glintTwo"/>
-    <div className="waterGlint glintThree"/><div className="waterGlint glintFour"/>
-
-    <div className="splashBoat boatOne"><BoatArt kind="deck"/></div>
-    <div className="splashBoat boatTwo"><BoatArt kind="pontoon"/></div>
-    <div className="splashBoat boatThree"><BoatArt kind="center-console"/></div>
-
-    <div className="splashHero">
-      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashLogoImage"/>
-      <div className="splashTag">Build your fleet. Rule the islands.</div>
-      <div className="splashButtons">
-        {soundBlocked && <button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
+    <div className="splashV3Horizon"/>
+    <div className="splashV3Sea"><KeysWater/></div>
+    <div className="splashV3Tower"><Lighthouse/></div>
+    <div className="splashV3Boat splashV3BoatDeck"><BoatArt kind="deck"/></div>
+    <div className="splashV3Boat splashV3BoatPontoon"><BoatArt kind="pontoon"/></div>
+    <div className="splashV3Boat splashV3BoatCenter"><BoatArt kind="center-console"/></div>
+    <div className="splashV3Hero">
+      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV3Logo"/>
+      <div className="splashV3Tag">Build your fleet. Rule the islands.</div>
+      <div className="splashV3Buttons">
+        {soundBlocked&&<button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
         <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
       </div>
     </div>
-    <small className="devThemeNote">Development build</small>
+    <small className="splashV3Build">Development build</small>
   </div></main>;
 }
