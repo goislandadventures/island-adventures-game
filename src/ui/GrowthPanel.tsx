@@ -1,5 +1,5 @@
 import { boatTemplates,islands,marinas } from '../game/data/content';
-import { buyBoat,captainCandidates,expandToIsland,hireCaptain,insureFleet } from '../game/engine/sim';
+import { buyBoat,captainCandidates,captainPerformance,expandToIsland,hireCaptain,insureFleet } from '../game/engine/sim';
 import { maintainBoat,serviceStatus } from '../game/engine/depth';
 import type { CompanyState } from '../game/types/models';
 import BoatArt from './BoatArt';
@@ -14,9 +14,9 @@ export default function GrowthPanel({state,onChange}:{state:CompanyState;onChang
   return <>
     <section className="card growthSection">
       <span className="eyebrow">CREW</span><h2>Captains</h2>
-      <p className="muted">You run boat one. Each hired captain lets you put one more boat to work. Insurance is optional; captains are not.</p>
-      {state.staff.length>0&&state.staff.map(s=><div className="growthRow" key={s.id}><div><b>Captain {s.name}</b><small>Skill {pct(s.skill)} · Reliability {pct(s.reliability)}</small></div><strong>{money(s.hourlyRate)}/hr</strong></div>)}
-      {captainCandidates.filter(c=>!state.staff.some(s=>s.id===c.id)).map(c=><div className="growthRow" key={c.id}><div><b>{c.name}</b><small>Skill {pct(c.skill)} · Reliability {pct(c.reliability)} · $250 onboarding</small></div><button type="button" onClick={()=>act(()=>hireCaptain(state,c.id))}>Hire {money(c.hourlyRate)}/hr</button></div>)}
+      <p className="muted">You run boat one. A second boat plus a hired captain can raise the company from 2 to as many as 4 charters per day. Your own performance influences the captains you hire, but cheaper captains carry more mistake and repair risk.</p>
+      {state.staff.length>0&&state.staff.map(s=>{const risk=captainPerformance(state,s);return <div className="growthRow" key={s.id}><div><b>Captain {s.name}</b><small>Skill {pct(s.skill)} · Reliability {pct(s.reliability)} · crew quality {pct(risk.effectiveQuality)}</small></div><strong>{money(s.hourlyRate)}/hr</strong></div>})}
+      {captainCandidates.filter(c=>!state.staff.some(s=>s.id===c.id)).map(c=>{const risk=captainPerformance(state,c);return <div className="growthRow" key={c.id}><div><b>{c.name}</b><small>Skill {pct(c.skill)} · Reliability {pct(c.reliability)} · crew quality {pct(risk.effectiveQuality)} · $250 onboarding</small></div><button type="button" onClick={()=>act(()=>hireCaptain(state,c.id))}>Hire {money(c.hourlyRate)}/hr</button></div>})}
     </section>
 
     <section className="card growthSection">
@@ -24,8 +24,8 @@ export default function GrowthPanel({state,onChange}:{state:CompanyState;onChang
       {state.boats.map(b=>{const svc=serviceStatus(b);return <div className="boatManage" key={b.instanceId}><div className="growthBoatThumb"><BoatArt kind={b.class}/></div><div className="growthRow"><div><b>{b.name}</b><small>Hull {b.year} · engine {b.engineYear} · {Math.round(b.engineHours)} hrs · condition {pct(b.condition)} · reliability {pct(b.reliability)} · {b.insured?'insured':'UNINSURED'}</small><em className={svc.kind==='ok'?'serviceOk':'serviceDue'}>{svc.label}</em></div></div><div className="maintenanceChoices"><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'dock'))}>Dock check $75</button><button type="button" disabled={svc.kind==='300hr'} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'100hr'))}>100-hour $350</button><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'300hr'))}>300-hour $700</button></div></div>})}
       {state.boats.some(b=>!b.insured)&&<><button type="button" className="primary big" onClick={()=>act(()=>insureFleet(state))}>Add Insurance to Uninsured Boat(s)</button><p className="fine">Insurance is optional. It costs more at premium marinas, but it can save the company if a hurricane destroys a boat.</p></>}
       <h3>Add another boat</h3>
-      <p className="fine">Extra boats only earn money when you have captains to run them. A 7–12 guest booking needs two boats and two captains.</p>
-      {boatTemplates.filter(b=>b.lengthFt<=(currentMarina?.maxBoatFt??0)).map(b=><div className="growthRow boatPurchaseRow" key={b.id}><div className="growthBoatThumb"><BoatArt kind={b.class}/></div><div><b>{b.name}</b><small>Hull {b.hullYear} · engine {b.engineYear} · {b.startingEngineHours} hrs · {b.lengthFt}′ · reliability {pct(b.reliability)}</small></div><button type="button" disabled={state.cash<b.basePrice} onClick={()=>act(()=>buyBoat(state,b.id))}>{money(b.basePrice)}</button></div>)}
+      <p className="fine">A second boat adds another slip and its own insurance, fuel, wear, maintenance and captain payroll. Those operating costs scale with the fleet; existing loan payments stay unchanged. A 7–12 guest booking still consumes both boats at once.</p>
+      {boatTemplates.filter(b=>b.lengthFt<=(currentMarina?.maxBoatFt??0)).map(b=>{const extraSlip=state.boats.length?(currentMarina?.monthlySlip??0):0;const cashNeeded=b.basePrice+extraSlip;return <div className="growthRow boatPurchaseRow" key={b.id}><div className="growthBoatThumb"><BoatArt kind={b.class}/></div><div><b>{b.name}</b><small>Hull {b.hullYear} · engine {b.engineYear} · {b.startingEngineHours} hrs · {b.lengthFt}′ · reliability {pct(b.reliability)}{extraSlip?(' · +'+money(extraSlip)+' first month for another slip'):''}</small></div><button type="button" disabled={state.cash<cashNeeded} onClick={()=>act(()=>buyBoat(state,b.id))}>{money(b.basePrice)}</button></div>})}
     </section>
 
     <section className="card growthSection">
