@@ -3,7 +3,8 @@ export type WeatherExposure = 'protected' | 'moderate' | 'exposed';
 export type BoatClass = 'deck' | 'center-console' | 'pontoon' | 'catamaran' | 'fishing' | 'cruiser';
 export type TripDecision = 'run' | 'protected' | 'cancel';
 export type TimeSlot = 'morning' | 'afternoon' | 'evening';
-export type MarketingFocus = 'organic' | 'maps' | 'social' | 'hotel' | 'content';
+export type MarketingChannelId = 'search' | 'maps' | 'social' | 'hotel' | 'content';
+export type MarketingFocus = MarketingChannelId | 'organic';
 export type CustomerType = 'family' | 'couple' | 'celebration' | 'snorkeler' | 'luxury' | 'bargain' | 'repeat';
 export type MaintenanceLevel = 'dock' | '100hr' | '300hr';
 
@@ -47,7 +48,7 @@ export interface CalendarInfo {
 }
 export interface Booking {
   id:string; tripType:TripType; partySize:number; revenue:number;
-  source:'organic'|'paid'|'maps'|'referral'|'repeat'|'hotel'|'marketplace'|'social'|'content';
+  source:'organic'|'paid'|'search'|'maps'|'referral'|'repeat'|'hotel'|'marketplace'|'social'|'content';
   guestExpectation:number; timeSlot:TimeSlot; customerType:CustomerType; customerLabel:string;
   boatsRequired:number; neverTips:boolean; tipCeiling:number;
 }
@@ -55,6 +56,8 @@ export interface Review { stars:number; text:string; reasons:string[]; }
 export interface LedgerEntry { day:number; category:string; amount:number; memo:string; }
 export interface StaffMember { id:string; name:string; role:'captain'; skill:number; reliability:number; hourlyRate:number; }
 export interface MarketingSettings { dailyBudget:number; focus:MarketingFocus; reviewAsk:boolean; }
+export interface MarketingMarketChannel { players:number; saturation:number; }
+export interface MarketingMarketSnapshot { totalPlayers:number; activeWindowDays:number; channels:Record<MarketingChannelId,MarketingMarketChannel>; }
 export interface HurricanePlan { day:number; haulBoats:boolean; }
 export interface CompanyState {
   day:number; seed:number; captainName:string; companyName:string; companyColor:string; cash:number; debt:number;
