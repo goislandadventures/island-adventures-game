@@ -62,3 +62,61 @@ jobs:
       - name: Deploy Worker and assets
         if: steps.cf.outputs.ready == 'true'
         run: npx wrangler deploy
+
+      - name: Live account smoke test
+        if: steps.cf.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TEST_PASSWORD="IslandTest-2026!"
+          test_auth () {
+            BASE="$1"
+            TAG="$2"
+            EMAIL="smoke-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${TAG}@example.com"
+            export EMAIL
+            node - <<'NODE' > /tmp/auth.json
+          const crypto=require('crypto');
+          const salt=crypto.randomBytes(16);
+          const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');
+          process.stdout.write(JSON.stringify({
+            email:process.env.EMAIL,
+            displayName:'Smoke Captain',
+            passwordSalt:salt.toString('base64'),
+            passwordProof:proof.toString('base64'),
+            marketingOptIn:false
+          }));
+          NODE
+            STATUS=$(curl -sS -o /tmp/register.json -w "%{http_code}" -c /tmp/cookies.txt               -H "Content-Type: application/json" -X POST "$BASE/api/auth/register" --data-binary @/tmp/auth.json)
+            echo "$BASE register -> $STATUS $(cat /tmp/register.json)"
+            test "$STATUS" = "201"
+
+            STATUS=$(curl -sS -o /tmp/me.json -w "%{http_code}" -b /tmp/cookies.txt "$BASE/api/auth/me")
+            echo "$BASE me -> $STATUS $(cat /tmp/me.json)"
+            test "$STATUS" = "200"
+            node -e "const j=require('/tmp/me.json'); if(j.player?.email!==process.env.EMAIL) process.exit(1)"
+
+            curl -sS -o /dev/null -b /tmp/cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/logout"
+
+            STATUS=$(curl -sS -o /tmp/salt.json -w "%{http_code}" "$BASE/api/auth/salt?email=$EMAIL")
+            echo "$BASE salt -> $STATUS"
+            test "$STATUS" = "200"
+            export SALT=$(node -e "process.stdout.write(require('/tmp/salt.json').salt)")
+            node - <<'NODE' > /tmp/login.json
+          const crypto=require('crypto');
+          const salt=Buffer.from(process.env.SALT,'base64');
+          const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');
+          process.stdout.write(JSON.stringify({email:process.env.EMAIL,passwordProof:proof.toString('base64')}));
+          NODE
+            STATUS=$(curl -sS -o /tmp/login-response.json -w "%{http_code}" -c /tmp/login-cookies.txt               -H "Content-Type: application/json" -X POST "$BASE/api/auth/login" --data-binary @/tmp/login.json)
+            echo "$BASE login -> $STATUS $(cat /tmp/login-response.json)"
+            test "$STATUS" = "200"
+          }
+
+          test_auth "https://island-adventures-game.goislandadventures.workers.dev" "worker"
+          test_auth "https://theislandadventures.com" "domain"
+
+      - name: Clean smoke-test accounts
+        if: always() && steps.cf.outputs.ready == 'true'
+        shell: bash
+        run: |
+          npx wrangler d1 execute DB --remote --command "DELETE FROM players WHERE email LIKE 'smoke-${GITHUB_RUN_ID}-%@example.com';" || true
