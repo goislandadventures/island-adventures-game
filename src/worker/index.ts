@@ -9,12 +9,14 @@ function json(data: unknown, status = 200, headers: Record<string,string> = {}) 
 function b64(bytes: Uint8Array) { return btoa(String.fromCharCode(...bytes)); }
 function unb64(s: string) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
 async function sha256(value: string) { const d=await crypto.subtle.digest('SHA-256',enc.encode(value)); return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
-async function hashPassword(password: string, salt?: string) {
-  const saltBytes = salt ? unb64(salt) : crypto.getRandomValues(new Uint8Array(16));
-  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:saltBytes,iterations:120000},key,256);
-  return { hash:b64(new Uint8Array(bits)), salt:b64(saltBytes) };
+function validB64(value:string,bytes?:number){
+  try{
+    const raw=atob(value);
+    return /^[A-Za-z0-9+/]+={0,2}$/.test(value) && (!bytes||raw.length===bytes);
+  }catch{return false;}
 }
+const FAKE_SALT='AAAAAAAAAAAAAAAAAAAAAA==';
+
 function cookieToken(request: Request) {
   const cookie=request.headers.get('cookie')||'';
   return cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('ia_session='))?.split('=')[1] || null;
@@ -68,31 +70,47 @@ export default {
       return json({totalPlayers,activeWindowDays:30,channels});
     }
 
+    if (url.pathname === '/api/auth/salt' && request.method==='GET') {
+      const email=String(url.searchParams.get('email')||'').trim().toLowerCase();
+      const p:any=email?await env.DB.prepare('SELECT password_salt FROM players WHERE email=?').bind(email).first():null;
+      return json({salt:String(p?.password_salt||FAKE_SALT)},200,{'Cache-Control':'no-store'});
+    }
+
     if (url.pathname === '/api/auth/register' && request.method==='POST') {
       const body:any=await request.json();
       const email=String(body.email||'').trim().toLowerCase();
       const displayName=String(body.displayName||'').trim().slice(0,30);
-      const password=String(body.password||'');
+      const passwordProof=String(body.passwordProof||'');
+      const passwordSalt=String(body.passwordSalt||'');
       const marketingOptIn=body.marketingOptIn===true;
-      if (!/^\S+@\S+\.\S+$/.test(email) || displayName.length<2 || password.length<10) return json({error:'Valid email, display name and a 10+ character password are required.'},400);
+      if (!/^\S+@\S+\.\S+$/.test(email) || displayName.length<2 || !validB64(passwordProof,32) || !validB64(passwordSalt,16)) {
+        return json({error:'Valid email, display name and a 10+ character password are required.'},400);
+      }
       const exists=await env.DB.prepare('SELECT id FROM players WHERE email=?').bind(email).first();
-      if (exists) return json({error:'That email already has an account.'},409);
-      const id=crypto.randomUUID(), now=Date.now(), pw=await hashPassword(password);
+      if (exists) return json({error:'That email already has an account. Sign in instead.'},409);
+      const id=crypto.randomUUID(), now=Date.now();
+      const passwordHash='v2:'+await sha256(passwordProof);
       await env.DB.prepare('INSERT INTO players(id,email,display_name,password_hash,password_salt,marketing_opt_in,marketing_opt_in_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?)')
-        .bind(id,email,displayName,pw.hash,pw.salt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
+        .bind(id,email,displayName,passwordHash,passwordSalt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
       const cookie=await createSession(id,env);
-      return json({ok:true,player:{id,email,displayName,marketingOptIn,tutorialCompleted:false}},201,{'Set-Cookie':cookie});
+      return json({ok:true,player:{id,email,displayName,marketingOptIn,tutorialCompleted:false}},201,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
     }
 
     if (url.pathname === '/api/auth/login' && request.method==='POST') {
-      const body:any=await request.json(); const email=String(body.email||'').trim().toLowerCase(), password=String(body.password||'');
+      const body:any=await request.json();
+      const email=String(body.email||'').trim().toLowerCase();
+      const passwordProof=String(body.passwordProof||'');
+      if(!validB64(passwordProof,32)) return json({error:'Invalid email or password.'},401);
       const p:any=await env.DB.prepare('SELECT * FROM players WHERE email=?').bind(email).first();
       if (!p) return json({error:'Invalid email or password.'},401);
-      const pw=await hashPassword(password,p.password_salt);
-      if (pw.hash!==p.password_hash) return json({error:'Invalid email or password.'},401);
+      const stored=String(p.password_hash||'');
+      const ok=stored.startsWith('v2:')
+        ? stored===('v2:'+await sha256(passwordProof))
+        : stored===passwordProof;
+      if (!ok) return json({error:'Invalid email or password.'},401);
       await env.DB.prepare('UPDATE players SET last_seen_at=? WHERE id=?').bind(Date.now(),p.id).run();
       const cookie=await createSession(p.id,env);
-      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed)}},200,{'Set-Cookie':cookie});
+      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed)}},200,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
     }
 
     if (url.pathname === '/api/auth/me' && request.method==='GET') return json({player:await currentPlayer(request,env)});
