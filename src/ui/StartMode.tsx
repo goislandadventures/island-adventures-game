@@ -19,24 +19,69 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
 
   useEffect(()=>{
     let alive=true;
-    me().then(async r=>{
-      if(!alive)return;
-      if(r.player){
+    const refreshSession=async()=>{
+      setCheckingSession(true);
+      try{
+        const r=await me();
+        if(!alive)return;
+        if(!r.player){
+          setSignedInPlayer(undefined);
+          setSignedInState(null);
+          return;
+        }
         const company=await loadCompany().catch(()=>({state:null}));
         if(!alive)return;
         setSignedInPlayer(r.player);
         setSignedInState(company.state);
+      }catch{
+        if(!alive)return;
+        setSignedInPlayer(undefined);
+        setSignedInState(null);
+      }finally{
+        if(alive)setCheckingSession(false);
       }
-    }).catch(()=>{}).finally(()=>{if(alive)setCheckingSession(false)});
-    return()=>{alive=false};
+    };
+    void refreshSession();
+    const onFocus=()=>void refreshSession();
+    const onPageShow=()=>void refreshSession();
+    const onVisibility=()=>{if(document.visibilityState==='visible')void refreshSession()};
+    window.addEventListener('focus',onFocus);
+    window.addEventListener('pageshow',onPageShow);
+    document.addEventListener('visibilitychange',onVisibility);
+    return()=>{
+      alive=false;
+      window.removeEventListener('focus',onFocus);
+      window.removeEventListener('pageshow',onPageShow);
+      document.removeEventListener('visibilitychange',onVisibility);
+    };
   },[]);
 
-  const chooseRegistered=()=>{
+  const chooseRegistered=async()=>{
     if(checkingSession)return;
-    if(signedInPlayer){onStart('registered',signedInPlayer,signedInState);return}
-    setError('');
-    setKind('register');
-    setView('account');
+    setCheckingSession(true);
+    try{
+      const r=await me();
+      if(r.player){
+        const company=await loadCompany().catch(()=>({state:null}));
+        setSignedInPlayer(r.player);
+        setSignedInState(company.state);
+        onStart('registered',r.player,company.state);
+        return;
+      }
+      setSignedInPlayer(undefined);
+      setSignedInState(null);
+      setError('');
+      setKind('register');
+      setView('account');
+    }catch{
+      setSignedInPlayer(undefined);
+      setSignedInState(null);
+      setError('');
+      setKind('register');
+      setView('account');
+    }finally{
+      setCheckingSession(false);
+    }
   };
 
   const submit=async()=>{
