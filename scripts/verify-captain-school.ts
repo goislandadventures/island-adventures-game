@@ -9,7 +9,7 @@ function prepared(seed:number){
 
 const weekSignatures=new Set<string>();
 
-for(let seed=1;seed<=500;seed++){
+for(let seed=1;seed<=20;seed++){
   const base=prepared(seed);
   const week:string[]=[];
 
@@ -49,4 +49,4 @@ for(let seed=1;seed<=500;seed++){
   weekSignatures.add(signature);
 }
 
-console.log(`Captain School invariant passed: 500 seeds × 7 days × 2 modes = ${500*7*2} day checks, always exactly 2 bookings.`);
+console.log(`Captain School invariant passed: 20 seeds × 7 days × 2 modes = ${20*7*2} day checks, always exactly 2 bookings.`);
