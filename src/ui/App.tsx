@@ -112,7 +112,8 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   useEffect(()=>{
     if(mode!=='registered'||!setupStarted)return;
     setSyncStatus('saving');
-    const timer=window.setTimeout(()=>syncCompany(state).then(()=>setSyncStatus('saved')).catch(()=>setSyncStatus('error')),1200);
+    const delay=state.day>7?250:500;
+    const timer=window.setTimeout(()=>syncCompany(state).then(()=>setSyncStatus('saved')).catch(()=>setSyncStatus('error')),delay);
     return()=>window.clearTimeout(timer);
   },[state,mode,setupStarted]);
 
@@ -209,7 +210,11 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     if(mode!=='registered'||signingOut)return;
     setSigningOut(true);
     try{
-      if(setupStarted)await syncCompany(state).catch(()=>{});
+      if(setupStarted){
+        setSyncStatus('saving');
+        await syncCompany(state);
+        setSyncStatus('saved');
+      }
       await logout();
       onReturnTitle();
     }catch(e){
@@ -302,7 +307,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
         <div className="turtleCoachAvatar"><img src="/branding/captain-school-turtle-exact-v10.webp?v=10" alt="Captain School turtle wishing the captain good luck"/></div>
       </div>
     </div>}
-    {setupStarted&&<section className="calendarStrip"><div><span>{calendar.monthName.toUpperCase()} {calendar.dayOfMonth} · WEEK {calendar.week}</span><strong>{calendar.season==='busy'?'BUSY SEASON':calendar.season==='warmup'?'WARMING UP':'SLOW SEASON'}</strong></div><p>{calendar.note}</p><b>{calendar.marketingLabel} marketing · Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
+    {setupStarted&&<section className="calendarStrip"><div><span>DAY {state.day} · {calendar.dayOfWeek.toUpperCase()} {calendar.monthName.toUpperCase()} {calendar.dayOfMonth} · YEAR {calendar.gameYear}</span><strong>{calendar.holidayLabel??(calendar.season==='busy'?'BUSY SEASON':calendar.season==='warmup'?'WARMING UP':'SLOW SEASON')}</strong></div><p>{calendar.note}</p><b>{calendar.marketingLabel} marketing · Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
 
     {tab==='dock'&&<>
       <section className="mapCard"><IslandMap active={Math.max(0,islands.findIndex(i=>i.id===state.islandId))} boatClass={state.boats[0]?.class} companyValue={state.companyValue}/><div className="mapText"><b>{currentIsland.name}</b><span>{currentIsland.description}</span><small>Tourism {Math.round(currentIsland.tourism*100)} · Fuel {money(currentIsland.fuelPrice)}/gal · {currentIsland.weatherExposure} exposure</small></div></section>
