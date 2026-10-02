@@ -167,8 +167,16 @@ export function generateDemoDemand(state:CompanyState):Booking[]{
   const second=remaining.length?rng.pick(remaining):first;
   const picked=[first,second];
   const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
-  const chosenSlots=[rng.pick(slots),rng.pick(slots)];
-  if(chosenSlots[1]===chosenSlots[0])chosenSlots[1]=slots[(slots.indexOf(chosenSlots[0])+1+rng.int(0,1))%slots.length];
+  const daytimeSlots:Booking['timeSlot'][]=['morning','afternoon'];
+  const chosenSlots:Booking['timeSlot'][]=[
+    first.type==='sunset'?'evening':rng.pick(slots),
+    second.type==='sunset'?'evening':rng.pick(slots)
+  ];
+  if(chosenSlots[0]===chosenSlots[1]){
+    if(first.type==='sunset')chosenSlots[1]=rng.pick(daytimeSlots);
+    else if(second.type==='sunset')chosenSlots[0]=rng.pick(daytimeSlots);
+    else chosenSlots[1]=slots[(slots.indexOf(chosenSlots[0])+1+rng.int(0,1))%slots.length];
+  }
   const sources:Booking['source'][]=['organic','maps','search','social','hotel','referral','repeat'];
   return picked.map((product,index)=>{
     const source=rng.pick(sources);
@@ -232,7 +240,7 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
       const neverTips=rng.chance(noTipChance);
       const baseTip=customer.type==='luxury'?.40:customer.type==='couple'||customer.type==='repeat'?.34:customer.type==='celebration'?.36:.28;
       const tipCeiling=Number(clamp(baseTip*(.80+rng.next()*.35),.12,.40).toFixed(2));
-      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize,revenue:product.price*boatsRequired,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:rng.pick(slots),customerType:customer.type,customerLabel:customer.label,boatsRequired,neverTips,tipCeiling});
+      bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize,revenue:product.price*boatsRequired,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:product.type==='sunset'?'evening':rng.pick(slots),customerType:customer.type,customerLabel:customer.label,boatsRequired,neverTips,tipCeiling});
     }
   }
   const maxBoatTrips=capacity*2;
@@ -268,13 +276,11 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
   }
 
   if(booking.tripType==='sunset'){
-    if(decision==='run'&&weather.windKts>=18)add(true,`You ran the sunset trip in ${weather.windKts} kt wind, badly hurting comfort.`);
-    if(decision==='run'&&weather.rainChance>=60)add(false,`You ran the sunset with a ${weather.rainChance}% rain chance instead of adjusting the plan.`);
-    if(decision==='protected'&&weather.windKts<12&&weather.rainChance<40)add(false,'You changed a good-weather sunset trip unnecessarily.');
+    if(decision==='run'&&weather.windKts>25)add(true,`You ran the sunset cruise in ${weather.windKts} kt wind, which made the ride seriously uncomfortable.`);
   }
 
   if(boat){
-    if(boat.condition<.45)add(booking.tripType!=='sandbar',`${boat.name} was in poor condition (${Math.round(boat.condition*100)}%). Service it before carrying guests.`);
+    if(boat.condition<.45)add(!['sandbar','sunset'].includes(booking.tripType),`${boat.name} was in poor condition (${Math.round(boat.condition*100)}%). Service it before carrying guests.`);
     else if(boat.condition<.60)add(false,`${boat.name} needed service; guests noticed the ${Math.round(boat.condition*100)}% condition.`);
     if(boat.reliability<.50)add(false,`${boat.name} was below 50% reliability and the trip felt less polished.`);
   }
@@ -413,7 +419,10 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     if(decision==='cancel'){
       const fee=Math.round(booking.revenue*.08);
       expenses+=fee;refunds+=fee;
-      const safeCall=weather.windKts>=18||weather.stormRisk>.23||(booking.tripType==='snorkel'&&weather.windKts>=15);
+      const safeCall=weather.stormRisk>.23
+        ||((booking.tripType==='sandbar'||booking.tripType==='sunset')&&weather.windKts>25)
+        ||(booking.tripType==='snorkel'&&weather.windKts>=15)
+        ||(!['sandbar','sunset','snorkel'].includes(booking.tripType)&&weather.windKts>=18);
       state.reputation=clamp(state.reputation+(safeCall ? .003 : -.005),.1,1);
       tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:0,expenses:fee,tip:0,satisfaction:0,note:safeCall?'You moved the trip for safety. Guests understood.':'You moved a trip that probably could have run.'});
       return;
