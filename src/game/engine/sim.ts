@@ -190,9 +190,18 @@ const keysClimate:Record<number,KeysClimateProfile>={
 };
 const monthLengths:Record<number,number>={1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31};
 
+function weatherHash32(value:number){
+  let x=value>>>0;
+  x^=x>>>16;
+  x=Math.imul(x,0x7feb352d);
+  x^=x>>>15;
+  x=Math.imul(x,0x846ca68b);
+  x^=x>>>16;
+  return x>>>0;
+}
 function weatherUnit(seed:number,day:number,salt:number){
-  const mixed=(seed^Math.imul(day+31,0x45d9f3b)^salt)>>>0;
-  return new RNG(mixed).next();
+  const mixed=weatherHash32((seed^Math.imul(day+31,0x45d9f3b)^salt)>>>0);
+  return mixed/4294967296;
 }
 function weatherSigned(seed:number,day:number,salt:number){
   return weatherUnit(seed,day,salt)*2-1;
