@@ -1668,3 +1668,34 @@ input:focus,select:focus{
   box-shadow:0 3px 0 #17324d;
 }
 .showPasswordBtn:active{transform:translateY(calc(-50% + 2px));box-shadow:0 1px 0 #17324d}
+
+/* Keep Captain School copy fully readable around the turtle */
+.captainSchoolV5 .coachBubble{
+  margin-right:0!important;
+  padding-right:16px!important;
+}
+.captainSchoolV5 .turtleCoachAvatar{
+  width:102px!important;
+  height:102px!important;
+  right:-4px!important;
+  bottom:-8px!important;
+}
+.captainSchoolV5 .coachActions{
+  right:88px!important;
+}
+@media(max-width:520px){
+  .captainSchoolV5 .coachBubble{
+    margin-right:0!important;
+    padding-right:14px!important;
+  }
+  .captainSchoolV5 .turtleCoachAvatar{
+    width:94px!important;
+    height:94px!important;
+    right:-2px!important;
+    bottom:-7px!important;
+  }
+  .captainSchoolV5 .coachActions{
+    right:78px!important;
+    grid-template-columns:92px minmax(0,1fr)!important;
+  }
+}
