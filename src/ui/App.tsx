@@ -16,6 +16,7 @@ import MarketplacePanel from './MarketplacePanel';
 import BusinessEventCard from './BusinessEventCard';
 import ProgressGoals from './ProgressGoals';
 import HurricaneCard from './HurricaneCard';
+import HelpPanel from './HelpPanel';
 import BoatArt from './BoatArt';
 import './styles.css';
 
@@ -43,6 +44,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
   const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
+  const [helpOpen,setHelpOpen]=useState(false);
   const [registeredTutorialComplete,setRegisteredTutorialComplete]=useState(
     Boolean(player?.tutorialCompleted||player?.tutorial_completed||(mode==='registered'&&state.day>7))
   );
@@ -80,6 +82,10 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     : mode==='registered'
       ? !registeredTutorialComplete&&state.day<=7
       : state.day<=7;
+  const tutorialNavigate=(next:TutorialTab)=>{
+    setTab(next);
+    window.requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'smooth'}));
+  };
   const finishRegisteredTutorial=()=>{
     if(mode!=='registered')return;
     setRegisteredTutorialComplete(true);
@@ -161,7 +167,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
-    {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={setTab} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial}/>} 
+    {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onOpenHelp={()=>setHelpOpen(true)}/>} 
     {state.day===8&&mode!=='demo'&&<section className="card weekTwoUnlock"><span className="eyebrow">CAPTAIN SCHOOL COMPLETE</span><h2>Week 2: now you own the decisions.</h2><p>The training wheels are off. Guests want different things, busy season matters, used boats come and go, bills keep showing up, and surprise decisions happen. There is no single right way to build your company now.</p></section>}
     {setupStarted&&<section className="calendarStrip"><div><span>{calendar.monthName.toUpperCase()} {calendar.dayOfMonth} · WEEK {calendar.week}</span><strong>{calendar.season==='busy'?'BUSY SEASON':calendar.season==='warmup'?'WARMING UP':'SLOW SEASON'}</strong></div><p>{calendar.note}</p><b>{calendar.marketingLabel} marketing · Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
 
@@ -206,6 +212,8 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
+    <button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>
+    {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
       <button className={`${tab==='dock'?'active ':''}${tutorialSpotlight==='dock'?'coachTarget':''}`} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button>
       <button className={`${tab==='grow'?'active ':''}${tutorialSpotlight==='grow'?'coachTarget':''}`} onClick={()=>setTab('grow')}><span>📣</span>Grow</button>
