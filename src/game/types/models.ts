@@ -48,6 +48,7 @@ export interface CalendarInfo {
   month:number; monthName:string; dayOfMonth:number; gameYear:number;
   season:'warmup'|'busy'|'slow'; demandMultiplier:number; note:string;
   marketingStrength:number; marketingLabel:'Strong'|'Okay'|'Weak';
+  isWeekend:boolean; holidayLabel?:string; peakDemand:boolean; crowdRisk:number;
 }
 export interface Booking {
   id:string; tripType:TripType; partySize:number; revenue:number;
@@ -59,6 +60,7 @@ export interface Review { stars:number; text:string; reasons:string[]; }
 export interface LedgerEntry { day:number; category:string; amount:number; memo:string; }
 export interface StaffMember { id:string; name:string; role:'captain'; skill:number; reliability:number; hourlyRate:number; }
 export interface MarketingSettings { dailyBudget:number; focus:MarketingFocus; reviewAsk:boolean; }
+export interface HotelDeal { id:string; startDay:number; endDay:number; demandBoost:number; }
 export interface MarketingMarketChannel { players:number; saturation:number; }
 export interface MarketingMarketSnapshot { totalPlayers:number; activeWindowDays:number; channels:Record<MarketingChannelId,MarketingMarketChannel>; }
 export interface HurricanePlan { day:number; haulBoats:boolean; }
@@ -77,6 +79,7 @@ export interface CompanyState {
   reputation:number; rating:number; reviewCount:number; islandId:string; marinaId?:string; boats:OwnedBoat[];
   products:TripProduct[]; bookings:Booking[]; ledger:LedgerEntry[]; companyValue:number; lifetimeRevenue:number;
   lifetimeProfit:number; daysOperated:number; staff:StaffMember[]; marketing:MarketingSettings; loans:Loan[];
+  activeHotelDeals?:HotelDeal[];
   lastBusinessEventDay?:number; hurricanePlan?:HurricanePlan; startupLoanTaken?:boolean;
   captainSchoolReviewsReset?:boolean; captainSchoolFarewellSeen?:boolean; pendingMaintenance?:MaintenanceIncident;
 }
