@@ -221,7 +221,10 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
       <span className="eyebrow">DAY {last.weather.day} COMPLETE · CAPTAIN'S LOG</span>
       <h2>{last.tripsRun?`${last.tripsRun} charter${last.tripsRun===1?'':'s'} complete`:'Day closed out'}</h2>
       <p className="dayDebriefIntro">Day {state.day} has not started yet. Review what your choices caused before moving on.</p>
-      {last.tripOutcomes.map(x=><p className="story" key={x.bookingId}><b>{x.timeSlot[0].toUpperCase()+x.timeSlot.slice(1)} {state.products.find(p=>p.type===x.tripType)?.name}:</b> {x.note}</p>)}
+      {[...last.tripOutcomes].sort((a,b)=>{
+        const order:Record<'morning'|'afternoon'|'evening',number>={morning:0,afternoon:1,evening:2};
+        return order[a.timeSlot]-order[b.timeSlot];
+      }).map(x=><p className="story" key={x.bookingId}><b>{x.timeSlot[0].toUpperCase()+x.timeSlot.slice(1)} {state.products.find(p=>p.type===x.tripType)?.name}:</b> {x.note}</p>)}
       {last.hurricaneSummary&&<p className="story hurricaneStory">🌀 {last.hurricaneSummary}</p>}
       {last.destroyedBoatNames?.length?<p className="story danger">Destroyed: {last.destroyedBoatNames.join(', ')}</p>:null}
       {last.wildlifeEvent&&<p className="story">🐬 {last.wildlifeEvent}</p>}
