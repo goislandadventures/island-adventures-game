@@ -13,6 +13,7 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm run test:captain-school
+      - run: npm run test:maintenance
       - name: Write build ID
         run: echo "$GITHUB_SHA" > public/build-id.txt
       - name: Build
