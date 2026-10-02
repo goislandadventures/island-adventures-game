@@ -1,158 +1,151 @@
 import { useEffect,useRef,useState } from 'react';
 
-function Palm({x,y,s=1,lean=0}:{x:number;y:number;s?:number;lean?:number}){
+function FacetedPalm({x,y,s=1,lean=0}:{x:number;y:number;s?:number;lean?:number}){
   return <g transform={`translate(${x} ${y}) scale(${s}) rotate(${lean})`}>
-    <path d="M0 0 C8 -34 13 -72 8 -118 C5 -139 2 -157 0 -176" fill="none" stroke="#8f5d35" strokeWidth="14" strokeLinecap="round"/>
-    <path d="M0 0 C7 -31 10 -69 6 -113" fill="none" stroke="#c88953" strokeWidth="5" strokeLinecap="round" opacity=".72"/>
-    <g transform="translate(0 -178)">
-      <path d="M0 3 C-35 -9 -64 -21 -94 -13 C-67 -5 -44 8 -14 21Z" fill="#1d7c55"/>
-      <path d="M1 1 C-23 -36 -48 -57 -74 -64 C-56 -39 -34 -17 -9 14Z" fill="#2b955f"/>
-      <path d="M0 0 C-2 -43 -11 -75 -28 -96 C-21 -64 -14 -31 -5 13Z" fill="#35a768"/>
-      <path d="M1 1 C27 -41 49 -61 78 -67 C59 -42 36 -17 10 14Z" fill="#2e9b61"/>
-      <path d="M2 4 C42 -15 76 -17 105 -4 C77 0 48 11 15 23Z" fill="#207e55"/>
-      <path d="M1 4 C28 13 51 32 69 59 C43 44 22 30 7 17Z" fill="#319a61"/>
-      <circle cx="-10" cy="8" r="7" fill="#7a4d27"/>
-      <circle cx="4" cy="10" r="7" fill="#8c572b"/>
-      <circle cx="16" cy="7" r="6" fill="#6d4525"/>
-    </g>
+    <path d="M0 0 C6 -28 8 -63 2 -106 C0 -123 -3 -139 -6 -154" fill="none" stroke="#654328" strokeWidth="11" strokeLinecap="round"/>
+    <path d="M-5 -154 L-78 -175 L-18 -145 Z" fill="#1e6947"/>
+    <path d="M-5 -154 L-61 -208 L-7 -166 Z" fill="#248354"/>
+    <path d="M-5 -154 L-19 -225 L4 -171 Z" fill="#2a965b"/>
+    <path d="M-3 -154 L51 -211 L8 -165 Z" fill="#258650"/>
+    <path d="M-1 -153 L78 -180 L13 -144 Z" fill="#1b6c46"/>
+    <path d="M-1 -152 L51 -124 L10 -142 Z" fill="#26794b"/>
+    <circle cx="-12" cy="-151" r="6" fill="#71441f"/>
+    <circle cx="1" cy="-150" r="6" fill="#855126"/>
   </g>;
 }
 
-function IslandWorld(){
-  return <svg className="splashV8World" viewBox="0 0 1000 1600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+function UnrealIslandWorld(){
+  return <svg className="splashV9World" viewBox="0 0 1000 1600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="v8Sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#0a68b8"/>
-        <stop offset=".46" stopColor="#2aa4dc"/>
-        <stop offset="1" stopColor="#8ee0ee"/>
+      <linearGradient id="v9Sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#0759a8"/>
+        <stop offset=".42" stopColor="#00aee4"/>
+        <stop offset=".78" stopColor="#55d9ef"/>
+        <stop offset="1" stopColor="#b8f2f3"/>
       </linearGradient>
-      <linearGradient id="v8Sea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#1bb8d0"/>
-        <stop offset=".38" stopColor="#2fced2"/>
-        <stop offset="1" stopColor="#73e4da"/>
+      <linearGradient id="v9Sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#13bcd0"/>
+        <stop offset=".34" stopColor="#16d1d0"/>
+        <stop offset="1" stopColor="#68e8df"/>
       </linearGradient>
-      <linearGradient id="v8Sand" x1="0" y1="0" x2="0" y2="1">
-        <stop stopColor="#ffe6a7"/>
-        <stop offset=".58" stopColor="#efca79"/>
-        <stop offset="1" stopColor="#dba85d"/>
+      <linearGradient id="v9Sand" x1="0" y1="0" x2="1" y2="1">
+        <stop stopColor="#ffe9a2"/>
+        <stop offset=".52" stopColor="#f2cc72"/>
+        <stop offset="1" stopColor="#c99a4f"/>
       </linearGradient>
-      <linearGradient id="v8Hill" x1="0" y1="0" x2="1" y2="1">
-        <stop stopColor="#6ab96d"/>
-        <stop offset=".45" stopColor="#4d9f5c"/>
-        <stop offset="1" stopColor="#2f7447"/>
+      <linearGradient id="v9RockA" x1="0" y1="0" x2="1" y2="1">
+        <stop stopColor="#354f61"/>
+        <stop offset=".5" stopColor="#253b4b"/>
+        <stop offset="1" stopColor="#162a38"/>
       </linearGradient>
-      <linearGradient id="v8Rock" x1="0" y1="0" x2="1" y2="1">
-        <stop stopColor="#64757b"/>
-        <stop offset=".55" stopColor="#42535b"/>
-        <stop offset="1" stopColor="#263740"/>
+      <linearGradient id="v9RockB" x1="0" y1="0" x2="1" y2="1">
+        <stop stopColor="#678293"/>
+        <stop offset=".46" stopColor="#415c6f"/>
+        <stop offset="1" stopColor="#223746"/>
       </linearGradient>
-      <radialGradient id="v8Shallow">
-        <stop stopColor="#eff5bd" stopOpacity=".56"/>
-        <stop offset=".48" stopColor="#bfe8c2" stopOpacity=".36"/>
-        <stop offset="1" stopColor="#7bd8cb" stopOpacity="0"/>
+      <linearGradient id="v9Grass" x1="0" y1="0" x2="1" y2="1">
+        <stop stopColor="#6bc272"/>
+        <stop offset=".45" stopColor="#43995b"/>
+        <stop offset="1" stopColor="#236849"/>
+      </linearGradient>
+      <radialGradient id="v9Shallow">
+        <stop stopColor="#f6efb3" stopOpacity=".52"/>
+        <stop offset=".46" stopColor="#c7e8bc" stopOpacity=".32"/>
+        <stop offset="1" stopColor="#69d2c4" stopOpacity="0"/>
       </radialGradient>
-      <filter id="v8Blur18"><feGaussianBlur stdDeviation="18"/></filter>
-      <filter id="v8Blur7"><feGaussianBlur stdDeviation="7"/></filter>
-      <filter id="v8IslandShadow" x="-30%" y="-40%" width="160%" height="220%">
-        <feDropShadow dx="0" dy="16" stdDeviation="14" floodColor="#065f71" floodOpacity=".24"/>
+      <filter id="v9Blur22"><feGaussianBlur stdDeviation="22"/></filter>
+      <filter id="v9Blur7"><feGaussianBlur stdDeviation="7"/></filter>
+      <filter id="v9IslandShadow" x="-30%" y="-40%" width="160%" height="220%">
+        <feDropShadow dx="0" dy="18" stdDeviation="13" floodColor="#005a78" floodOpacity=".28"/>
       </filter>
-      <linearGradient id="v8Reflection" x1="0" y1="0" x2="0" y2="1">
-        <stop stopColor="#ffffff" stopOpacity=".20"/>
-        <stop offset="1" stopColor="#ffffff" stopOpacity="0"/>
-      </linearGradient>
+      <pattern id="v9Grid" width="120" height="70" patternUnits="userSpaceOnUse">
+        <path d="M0 70 L120 70 M60 0 L60 70 M0 0 L120 70 M120 0 L0 70" stroke="#d9ffff" strokeOpacity=".10" strokeWidth="1"/>
+      </pattern>
     </defs>
 
-    {/* expansive sky */}
-    <rect width="1000" height="930" fill="url(#v8Sky)"/>
-    <ellipse cx="820" cy="140" rx="180" ry="110" fill="#ffffff" opacity=".08" filter="url(#v8Blur18)"/>
-    <path d="M-40 685 C120 630 246 675 365 646 C474 620 590 644 706 616 C810 591 914 598 1040 564" fill="none" stroke="#ffffff" strokeWidth="22" opacity=".10" filter="url(#v8Blur18)"/>
-    <path d="M52 742 C172 710 282 735 387 710 C497 685 606 703 711 678 C813 654 909 660 1000 637" fill="none" stroke="#ffffff" strokeWidth="5" opacity=".24" filter="url(#v8Blur7)"/>
-
-    {/* sea */}
-    <rect y="930" width="1000" height="670" fill="url(#v8Sea)"/>
-    <ellipse cx="500" cy="1115" rx="455" ry="190" fill="url(#v8Shallow)"/>
-    <path d="M0 930 H1000" stroke="#dffcff" strokeWidth="4" opacity=".84"/>
-    <path d="M0 939 H1000" stroke="#0e8aa2" strokeWidth="2" opacity=".28"/>
-
-    {/* distant specks */}
-    <g fill="#1f5260" opacity=".52">
-      <ellipse cx="99" cy="921" rx="27" ry="3"/>
-      <ellipse cx="869" cy="925" rx="38" ry="3"/>
-      <ellipse cx="914" cy="919" rx="14" ry="2"/>
+    {/* saturated sky */}
+    <rect width="1000" height="980" fill="url(#v9Sky)"/>
+    <g className="v9Rays" opacity=".16">
+      <path d="M510 0 L410 760 L535 760Z" fill="#ffffff"/>
+      <path d="M510 0 L560 760 L690 760Z" fill="#ffffff"/>
+      <path d="M510 0 L125 760 L360 760Z" fill="#7eeeff"/>
+      <path d="M510 0 L735 760 L930 760Z" fill="#62e6ff"/>
     </g>
+    <rect width="1000" height="980" fill="url(#v9Grid)" opacity=".42"/>
+    <ellipse cx="500" cy="870" rx="690" ry="150" fill="#ffffff" opacity=".14" filter="url(#v9Blur22)"/>
 
-    {/* single hero island */}
-    <g filter="url(#v8IslandShadow)">
-      <ellipse cx="500" cy="1017" rx="330" ry="56" fill="#0e8ca0" opacity=".18"/>
-      <path d="M208 957 C284 916 386 908 493 914 C615 907 713 919 794 957 C739 1001 641 1024 500 1026 C360 1024 261 1002 208 957Z" fill="url(#v8Sand)"/>
+    {/* streak clouds, not fluffy cartoon clouds */}
+    <path d="M-80 720 C130 675 247 714 390 684 C560 650 732 675 1080 604" fill="none" stroke="#ffffff" strokeWidth="24" opacity=".13" filter="url(#v9Blur22)"/>
+    <path d="M10 778 C189 748 315 765 466 738 C629 709 792 721 1010 674" fill="none" stroke="#ffffff" strokeWidth="6" opacity=".28" filter="url(#v9Blur7)"/>
 
-      {/* island green mass */}
-      <path d="M326 922 C369 860 422 824 481 828 C531 785 612 796 649 847 C690 854 727 881 747 929 C659 946 568 952 485 951 C426 951 369 943 326 922Z" fill="url(#v8Hill)"/>
+    {/* low-camera water */}
+    <rect y="945" width="1000" height="655" fill="url(#v9Sea)"/>
+    <ellipse cx="510" cy="1090" rx="520" ry="170" fill="url(#v9Shallow)"/>
+    <path d="M0 945 H1000" stroke="#f4ffff" strokeWidth="5" opacity=".82"/>
+    <rect y="945" width="1000" height="655" fill="url(#v9Grid)" opacity=".28"/>
 
-      {/* faceted terrain */}
-      <path d="M325 922 L412 847 L471 829 L440 925Z" fill="#65b06a" opacity=".95"/>
-      <path d="M440 925 L471 829 L549 804 L528 935Z" fill="#4b985b"/>
-      <path d="M528 935 L549 804 L624 823 L654 932Z" fill="#397f4f"/>
-      <path d="M654 932 L624 823 L708 889 L747 929Z" fill="#2c7047"/>
-      <path d="M411 847 L455 825 L436 877Z" fill="#76c278" opacity=".85"/>
+    {/* thin horizon silhouettes */}
+    <path d="M0 935 C80 927 138 932 204 925 C262 919 310 922 360 920 L360 949 H0Z" fill="#0f7590" opacity=".40"/>
+    <path d="M740 929 C800 920 860 925 1000 917 V948 H740Z" fill="#0c6b85" opacity=".34"/>
 
-      {/* rocky ridge inspired by low-poly Fortnite terrain */}
-      <path d="M417 859 L456 799 L501 817 L532 770 L601 790 L640 845 L608 877 L543 864 L485 883Z" fill="url(#v8Rock)"/>
-      <path d="M456 799 L501 817 L484 852 L438 850Z" fill="#78888d"/>
-      <path d="M501 817 L532 770 L553 833 L484 852Z" fill="#53646a"/>
-      <path d="M532 770 L601 790 L575 838 L553 833Z" fill="#34464d"/>
-      <path d="M601 790 L640 845 L575 838Z" fill="#2a3b42"/>
+    {/* wide, low island */}
+    <g filter="url(#v9IslandShadow)">
+      <ellipse cx="500" cy="1011" rx="410" ry="58" fill="#047d92" opacity=".17"/>
+      <path d="M70 967 C203 919 361 913 492 920 C655 911 805 925 930 965 C842 1005 694 1027 500 1031 C306 1028 161 1007 70 967Z" fill="url(#v9Sand)"/>
 
-      {/* dock */}
-      <path d="M653 944 L787 953 L780 971 L646 962Z" fill="#a36d3f"/>
-      <path d="M663 935 L793 944 L787 953 L653 944Z" fill="#d69b5e"/>
-      <path d="M679 956 L674 997 M745 960 L741 1001" stroke="#70472d" strokeWidth="7"/>
+      {/* grassy land shelf */}
+      <path d="M166 946 L255 889 L349 878 L428 903 L514 853 L615 872 L688 914 L782 902 L852 949 C716 969 595 973 486 970 C365 971 261 965 166 946Z" fill="url(#v9Grass)"/>
 
-      {/* palms */}
-      <Palm x={387} y={944} s={.72} lean={-6}/>
-      <Palm x={472} y={930} s={.92} lean={4}/>
-      <Palm x={573} y={940} s={.80} lean={2}/>
-      <Palm x={651} y={946} s={.60} lean={8}/>
-      <Palm x={315} y={946} s={.54} lean={-10}/>
+      {/* angular mountain/ridge mass */}
+      <path d="M280 921 L365 826 L449 842 L523 768 L626 788 L722 897 L650 929 L534 914 L448 938Z" fill="url(#v9RockA)"/>
+      <path d="M365 826 L449 842 L423 895 L318 902Z" fill="#547489"/>
+      <path d="M449 842 L523 768 L553 861 L423 895Z" fill="url(#v9RockB)"/>
+      <path d="M523 768 L626 788 L601 872 L553 861Z" fill="#314c5f"/>
+      <path d="M626 788 L722 897 L601 872Z" fill="#1e3344"/>
+      <path d="M318 902 L423 895 L448 938 L280 921Z" fill="#263e50"/>
+      <path d="M553 861 L601 872 L650 929 L534 914Z" fill="#213849"/>
 
-      {/* simple branded beach hut */}
-      <path d="M510 903 H606 V954 H510Z" fill="#b97a45" stroke="#6f482d" strokeWidth="4"/>
-      <path d="M495 904 L558 867 L620 904Z" fill="#6f4b31" stroke="#4d3425" strokeWidth="4"/>
-      <path d="M522 915 H548 V946 H522Z" fill="#f4d59a" opacity=".88"/>
-      <path d="M561 914 H592 V936 H561Z" fill="#76c2d3" stroke="#426b73" strokeWidth="3"/>
+      {/* sparse palms: asymmetrical, more Fortnite-like */}
+      <FacetedPalm x={242} y={954} s={.60} lean={-6}/>
+      <FacetedPalm x={322} y={944} s={.74} lean={4}/>
+      <FacetedPalm x={740} y={952} s={.56} lean={7}/>
 
-      {/* one tasteful charter boat */}
-      <g transform="translate(806 956) scale(.86)">
-        <ellipse cx="0" cy="28" rx="84" ry="10" fill="#075a6d" opacity=".18"/>
-        <path d="M-78 0 Q-48 -15 7 -15 Q50 -15 81 -3 Q66 22 38 29 H-41 Q-66 22 -78 0Z" fill="#fffdf5" stroke="#5a747d" strokeWidth="4"/>
-        <path d="M-62 6 Q-7 19 65 7 Q56 23 35 27 H-39 Q-55 21 -62 6Z" fill="#a4b1b0" opacity=".52"/>
-        <path d="M-44 -3 Q0 -14 49 -7 L60 1 Q4 1 -44 7Z" fill="#dfc382"/>
-        <path d="M-8 -26 H32 L45 -8 H-23Z" fill="#6dc4d7" stroke="#356a7a" strokeWidth="4"/>
-        <path d="M0 -30 Q5 -53 20 -55 Q37 -54 42 -30 M-5 -54 H45" fill="none" stroke="#304b52" strokeWidth="7" strokeLinecap="round"/>
-        <path d="M79 -7 Q95 -4 91 15 L88 39 Q85 50 74 46 L65 39 L68 1Z" fill="#29373d" stroke="#152025" strokeWidth="4"/>
+      {/* tiny dock and hut */}
+      <path d="M665 942 L808 949 L800 964 L657 958Z" fill="#7a563c"/>
+      <path d="M675 936 L812 944 L807 951 L666 944Z" fill="#b78255"/>
+      <path d="M691 958 L687 997 M755 961 L751 1000" stroke="#5b412f" strokeWidth="7"/>
+      <path d="M573 913 H636 V950 H573Z" fill="#9d6d47" stroke="#5c402f" strokeWidth="3"/>
+      <path d="M563 914 L604 888 L645 914Z" fill="#684933"/>
+      <rect x="584" y="923" width="19" height="24" fill="#efd18f"/>
+      <rect x="609" y="922" width="18" height="15" fill="#60b7d0"/>
+
+      {/* single integrated boat, mostly silhouette scale */}
+      <g transform="translate(862 964) scale(.63)">
+        <ellipse cx="0" cy="25" rx="86" ry="9" fill="#005f73" opacity=".18"/>
+        <path d="M-82 1 Q-48 -15 7 -15 Q52 -15 84 -4 Q68 22 39 29 H-44 Q-68 23 -82 1Z" fill="#f8fbf8" stroke="#415d6a" strokeWidth="4"/>
+        <path d="M-57 -3 Q-5 -16 49 -8 L61 1 Q3 2 -57 8Z" fill="#d1b779"/>
+        <path d="M-8 -27 H34 L47 -8 H-24Z" fill="#56b8d4" stroke="#2e6074" strokeWidth="4"/>
+        <path d="M1 -31 Q7 -55 22 -57 Q38 -56 44 -31 M-5 -56 H47" fill="none" stroke="#283e49" strokeWidth="7" strokeLinecap="round"/>
+        <path d="M82 -7 Q99 -3 95 16 L92 41 Q89 52 77 47 L67 40 L71 1Z" fill="#26343b" stroke="#111b20" strokeWidth="4"/>
       </g>
     </g>
 
-    {/* water reflection of island */}
-    <g transform="translate(0 2040) scale(1 -1)" opacity=".16" filter="url(#v8Blur7)">
-      <path d="M208 957 C284 916 386 908 493 914 C615 907 713 919 794 957 C739 1001 641 1024 500 1026 C360 1024 261 1002 208 957Z" fill="#f6dda0"/>
-      <path d="M326 922 C369 860 422 824 481 828 C531 785 612 796 649 847 C690 854 727 881 747 929 C659 946 568 952 485 951 C426 951 369 943 326 922Z" fill="#477d55"/>
+    {/* aggressive mirrored/reflection treatment */}
+    <g opacity=".18" filter="url(#v9Blur7)" transform="translate(0 1995) scale(1 -1)">
+      <path d="M70 967 C203 919 361 913 492 920 C655 911 805 925 930 965 C842 1005 694 1027 500 1031 C306 1028 161 1007 70 967Z" fill="#f6d98a"/>
+      <path d="M280 921 L365 826 L449 842 L523 768 L626 788 L722 897 L650 929 L534 914 L448 938Z" fill="#183b4c"/>
     </g>
 
-    {/* calm water lines */}
-    <g fill="none" stroke="#efffff" strokeLinecap="round">
-      <path d="M-30 1060 C133 1034 287 1052 447 1021 C612 990 802 1003 1030 965" strokeWidth="4" opacity=".16"/>
-      <path d="M-24 1114 C153 1084 318 1108 482 1074 C654 1039 821 1053 1030 1017" strokeWidth="2.5" opacity=".13"/>
-      <path d="M-10 1290 C168 1259 323 1280 494 1247 C659 1215 814 1225 1020 1191" strokeWidth="4" opacity=".14"/>
-      <path d="M-10 1414 C173 1384 329 1405 495 1374 C657 1343 824 1354 1020 1320" strokeWidth="2.8" opacity=".11"/>
+    {/* water streaks and perspective lines */}
+    <g fill="none" stroke="#f3ffff" strokeLinecap="round">
+      <path d="M-40 1065 C150 1039 305 1054 481 1021 C656 989 819 1000 1040 960" strokeWidth="4" opacity=".22"/>
+      <path d="M-22 1122 C148 1091 316 1114 490 1080 C661 1047 823 1058 1027 1022" strokeWidth="2.7" opacity=".18"/>
+      <path d="M-14 1268 C158 1234 329 1258 497 1226 C672 1192 826 1204 1028 1168" strokeWidth="4" opacity=".17"/>
+      <path d="M-20 1398 C157 1363 327 1388 500 1355 C664 1325 822 1334 1026 1300" strokeWidth="2.8" opacity=".13"/>
     </g>
 
-    {/* subtle underwater depth */}
-    <g fill="#0f7583" opacity=".08">
-      <ellipse cx="172" cy="1378" rx="115" ry="42"/>
-      <ellipse cx="817" cy="1438" rx="150" ry="55"/>
-      <ellipse cx="500" cy="1525" rx="190" ry="62"/>
-    </g>
+    {/* subtle vignette */}
+    <rect width="1000" height="1600" fill="none" stroke="#03568f" strokeWidth="34" opacity=".12"/>
   </svg>;
 }
 
@@ -191,18 +184,18 @@ export default function Splash({onEnter}:{onEnter:()=>void}){
     if(audio){try{audio.pause();audio.currentTime=0}catch{}}
   };
 
-  return <main className="splash splashV8">
-    <div className="splashV8Scene">
-      <IslandWorld/>
-      <div className="splashV8Hero">
-        <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV8Logo"/>
-        <div className="splashV8Tag">Build your fleet. Rule the islands.</div>
-        <div className="splashV8Buttons">
+  return <main className="splash splashV9">
+    <div className="splashV9Scene">
+      <UnrealIslandWorld/>
+      <div className="splashV9Hero">
+        <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV9Logo"/>
+        <div className="splashV9Tag">Build your fleet. Rule the islands.</div>
+        <div className="splashV9Buttons">
           <button className="soundPrompt" onClick={toggleSound}>{soundPlaying?'■ Stop theme':'♫ Tap for theme'}</button>
           <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
         </div>
       </div>
-      <small className="splashV8Build">Version 1.0 © 2026</small>
+      <small className="splashV9Build">Version 1.0 © 2026</small>
     </div>
   </main>;
 }
