@@ -1900,3 +1900,14 @@ input:focus,select:focus{
   .captainSchoolFarewell .farewellHelp{font-size:.8rem!important}
   .captainSchoolFarewell .coachNext{right:86px}
 }
+
+.maintenanceDecision{border-color:#d18b73;background:#fff7f3}
+.maintenanceDecision h2{margin:.2rem 0 .45rem}
+.maintenanceDecision>p{margin:.35rem 0;color:#425d70}
+.maintenanceChoices{display:grid;gap:10px;margin-top:14px}
+.maintenanceChoices button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:12px 13px;text-align:left;border:2px solid var(--ia-navy-deep);border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--ia-navy-deep)}
+.maintenanceChoices button:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ia-navy-deep)}
+.maintenanceChoices button:disabled{opacity:.46;transform:none;box-shadow:0 4px 0 var(--ia-navy-deep)}
+.maintenanceChoices button b{font-size:.92rem;color:var(--ia-navy-deep)}
+.maintenanceChoices button small{font-size:.76rem;line-height:1.35;color:#5a7180;font-weight:700}
+.maintenanceChoices .riskBtn{background:#fff1e9}
