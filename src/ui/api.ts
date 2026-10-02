@@ -4,12 +4,41 @@ export type Player = { id:string; email:string; displayName?:string; display_nam
 
 async function api<T>(path:string, options:RequestInit={}):Promise<T>{
   const res=await fetch(path,{credentials:'include',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error((data as any).error||'Request failed');
+  const raw=await res.text();
+  let data:any={};
+  try{data=raw?JSON.parse(raw):{}}catch{}
+  if(!res.ok) throw new Error(data?.error||(`Account service error (${res.status}). Please try again.`));
   return data as T;
 }
-export const register=(payload:{email:string;displayName:string;password:string;marketingOptIn:boolean})=>api<{player:Player}>('/api/auth/register',{method:'POST',body:JSON.stringify(payload)});
-export const login=(payload:{email:string;password:string})=>api<{player:Player}>('/api/auth/login',{method:'POST',body:JSON.stringify(payload)});
+function bytesToB64(bytes:Uint8Array){
+  let s=''; for(const b of bytes)s+=String.fromCharCode(b); return btoa(s);
+}
+function b64ToBytes(s:string){
+  const raw=atob(s); const out=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i); return out;
+}
+async function passwordProof(password:string,saltB64:string){
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:b64ToBytes(saltB64),iterations:120000},key,256);
+  return bytesToB64(new Uint8Array(bits));
+}
+function newSalt(){return bytesToB64(crypto.getRandomValues(new Uint8Array(16)));}
+
+export async function register(payload:{email:string;displayName:string;password:string;marketingOptIn:boolean}){
+  const passwordSalt=newSalt();
+  const proof=await passwordProof(payload.password,passwordSalt);
+  return api<{player:Player}>('/api/auth/register',{method:'POST',body:JSON.stringify({
+    email:payload.email,
+    displayName:payload.displayName,
+    passwordProof:proof,
+    passwordSalt,
+    marketingOptIn:payload.marketingOptIn
+  })});
+}
+export async function login(payload:{email:string;password:string}){
+  const salt=await api<{salt:string}>('/api/auth/salt?email='+encodeURIComponent(payload.email.trim().toLowerCase()));
+  const proof=await passwordProof(payload.password,salt.salt);
+  return api<{player:Player}>('/api/auth/login',{method:'POST',body:JSON.stringify({email:payload.email,passwordProof:proof})});
+}
 export const me=()=>api<{player:Player|null}>('/api/auth/me');
 export const logout=()=>api<{ok:boolean}>('/api/auth/logout',{method:'POST'});
 export const completeTutorial=()=>api<{ok:boolean}>('/api/tutorial/complete',{method:'POST'});
