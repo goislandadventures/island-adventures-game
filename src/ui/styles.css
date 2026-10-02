@@ -64,8 +64,8 @@
 .island .islandArt{display:block;width:92px;height:92px;object-fit:contain;filter:drop-shadow(0 5px 3px rgba(23,50,77,.28));transition:transform .18s ease,filter .18s ease}
 .island small{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:.58rem;line-height:1;font-weight:900;white-space:nowrap;background:#fff8d7;padding:3px 6px;border-radius:7px;color:#17324d;box-shadow:0 2px 0 rgba(23,50,77,.18);max-width:none}
 .island em{position:absolute;right:3px;top:4px;font-style:normal;font-size:17px;z-index:2;filter:drop-shadow(0 1px 1px rgba(23,50,77,.35))}
-.island.locked{opacity:.7}
-.island.locked .islandArt{filter:grayscale(.35) saturate(.65) drop-shadow(0 4px 3px rgba(23,50,77,.22))}
+.island.locked{opacity:1}
+.island.locked .islandArt{filter:drop-shadow(0 5px 3px rgba(23,50,77,.28))}
 .island.active{outline:0;box-shadow:none;z-index:4;transform:scale(1.06)}
 .island.active .islandArt{filter:drop-shadow(0 0 3px #fff) drop-shadow(0 7px 4px rgba(23,50,77,.32))}
 .i0{left:2%;top:37%}.i1{left:5%;top:18%}.i2{left:42%;top:42%}.i3{right:1%;top:13%}.i4{right:1%;bottom:1%}.i5{left:5%;bottom:1%}.i6{left:38%;top:0}.i7{left:37%;bottom:0}
