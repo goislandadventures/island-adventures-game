@@ -7,7 +7,7 @@ import { clearGame,loadGame,normalizeState,saveGame } from '../game/engine/save'
 import type { CompanyState,DayResult,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
 import type { GameMode } from './StartMode';
 import type { Player } from './api';
-import { loadMarketingMarket,syncCompany } from './api';
+import { completeTutorial,loadMarketingMarket,syncCompany } from './api';
 import Leaderboard from './Leaderboard';
 import TutorialCard,{type TutorialTab} from './TutorialCard';
 import GrowthPanel from './GrowthPanel';
@@ -43,6 +43,9 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
   const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
+  const [registeredTutorialComplete,setRegisteredTutorialComplete]=useState(
+    Boolean(player?.tutorialCompleted||player?.tutorial_completed||(mode==='registered'&&state.day>7))
+  );
 
   const setupStarted=Boolean(state.captainName&&state.companyName);
   const previousSetupStarted=useRef(setupStarted);
@@ -72,6 +75,16 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const currentIsland=islands.find(i=>i.id===state.islandId)??islands[0];
   const currentMarina=marinas.find(m=>m.id===state.marinaId);
   const ready=Boolean(currentMarina&&state.boats.length>0);
+  const showTutorial=mode==='demo'
+    ? !demoComplete&&state.day<=7
+    : mode==='registered'
+      ? !registeredTutorialComplete&&state.day<=7
+      : state.day<=7;
+  const finishRegisteredTutorial=()=>{
+    if(mode!=='registered')return;
+    setRegisteredTutorialComplete(true);
+    completeTutorial().catch(()=>{});
+  };
 
   useEffect(()=>{
     if(!setupStarted)return;
@@ -145,7 +158,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   </main>;
 
   return <main className="shell">
-    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{state.companyName}</h1><p>{state.captainName} · {currentIsland.name}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
+    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {!demoComplete&&<TutorialCard day={state.day}/>}
