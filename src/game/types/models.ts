@@ -10,6 +10,9 @@ export type MaintenanceLevel = 'dock' | '100hr' | '300hr';
 export type MaintenanceDecision = 'cheap' | 'premium' | 'replace' | 'defer';
 export type EquipmentSystem = 'engine'|'propeller'|'battery'|'steering'|'pump'|'electronics'|'upholstery'|'safety'|'navigation';
 export type FailurePhase = 'overnight'|'inspection'|'pre-departure'|'charter';
+export type MaintenanceDecision = 'cheap' | 'premium' | 'replace' | 'defer';
+export type EquipmentSystem = 'engine'|'propeller'|'battery'|'steering'|'pump'|'electronics'|'upholstery'|'safety'|'navigation';
+export type FailurePhase = 'overnight'|'inspection'|'pre-departure'|'charter';
 
 export interface Island {
   id:string; name:string; unlockValue:number; tourism:number; adCompetition:number; fuelPrice:number;
@@ -62,6 +65,11 @@ export interface MarketingSettings { dailyBudget:number; focus:MarketingFocus; r
 export interface MarketingMarketChannel { players:number; saturation:number; }
 export interface MarketingMarketSnapshot { totalPlayers:number; activeWindowDays:number; channels:Record<MarketingChannelId,MarketingMarketChannel>; }
 export interface HurricanePlan { day:number; haulBoats:boolean; }
+export interface MaintenanceIncident {
+  id:string; boatInstanceId:string; boatName:string; component:EquipmentSystem; phase:FailurePhase;
+  title:string; description:string; severity:'minor'|'moderate'|'major';
+  cheapCost:number; premiumCost:number; replaceCost:number;
+}
 export interface MaintenanceIncident {
   id:string; boatInstanceId:string; boatName:string; component:EquipmentSystem; phase:FailurePhase;
   title:string; description:string; severity:'minor'|'moderate'|'major';
