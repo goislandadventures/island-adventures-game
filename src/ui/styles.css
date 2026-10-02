@@ -765,3 +765,144 @@ input:focus,select:focus{
   from{translate:0 0}
   to{translate:0 -3px}
 }
+
+/* 2026-10-01 Keys aerial splash rebuild */
+.splash,.splashOcean{min-height:100svh}
+.splashOcean{
+  position:relative;
+  overflow:hidden;
+  background:#2bc3d1!important;
+  isolation:isolate;
+}
+.keysWaterArt{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.splashOcean:before{
+  content:"";
+  position:absolute;
+  inset:30% 0 0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(115deg,transparent 0 16%,rgba(255,255,255,.08) 20%,transparent 25% 47%,rgba(255,255,255,.06) 51%,transparent 57%),
+    radial-gradient(ellipse at 45% 15%,rgba(255,255,255,.12),transparent 42%);
+  mix-blend-mode:screen;
+  animation:keysSurfaceMove 10s ease-in-out infinite alternate;
+}
+.splashOcean:after{display:none!important}
+@keyframes keysSurfaceMove{
+  to{transform:translate3d(2.5%,1%,0) scale(1.035);opacity:.72}
+}
+
+.skyArt{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+}
+.splashSunSvg{
+  position:absolute;
+  top:16svh;
+  right:2.5vw;
+  width:clamp(82px,14vw,128px);
+  height:auto;
+}
+.splashCloudSvg{
+  position:absolute;
+  width:clamp(115px,24vw,215px);
+  height:auto;
+  opacity:.94;
+}
+.splashCloudSvg.cloudOne{left:-2vw;top:18svh;transform:scale(.86)}
+.splashCloudSvg.cloudTwo{left:30vw;top:29svh;transform:scale(.58);opacity:.75}
+.splashCloudSvg.cloudThree{right:20vw;top:34svh;transform:scale(.48);opacity:.65}
+
+.splashHero{
+  position:absolute;
+  z-index:20;
+  top:max(2px,env(safe-area-inset-top));
+  left:50%;
+  transform:translateX(-50%);
+  width:min(94vw,600px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  pointer-events:none;
+}
+.splashHero>*{pointer-events:auto}
+.splashLogoImage{
+  width:min(62vw,360px)!important;
+  max-height:17svh!important;
+  object-fit:contain;
+  margin:0 auto 2px!important;
+}
+.splashTag{
+  margin:0 0 7px!important;
+  padding:5px 11px!important;
+  background:rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(7px);
+}
+.splashButtons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.enterGame{padding:11px 22px!important}
+.soundPrompt{padding:8px 12px!important;margin:0!important}
+
+.waterGlint{
+  position:absolute;
+  z-index:7;
+  height:3px;
+  border-radius:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),rgba(255,255,255,.9),rgba(255,255,255,.2),transparent);
+  filter:blur(.15px);
+  animation:keysGlint 4s ease-in-out infinite;
+}
+.glintOne{width:150px;left:5%;top:56%}
+.glintTwo{width:120px;right:7%;top:62%;animation-delay:.8s}
+.glintThree{width:95px;left:38%;bottom:20%;animation-delay:1.7s}
+.glintFour{width:135px;right:26%;bottom:8%;animation-delay:2.4s}
+@keyframes keysGlint{0%,100%{opacity:.18;transform:scaleX(.72)}50%{opacity:.9;transform:scaleX(1.18)}}
+
+.splashBoat{
+  position:absolute;
+  z-index:9;
+  font-size:0!important;
+  width:clamp(150px,25vw,245px);
+  filter:none!important;
+}
+.splashBoat .boatArt{
+  filter:drop-shadow(0 12px 7px rgba(9,75,88,.28)) drop-shadow(0 1px 0 rgba(255,255,255,.75));
+}
+.boatOne{left:7%;bottom:16%;animation:boatFloat 3s ease-in-out infinite}
+.boatTwo{right:1%;bottom:8%;animation:boatFloat 3.25s ease-in-out infinite reverse}
+.boatThree{right:23%;bottom:31%;width:clamp(138px,22vw,220px);animation:boatFloat 2.8s ease-in-out infinite .45s}
+@keyframes boatFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
+
+.devThemeNote{
+  z-index:30;
+  left:50%;
+  bottom:max(8px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  color:#17324d;
+  opacity:.5;
+  white-space:nowrap;
+}
+
+@media(max-width:520px){
+  .splashLogoImage{width:min(66vw,300px)!important;max-height:15.5svh!important}
+  .splashTag{font-size:.76rem!important}
+  .enterGame{font-size:.9rem!important;padding:10px 17px!important}
+  .soundPrompt{font-size:.8rem!important;padding:7px 10px!important}
+  .splashSunSvg{top:15svh;right:-1vw;width:78px}
+  .splashCloudSvg.cloudOne{top:19svh;left:-10vw;width:125px}
+  .splashCloudSvg.cloudTwo{top:29svh;left:26vw;width:118px}
+  .splashCloudSvg.cloudThree{top:34svh;right:17vw;width:105px}
+  .splashBoat{width:145px}
+  .boatOne{left:-1%;bottom:18%}
+  .boatTwo{right:-5%;bottom:7%}
+  .boatThree{right:21%;bottom:31%;width:128px}
+}
