@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "check:core": "tsc -p tsconfig.core.json --noEmit",
     "test:captain-school": "tsx scripts/verify-captain-school.ts",
+    "test:maintenance": "tsx scripts/verify-maintenance.ts",
     "test:maintenance": "tsx scripts/verify-maintenance.ts"
   },
   "dependencies": {
