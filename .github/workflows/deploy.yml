@@ -97,9 +97,7 @@ jobs:
             echo "$BASE login -> $STATUS $(cat /tmp/login-response.json)"
             test "$STATUS" = "200"
 
-            cat > /tmp/company.json <<'JSON'
-            {"state":{"companyName":"Smoke Charter Co","day":1,"cash":10000,"debt":0,"reputation":0.5,"rating":0,"reviewCount":0,"companyValue":10000,"lifetimeRevenue":0,"lifetimeProfit":0,"islandId":"harbor","boats":[]}}
-JSON
+            printf '%s\n' '{"state":{"companyName":"Smoke Charter Co","day":1,"cash":10000,"debt":0,"reputation":0.5,"rating":0,"reviewCount":0,"companyValue":10000,"lifetimeRevenue":0,"lifetimeProfit":0,"islandId":"harbor","boats":[]}}' > /tmp/company.json
             STATUS=$(curl -sS -o /tmp/company-save.json -w "%{http_code}" -b /tmp/login-cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/company/sync" --data-binary @/tmp/company.json)
             echo "$BASE company save -> $STATUS $(cat /tmp/company-save.json)"
             test "$STATUS" = "200"
