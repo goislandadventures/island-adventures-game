@@ -481,3 +481,115 @@ input:focus,select:focus{
   .weatherGrid{gap:6px}
   .bottomNav{width:calc(100% - 8px);bottom:4px}
 }
+
+
+/* Five-island archipelago — intentionally staggered, not circular */
+.ocean{height:335px}
+.i0{left:2%;top:56%}
+.i1{left:17%;top:8%}
+.i2{left:40%;top:39%}
+.i3{right:12%;top:4%}
+.i4{right:1%;top:57%}
+@media(min-width:700px){
+  .ocean{height:365px}
+  .i0{left:4%;top:58%}
+  .i1{left:21%;top:8%}
+  .i2{left:43%;top:39%}
+  .i3{right:17%;top:5%}
+  .i4{right:3%;top:58%}
+}
+
+/* Turtle Captain School helper */
+.captainSchoolOverlay{
+  position:fixed;inset:0;z-index:90;pointer-events:auto;
+}
+.captainSchoolShade{
+  position:absolute;inset:0;background:rgba(13,39,64,.32);
+  backdrop-filter:blur(2px);
+}
+.turtleCoach{
+  position:absolute;right:10px;bottom:94px;
+  width:min(390px,calc(100vw - 20px));
+  z-index:2;
+}
+.coachBubble{
+  position:relative;
+  margin-right:46px;
+  background:linear-gradient(180deg,#fffdf3 0%,#f7f6dc 100%);
+  border:3px solid var(--ia-navy);
+  border-radius:24px;
+  padding:17px 17px 64px;
+  box-shadow:0 7px 0 var(--ia-navy-deep),0 16px 28px rgba(13,39,64,.24);
+}
+.coachBubble:after{
+  content:"";
+  position:absolute;right:-18px;bottom:34px;
+  width:30px;height:30px;
+  background:#f7f6dc;
+  border-right:3px solid var(--ia-navy);
+  border-bottom:3px solid var(--ia-navy);
+  transform:rotate(-24deg) skew(-8deg);
+  border-radius:0 0 8px 0;
+}
+.coachBubble>span{
+  display:block;
+  color:#16849a;
+  font-size:.67rem;
+  font-weight:1000;
+  letter-spacing:.13em;
+  margin-bottom:6px;
+}
+.coachBubble h3{
+  margin:0 0 8px;
+  color:var(--ia-navy-deep);
+  font-size:1.22rem;
+  line-height:1.08;
+}
+.coachBubble p{
+  margin:0;
+  color:var(--ia-navy);
+  font-weight:800;
+  font-size:.98rem;
+  line-height:1.42;
+}
+.coachProgress{
+  display:flex;gap:5px;align-items:center;
+  margin:14px 0 0;
+}
+.coachProgress i{
+  display:block;height:7px;flex:1;
+  background:#d4e0df;border-radius:999px;
+  box-shadow:inset 0 1px 1px rgba(13,39,64,.16);
+}
+.coachProgress i.done{background:linear-gradient(90deg,#69cf4d,#9ee86f)}
+.coachNext{
+  position:absolute;left:16px;right:78px;bottom:14px;
+  min-height:42px;
+  background:linear-gradient(180deg,#ffe77e,#ffc947);
+  color:var(--ia-navy-deep);
+}
+.turtleCoachAvatar{
+  position:absolute;right:-2px;bottom:-22px;
+  width:104px;height:104px;
+  overflow:hidden;
+  border-radius:28px;
+  border:3px solid var(--ia-navy);
+  background:linear-gradient(#59d9e8,#27bfd7);
+  box-shadow:0 6px 0 var(--ia-navy-deep),0 10px 20px rgba(13,39,64,.24);
+  z-index:3;
+}
+.turtleCoachAvatar img{
+  position:absolute;
+  height:170px;width:auto;max-width:none;
+  left:-108px;top:-42px;
+  pointer-events:none;user-select:none;
+}
+@media(max-width:430px){
+  .turtleCoach{right:7px;bottom:92px;width:calc(100vw - 14px)}
+  .coachBubble{margin-right:40px;padding:15px 14px 62px;border-radius:21px}
+  .coachBubble p{font-size:.93rem}
+  .coachBubble h3{font-size:1.12rem}
+  .turtleCoachAvatar{width:96px;height:96px;right:-1px;bottom:-19px}
+  .turtleCoachAvatar img{height:158px;left:-99px;top:-38px}
+  .coachNext{right:72px}
+}
