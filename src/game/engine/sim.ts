@@ -156,7 +156,44 @@ function operatingBoatCount(state:CompanyState):number{
   if(!state.boats.length)return 0;
   return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
-export function generateDemand(state:CompanyState,weather=generateWeather(state),market?:MarketingMarketSnapshot):Booking[]{
+function generateDemoDemand(state:CompanyState):Booking[]{
+  if(!state.boats.length)return [];
+  const rng=new RNG((state.seed^0x5f3759df)+(state.day*104729));
+  const products=[...state.products];
+  if(!products.length)return [];
+  const firstIndex=rng.int(0,products.length-1);
+  const first=products[firstIndex];
+  const remaining=products.filter((_,i)=>i!==firstIndex);
+  const second=remaining.length?rng.pick(remaining):first;
+  const picked=[first,second];
+  const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
+  const chosenSlots=[rng.pick(slots),rng.pick(slots)];
+  if(chosenSlots[1]===chosenSlots[0])chosenSlots[1]=slots[(slots.indexOf(chosenSlots[0])+1+rng.int(0,1))%slots.length];
+  const sources:Booking['source'][]=['organic','maps','search','social','hotel','referral','repeat'];
+  return picked.map((product,index)=>{
+    const source=rng.pick(sources);
+    const customer=customerForTrip(rng,product.type,source);
+    const neverTips=rng.chance(.12);
+    const baseTip=customer.type==='luxury'?.40:customer.type==='couple'||customer.type==='repeat'?.34:customer.type==='celebration'?.36:.28;
+    return {
+      id:`DEMO-D${state.day}-${index+1}-${product.type}-${rng.int(1000,9999)}`,
+      tripType:product.type,
+      partySize:rng.int(2,6),
+      revenue:product.price,
+      source,
+      guestExpectation:Number((.58+rng.next()*.34).toFixed(2)),
+      timeSlot:chosenSlots[index],
+      customerType:customer.type,
+      customerLabel:customer.label,
+      boatsRequired:1,
+      neverTips,
+      tipCeiling:Number(clamp(baseTip*(.82+rng.next()*.32),.12,.40).toFixed(2))
+    };
+  });
+}
+
+export function generateDemand(state:CompanyState,weather=generateWeather(state),market?:MarketingMarketSnapshot,demoMode=false):Booking[]{
+  if(demoMode)return generateDemoDemand(state);
   if(!state.boats.length||hurricaneForDay(state))return [];
   if(state.day===1){
     const sandbar=state.products.find(p=>p.type==='sandbar')!;
@@ -319,7 +356,7 @@ function computeCompanyValue(state:CompanyState):number{
   return Math.round(state.cash+fleet-state.debt+earnedReputation+profitValue);
 }
 
-export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>,market?:MarketingMarketSnapshot):{state:CompanyState;result:DayResult}{
+export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>,market?:MarketingMarketSnapshot,demoMode=false):{state:CompanyState;result:DayResult}{
   let state=structuredClone(input);
   state.staff=state.staff??[];
   state.marketing=state.marketing??{dailyBudget:0,focus:'search',reviewAsk:true};
@@ -359,7 +396,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     return {state,result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:catastrophicReviews,tripOutcomes:[],revenue:0,tips:0,expenses,refunds:0,loanPayment:loanResult.payment,fixedCosts,hurricaneSummary:storm.summary,destroyedBoatNames:storm.destroyedBoatNames,summary:storm.summary}};
   }
 
-  const bookings=generateDemand(state,weather,market);
+  const bookings=generateDemand(state,weather,market,demoMode);
   const availableBoats=state.boats.slice(0,operatingBoatCount(state));
   if(!availableBoats.length){
     state.cash-=renew.expense+marketingSpend;
