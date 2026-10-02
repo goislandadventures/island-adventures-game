@@ -55,6 +55,10 @@ jobs:
         if: steps.cf.outputs.ready == 'true'
         run: npx wrangler d1 migrations apply DB --remote
 
+      - name: Verify Captain School bookings
+        if: steps.cf.outputs.ready == 'true'
+        run: npm run test:captain-school
+
       - name: Build
         if: steps.cf.outputs.ready == 'true'
         run: npm run build
