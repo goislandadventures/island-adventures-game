@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN tutorial_completed INTEGER NOT NULL DEFAULT 0;
