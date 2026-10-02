@@ -165,23 +165,26 @@ export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):C
   if(!marina||!template)throw new Error('Marina or boat data unavailable.');
   if(template.lengthFt>marina.maxBoatFt)throw new Error('That boat is too big for your current marina.');
   const owned=ownedFromListing(state,listing);
-  const cashRequired=finance?Math.ceil(listing.askingPrice*.25):listing.askingPrice;
-  if(state.cash<cashRequired)throw new Error('Not enough cash for this boat.');
+  const purchaseCashRequired=finance?Math.ceil(listing.askingPrice*.25):listing.askingPrice;
+  const additionalSlip=state.boats.length?marina.monthlySlip:0;
+  const cashRequired=purchaseCashRequired+additionalSlip;
+  if(state.cash<cashRequired)throw new Error('Not enough cash for this boat and its marina slip.');
 
   let loans=[...(state.loans??[])];
   let debt=state.debt??0;
   let memo=`Bought used ${listing.name}`;
   if(finance){
-    const principal=listing.askingPrice-cashRequired;
+    const principal=listing.askingPrice-purchaseCashRequired;
     const apr=.2499;
     const dailyRate=apr/365;
     const dailyPayment=Math.ceil(principal*dailyRate/(1-Math.pow(1+dailyRate,-730)));
     const loan:Loan={id:`loan-${owned.instanceId}`,originalPrincipal:principal,balance:principal,apr,dailyPayment,boatInstanceId:owned.instanceId};
     loans.push(loan); debt+=principal; memo=`Financed used ${listing.name}; 25% down · 24.99% APR · 2 game years`;
   }
+  const ledger=[...state.ledger,{day:state.day,category:'boat',amount:-purchaseCashRequired,memo}];
+  if(additionalSlip)ledger.push({day:state.day,category:'marina',amount:-additionalSlip,memo:`Additional monthly slip for ${listing.name} at ${marina.name}`});
   return {
-    ...state,cash:state.cash-cashRequired,debt,loans,boats:[...state.boats,owned],
-    ledger:[...state.ledger,{day:state.day,category:'boat',amount:-cashRequired,memo}]
+    ...state,cash:state.cash-cashRequired,debt,loans,boats:[...state.boats,owned],ledger
   };
 }
 
