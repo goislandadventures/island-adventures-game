@@ -145,6 +145,6 @@ export default function Splash({onEnter}:{onEnter:()=>void}){
         <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
       </div>
     </div>
-    <small className="splashV4Build">Development build</small>
+    <small className="splashV4Build">Version 1.0 © 2026</small>
   </div></main>;
 }
