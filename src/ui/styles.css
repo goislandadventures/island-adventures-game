@@ -1933,3 +1933,271 @@ input:focus,select:focus{
     line-height:1.5;
   }
 }
+
+/* ===== Splash V5: cinematic Alligator Reef ===== */
+.splashV5{
+  min-height:100svh!important;
+  overflow:hidden!important;
+  background:#0e73aa!important;
+}
+.splashV5Scene{
+  position:relative!important;
+  width:100%!important;
+  min-height:100svh!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background:#0e73aa!important;
+}
+.splashV5Sky{
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  height:49svh!important;
+  z-index:0!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 54% 20%,rgba(255,255,255,.26),transparent 23%),
+    linear-gradient(180deg,#0b6db0 0%,#2a94ce 38%,#65c4e5 70%,#b5e8ee 100%)!important;
+}
+.splashV5Atmosphere{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(112deg,rgba(255,255,255,.10),transparent 26% 68%,rgba(255,255,255,.05)),
+    radial-gradient(ellipse at 50% 98%,rgba(255,255,255,.34),transparent 42%);
+  opacity:.9;
+}
+.splashV5CloudBand{
+  position:absolute;
+  height:18px;
+  border-radius:999px;
+  background:rgba(255,255,255,.42);
+  filter:blur(8px);
+  opacity:.58;
+}
+.cloudBandOne{left:4%;right:52%;bottom:9%;transform:rotate(-2deg)}
+.cloudBandTwo{left:56%;right:4%;bottom:13%;transform:rotate(1deg);opacity:.38}
+.splashV5Horizon{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  top:48.7svh!important;
+  height:3px!important;
+  z-index:6!important;
+  background:linear-gradient(90deg,transparent,rgba(238,255,255,.95) 18% 82%,transparent)!important;
+  box-shadow:0 -2px 14px rgba(255,255,255,.22),0 2px 10px rgba(0,88,119,.12)!important;
+}
+.splashV5Sea{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  top:49svh!important;
+  bottom:0!important;
+  z-index:1!important;
+  overflow:hidden!important;
+  background:#24bfd0!important;
+}
+.splashV5Sea:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(7,92,119,.14),transparent 20%),
+    radial-gradient(ellipse at 50% 2%,rgba(255,255,255,.28),transparent 30%),
+    linear-gradient(115deg,transparent 0 23%,rgba(255,255,255,.05) 29%,transparent 35% 62%,rgba(255,255,255,.08) 69%,transparent 76%);
+  animation:v5WaterLight 10s ease-in-out infinite alternate;
+}
+@keyframes v5WaterLight{
+  to{transform:translate3d(1.5%,.6%,0) scale(1.018);opacity:.78}
+}
+.splashV5WaterArt{
+  position:absolute!important;
+  inset:-4% -2% -3%!important;
+  width:104%!important;
+  height:107%!important;
+  display:block!important;
+}
+.splashV5Tower{
+  position:absolute!important;
+  z-index:11!important;
+  left:50%!important;
+  top:28.5svh!important;
+  transform:translateX(-50%)!important;
+  width:clamp(190px,39vw,315px)!important;
+  height:auto!important;
+  pointer-events:none!important;
+}
+.splashV5TowerArt{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+}
+.splashV5DistantFleet{
+  position:absolute!important;
+  z-index:8!important;
+  left:50%!important;
+  top:47.2svh!important;
+  transform:translateX(-50%)!important;
+  width:min(102vw,980px)!important;
+  height:auto!important;
+  opacity:.88!important;
+  pointer-events:none!important;
+}
+.splashV5Boat{
+  position:absolute!important;
+  z-index:13!important;
+  pointer-events:none!important;
+  animation:v5BoatFloat 3.6s ease-in-out infinite!important;
+}
+.splashV5Boat .boatArt{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  display:block!important;
+  filter:drop-shadow(0 14px 8px rgba(2,71,86,.28))!important;
+}
+.splashV5BoatLeft{
+  left:-2.5%!important;
+  bottom:9.5%!important;
+  width:clamp(155px,29vw,235px)!important;
+  transform:rotate(-3deg)!important;
+}
+.splashV5BoatRight{
+  right:-1%!important;
+  bottom:22%!important;
+  width:clamp(128px,23vw,190px)!important;
+  animation-delay:.65s!important;
+}
+.splashV5Wake{
+  position:absolute;
+  z-index:1;
+  left:12%;
+  right:8%;
+  bottom:14%;
+  height:16px;
+  border-radius:50%;
+  border-bottom:4px solid rgba(239,255,255,.45);
+  transform:skewX(-18deg);
+  filter:blur(.5px);
+}
+.splashV5BoatRight .splashV5Wake{left:16%;right:3%}
+@keyframes v5BoatFloat{
+  0%,100%{translate:0 0}
+  50%{translate:0 -4px}
+}
+.splashV5Hero{
+  position:absolute!important;
+  z-index:30!important;
+  top:calc(env(safe-area-inset-top) + 8px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(95vw,660px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  text-align:center!important;
+}
+.splashV5Logo{
+  display:block!important;
+  width:min(64vw,370px)!important;
+  max-height:18svh!important;
+  object-fit:contain!important;
+  margin:0 auto 2px!important;
+  filter:
+    drop-shadow(0 5px 2px rgba(0,35,57,.20))
+    drop-shadow(0 10px 18px rgba(0,68,99,.10))!important;
+}
+.splashV5Tag{
+  margin:0 0 8px!important;
+  padding:5px 14px!important;
+  border-radius:999px!important;
+  color:#17324d!important;
+  background:rgba(255,255,255,.92)!important;
+  border:1px solid rgba(23,50,77,.14)!important;
+  box-shadow:0 3px 0 rgba(23,50,77,.23),0 8px 24px rgba(0,69,98,.12)!important;
+  backdrop-filter:blur(8px)!important;
+  font-weight:950!important;
+  font-size:clamp(.78rem,2.2vw,.98rem)!important;
+  white-space:nowrap!important;
+}
+.splashV5Buttons{
+  display:flex!important;
+  justify-content:center!important;
+  align-items:stretch!important;
+  gap:9px!important;
+  flex-wrap:nowrap!important;
+}
+.splashV5 .enterGame,
+.splashV5 .soundPrompt{
+  min-height:50px!important;
+  margin:0!important;
+  border-width:3px!important;
+  box-shadow:0 6px 0 #17324d,0 12px 24px rgba(7,60,78,.15)!important;
+}
+.splashV5 .enterGame{
+  padding:11px 23px!important;
+  background:linear-gradient(180deg,#ffe27b,#ffc83e)!important;
+  letter-spacing:.035em!important;
+}
+.splashV5 .soundPrompt{
+  padding:9px 13px!important;
+  background:rgba(255,255,255,.94)!important;
+  backdrop-filter:blur(8px)!important;
+}
+.splashV5Location{
+  position:absolute!important;
+  z-index:20!important;
+  left:50%!important;
+  top:45.5svh!important;
+  transform:translateX(-50%)!important;
+  padding:5px 10px!important;
+  border-radius:999px!important;
+  background:rgba(8,62,78,.55)!important;
+  color:rgba(255,255,255,.95)!important;
+  border:1px solid rgba(255,255,255,.30)!important;
+  backdrop-filter:blur(7px)!important;
+  font-size:.58rem!important;
+  font-weight:950!important;
+  letter-spacing:.13em!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.18)!important;
+}
+.splashV5Build{
+  position:absolute!important;
+  z-index:40!important;
+  left:50%!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  color:#0f5970!important;
+  opacity:.58!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.55)!important;
+}
+@media(max-width:520px){
+  .splashV5Sky{height:49svh!important}
+  .splashV5Horizon{top:48.7svh!important}
+  .splashV5Sea{top:49svh!important}
+  .splashV5Hero{width:97vw!important;top:calc(env(safe-area-inset-top) + 6px)!important}
+  .splashV5Logo{width:min(67vw,320px)!important;max-height:16.5svh!important}
+  .splashV5Tag{font-size:.74rem!important;padding:4px 10px!important;margin-bottom:7px!important}
+  .splashV5Buttons{gap:7px!important}
+  .splashV5 .enterGame{font-size:.84rem!important;padding:9px 14px!important;min-height:47px!important}
+  .splashV5 .soundPrompt{font-size:.75rem!important;padding:7px 9px!important;min-height:47px!important}
+  .splashV5Tower{
+    top:28.3svh!important;
+    width:clamp(205px,49vw,270px)!important;
+  }
+  .splashV5DistantFleet{top:47.6svh!important;width:118vw!important}
+  .splashV5BoatLeft{left:-8%!important;bottom:10%!important;width:154px!important}
+  .splashV5BoatRight{right:-6%!important;bottom:22%!important;width:122px!important}
+  .splashV5Location{top:45.8svh!important;font-size:.52rem!important;padding:4px 8px!important}
+}
+@media(max-height:720px){
+  .splashV5Hero{top:calc(env(safe-area-inset-top) + 2px)!important}
+  .splashV5Logo{max-height:15svh!important}
+  .splashV5Tag{margin-bottom:5px!important}
+  .splashV5 .enterGame,.splashV5 .soundPrompt{min-height:44px!important}
+  .splashV5Tower{top:27.2svh!important}
+}
