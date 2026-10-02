@@ -1,7 +1,7 @@
 import { boatTemplates, defaultProducts, islands, marinas } from '../data/content';
 import type { Booking, CompanyState, DayResult, EquipmentSystem, FailurePhase, MaintenanceDecision, MaintenanceIncident, MarketingFocus, MarketingMarketSnapshot, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
 import { RNG } from './rng';
-import { applyLoanPayments, calendarForDay, canonicalMarketingFocus, customerForTrip, customerProfiles, marketingPerformance, nextHundred, nextThreeHundred, serviceStatus } from './depth';
+import { activeHotelDealsForDay, applyLoanPayments, calendarForDay, canonicalMarketingFocus, customerForTrip, customerProfiles, marketingPerformance, nextHundred, nextThreeHundred, serviceStatus } from './depth';
 import { applyHurricane, hurricaneForDay } from './hurricane';
 
 const clamp = (n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
@@ -313,6 +313,17 @@ function seasonalWindDirection(seed:number,day:number,month:number):WeatherDay['
   return rng.pick<WeatherDay['windDirection']>(['NE','E','NE','E','N','NE']);
 }
 
+function calmBreakForDay(seed:number,day:number){
+  const block=Math.floor((day-1)/7);
+  const blockStart=block*7+1;
+  const anchor=blockStart+Math.floor(weatherUnit(seed,blockStart,0x6ac690c5)*7);
+  const distance=Math.abs(day-anchor);
+  return {
+    anchor:distance===0,
+    windReduction:distance===0?6.5:distance===1?2.0:0
+  };
+}
+
 export function generateWeather(state:CompanyState):WeatherDay{
   const climate=climateForGameDay(state.day);
   const cal=climate.calendar;
@@ -326,6 +337,7 @@ export function generateWeather(state:CompanyState):WeatherDay{
   const clarityNoise=smoothWeatherNoise(state.seed,state.day,0x44444444);
   const gustRoll=weatherUnit(state.seed,state.day,0x55555555);
   const showerRoll=weatherUnit(state.seed,state.day,0x66666666);
+  const calmBreak=calmBreakForDay(state.seed,state.day);
 
   const wetSeason=cal.month>=5&&cal.month<=10;
   const monthlyRainBase=clamp(12+climate.precip*6.6,14,58);
@@ -347,13 +359,15 @@ export function generateWeather(state:CompanyState):WeatherDay{
     .01,.62
   );
 
-  const gustBoost=Math.pow(gustRoll,3)*(wetSeason?8:11);
-  const windKts=clamp(Math.round(
-    climate.wind
-    +windNoise*4.2
+  const gustBoost=Math.pow(gustRoll,3)*(wetSeason?7:9);
+  const rawWind=clamp(Math.round(
+    climate.wind*.76
+    +windNoise*5.4
     +gustBoost
     +front.wind+wet.wind+tropical.wind
+    -calmBreak.windReduction
   ),3,32);
+  const windKts=calmBreak.anchor&&stormRisk<.30?Math.min(10,rawWind):rawWind;
 
   const temperatureF=clamp(Math.round(
     climate.high
@@ -477,6 +491,7 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
   const marketingPerf=marketingPerformance(state,market);
   const paidBoost=1+(marketingPerf.bookingBoost/competition);
   const calendar=calendarForDay(state.day,state,market);
+  const activeHotelDeals=activeHotelDealsForDay(state);
   const capacity=operatingBoatCount(state);
   for(const product of state.products){
     const ref=referencePrice[product.type]??product.price;
@@ -485,7 +500,8 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
     const probability=clamp(product.baseDemand*island.tourism*weatherFit(product.type,weather)*priceFit*reputationFit*.62*paidBoost*calendar.demandMultiplier,.025,.98);
     if(rng.chance(probability)){
       let source:Booking['source'];
-      if(state.reviewCount>=10&&state.reputation>.65&&rng.chance(.20))source=rng.chance(.55)?'repeat':'referral';
+      if(activeHotelDeals.length&&rng.chance(clamp(.22*activeHotelDeals.length,.22,.66)))source='hotel';
+      else if(state.reviewCount>=10&&state.reputation>.65&&rng.chance(.20))source=rng.chance(.55)?'repeat':'referral';
       else if(rng.chance(.10))source='marketplace';
       else if(marketing.dailyBudget>0&&rng.chance(.55))source=canonicalMarketingFocus(marketing.focus);
       else source=rng.pick<Booking['source']>(['organic','maps','social','hotel','paid']);
@@ -585,6 +601,11 @@ function resolveHiddenTripOutcome(
   if(boat){
     add(Math.max(0,.70-boat.condition)*.24,'Guests noticed the boat was rough around the edges.','The boat condition took some polish off the experience.');
     add(Math.max(0,.60-boat.reliability)*.16,'A small boat issue interrupted the otherwise good trip.','A minor boat issue interrupted the flow of the trip.');
+  }
+
+  const calendar=calendarForDay(state.day,state);
+  if(calendar.crowdRisk>0){
+    add(calendar.crowdRisk,'Heavy holiday and weekend traffic contributed to a minor guest injury.','Crowded docks and heavy boat traffic contributed to a minor guest injury during the outing.');
   }
 
   if(booking.customerType==='family'&&decision==='run')add(Math.max(0,weather.windKts-13)*.012,'The ride was rougher than this family was comfortable with.','The family found part of the ride rough.');
@@ -862,7 +883,8 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     const fleetIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
     const hiredCaptain=fleetIndex>0?state.staff[fleetIndex-1]:undefined;
     const captainRepairRisk=hiredCaptain?captainPerformance(state,hiredCaptain).repairRisk:0;
-    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk+deferredRisk+captainRepairRisk,.01,.62);
+    const crowdRisk=calendar.crowdRisk*.90;
+    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk+deferredRisk+captainRepairRisk+crowdRisk,.01,.62);
     let condition=clamp(boat.condition-used*.003-overdueWear*used,.20,1);
     let reliability=clamp(boat.reliability-overdueWear*.55*used,.25,.99);
     if(!maintenanceIncident&&rng.chance(failureRisk)){
