@@ -277,8 +277,8 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
       <label>Charter company<input value={companyName} maxLength={28} placeholder="Keys Adventure Co." onChange={e=>setCompanyName(e.target.value)}/></label>
       <fieldset className="colorField"><legend>Company color</legend><div className="colorRow">{companyColors.map(color=><label className={`colorChoice ${companyColor===color.value?'picked':''}`} key={color.value} style={{background:color.value}} title={color.name}><input type="radio" name="companyColor" value={color.value} checked={companyColor===color.value} onChange={()=>setCompanyColor(color.value)}/><span>{companyColor===color.value?'✓':''}</span></label>)}</div><small>Selected: <i className="selectedColorChip" style={{background:companyColor}}/> {companyColors.find(color=>color.value===companyColor)?.name??'Custom Color'}</small></fieldset>
-      <button className="primary big" disabled={!captainName.trim()||!companyName.trim()} onClick={begin}>Launch Company →</button>
-      <p className="fine">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
+      <button className="primary big setupLaunchButton" disabled={!captainName.trim()||!companyName.trim()} onClick={begin}>Launch Company →</button>
+      <p className="fine setupHelperText">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
     </section>
   </main>;
 
