@@ -151,6 +151,12 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     playDayResultSounds(out.result,state.day);
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
   };
+  const continueAfterResults=()=>{
+    setLast(null);
+    setTripDecisions({});
+    setTab('dock');
+    window.scrollTo(0,0);
+  };
   const restartDemo=()=>{
     if(mode!=='demo')return;
     const fresh=createCompany('','');
@@ -186,6 +192,27 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const modeControl=mode==='registered'
     ? <button type="button" className="gameHeaderControl signOutControl" disabled={signingOut} onClick={signOutAccount}>{signingOut?'Signing out…':'Sign out'}</button>
     : <button type="button" className="gameHeaderControl" onClick={()=>setMenuOpen(true)}>☰ Menu</button>;
+
+  if(last)return <main className="shell dayDebriefShell">
+    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className="headerModeActions"><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':'DEMO'}</div>{modeControl}</div></header>
+    <section className="card event dayDebrief">
+      <span className="eyebrow">DAY {last.weather.day} COMPLETE · CAPTAIN'S LOG</span>
+      <h2>{last.tripsRun?`${last.tripsRun} charter${last.tripsRun===1?'':'s'} complete`:'Day closed out'}</h2>
+      <p className="dayDebriefIntro">Day {state.day} has not started yet. Review what your choices caused before moving on.</p>
+      {last.tripOutcomes.map(x=><p className="story" key={x.bookingId}><b>{x.timeSlot[0].toUpperCase()+x.timeSlot.slice(1)} {state.products.find(p=>p.type===x.tripType)?.name}:</b> {x.note}</p>)}
+      {last.hurricaneSummary&&<p className="story hurricaneStory">🌀 {last.hurricaneSummary}</p>}
+      {last.destroyedBoatNames?.length?<p className="story danger">Destroyed: {last.destroyedBoatNames.join(', ')}</p>:null}
+      {last.wildlifeEvent&&<p className="story">🐬 {last.wildlifeEvent}</p>}
+      {last.maintenanceEvent&&<p className="story danger">🔧 {last.maintenanceEvent}</p>}
+      {last.loanPayment>0&&<p className="story financeStory">💳 Loan payments today: {money(last.loanPayment)}</p>}
+      <div className="resultGrid"><div><span>Fares</span><b>{money(last.revenue)}</b></div><div><span>Tips</span><b>{money(last.tips)}</b></div><div><span>Expenses</span><b>-{money(last.expenses)}</b></div><div><span>Net cash</span><b>{money(last.revenue+last.tips-last.expenses)}</b></div></div>
+      {last.reviews.length?<div className="dayReviews"><h3>Guest reviews</h3>{last.reviews.map((r,i)=><blockquote key={i}><b>{'★'.repeat(r.stars)}{'☆'.repeat(5-r.stars)}</b> “{r.text}”{mode==='demo'&&r.stars<5&&<div className="reviewCause"><strong>Why this wasn't 5★</strong><ul>{r.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div>}</blockquote>)}</div>:<p className="muted">No guest review was posted today.</p>}
+      <div className="dayAdvanceBox"><b>{demoComplete?'Captain School week complete.':`Next up: Day ${state.day}`}</b><span>{demoComplete?'Your graduation screen is next.':'The next forecast and bookings appear only after you continue.'}</span></div>
+      <button className="primary big" onClick={continueAfterResults}>{demoComplete?'See Captain School Graduation →':`Start Day ${state.day} →`}</button>
+    </section>
+    {menuOpen&&mode!=='registered'&&<GameMenu onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onHelp={openHelpFromMenu}/>}
+    {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
+  </main>;
 
   if(!setupStarted)return <main className="shell onboarding">
     <div className="onboardingGameControl">{modeControl}</div>
@@ -238,7 +265,6 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
         {todaysBookings.length>0&&<><div className="decisionTitle">Captain's plan for the day</div>{state.day===1&&<p className="captainHint">17 kt east wind. Each trip gets its own decision. The morning sandbar and afternoon snorkel do not have to use the same plan.</p>}{businessEvent&&<p className="eventBlockNotice">Pick an owner decision first.</p>}{hurricane&&state.hurricanePlan?.day!==state.day&&<p className="eventBlockNotice">Choose whether to haul the fleet or leave it in the water.</p>}{!hurricane&&todaysBookings.some(b=>!tripDecisions[b.id])&&<p className="tripChoiceNotice">Make a choice for each trip.</p>}<button className="primary big" disabled={Boolean(businessEvent)||(Boolean(hurricane)&&state.hurricanePlan?.day!==state.day)||(!hurricane&&todaysBookings.some(b=>!tripDecisions[b.id]))} onClick={runDay}>{hurricane?'Face the Storm →':"Run Today's Plan →"}</button></>}
       </section>}
 
-      {last&&<section className="card event"><span className="eyebrow">CAPTAIN'S LOG · DAY {last.weather.day}</span><h2>{last.tripsRun?'Boats are back at the dock':'Day closed out'}</h2>{last.tripOutcomes.map(x=><p className="story" key={x.bookingId}><b>{x.timeSlot} {state.products.find(p=>p.type===x.tripType)?.name}:</b> {x.note}</p>)}{last.hurricaneSummary&&<p className="story hurricaneStory">🌀 {last.hurricaneSummary}</p>}{last.destroyedBoatNames?.length?<p className="story danger">Destroyed: {last.destroyedBoatNames.join(', ')}</p>:null}{last.wildlifeEvent&&<p className="story">🐬 {last.wildlifeEvent}</p>}{last.maintenanceEvent&&<p className="story danger">🔧 {last.maintenanceEvent}</p>}{last.loanPayment>0&&<p className="story financeStory">💳 Loan payments today: {money(last.loanPayment)}</p>}<div className="resultGrid"><div><span>Fares</span><b>{money(last.revenue)}</b></div><div><span>Tips</span><b>{money(last.tips)}</b></div><div><span>Expenses</span><b>-{money(last.expenses)}</b></div><div><span>Net cash</span><b>{money(last.revenue+last.tips-last.expenses)}</b></div></div>{last.reviews.map((r,i)=><blockquote key={i}><b>{'★'.repeat(r.stars)}{'☆'.repeat(5-r.stars)}</b> “{r.text}”{mode==='demo'&&r.stars<5&&<div className="reviewCause"><strong>Why this wasn't 5★</strong><ul>{r.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul></div>}</blockquote>)}</section>}
 
       {demoComplete&&<section className="card demoComplete"><span className="eyebrow">WEEK 1 COMPLETE</span><h2>You graduated from Captain School.</h2><p>You completed all seven tutorial days. Create a free owner account to keep building boats, reviews, revenue and company value. Registered companies are eligible for the Island leaderboards.</p><button className="primary big" onClick={onUpgrade}>Create Account & Keep Playing →</button><p className="fine">Your demo is intentionally not ranked.</p></section>}
     </>}

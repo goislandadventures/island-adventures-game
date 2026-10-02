@@ -1868,3 +1868,14 @@ input:focus,select:focus{
     border-radius:22px 22px 12px 12px;
   }
 }
+
+/* Day transition: finish and understand the previous day before the next day begins. */
+.dayDebriefShell{padding-bottom:36px}
+.dayDebriefShell .brand{position:static}
+.dayDebrief{margin-top:18px;background:linear-gradient(180deg,#fffaf0 0%,#f4fbef 100%)}
+.dayDebriefIntro{font-weight:800;color:#49657b;background:#fff;border:2px solid rgba(23,50,77,.14);border-radius:12px;padding:11px 12px}
+.dayDebrief .story{border:1px solid rgba(23,50,77,.12)}
+.dayReviews{margin-top:14px}
+.dayAdvanceBox{display:flex;flex-direction:column;gap:3px;margin:16px 0 12px;padding:12px 13px;background:#fff3bd;border:2px solid #17324d;border-radius:14px;box-shadow:0 3px 0 #17324d}
+.dayAdvanceBox b{font-size:1rem}
+.dayAdvanceBox span{font-size:.8rem;color:#526b7c;font-weight:750}
