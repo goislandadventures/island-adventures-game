@@ -38,6 +38,11 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   const chooseRegistered=()=>{
     if(checkingSession)return;
     if(signedInPlayer){
+      if(signedInPlayer.mustChangePassword||signedInPlayer.force_password_change){
+        setPendingPlayer(signedInPlayer);
+        setView('change');
+        return;
+      }
       onStart('registered',signedInPlayer,signedInState);
       return;
     }
