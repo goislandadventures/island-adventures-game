@@ -975,3 +975,238 @@ input:focus,select:focus{
   .coachBubble{margin-right:46px!important;padding-right:14px!important}
   .coachNext{right:102px!important}
 }
+
+/* ===== Splash V3: bright Florida Keys day ===== */
+.splashV3{
+  min-height:100svh!important;
+  background:#bcefff!important;
+  overflow:hidden!important;
+}
+.splashV3 .splashV3Scene{
+  position:relative;
+  min-height:100svh;
+  width:100%;
+  overflow:hidden;
+  isolation:isolate;
+  background:#bcefff;
+}
+.splashV3Sky{
+  position:absolute;
+  inset:0 0 auto 0;
+  height:36svh;
+  z-index:0;
+  background:
+    radial-gradient(circle at 72% 18%,rgba(255,255,255,.8),transparent 15%),
+    linear-gradient(180deg,#c9f3ff 0%,#9be8fb 56%,#73ddef 100%);
+}
+.splashV3Horizon{
+  position:absolute;
+  top:34.5svh;
+  left:-2%;
+  width:104%;
+  height:4svh;
+  z-index:2;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.15) 28%,rgba(83,220,229,.4) 75%,transparent);
+  filter:blur(2px);
+  opacity:.88;
+}
+.splashV3Sea{
+  position:absolute;
+  left:0;right:0;top:35svh;bottom:0;
+  z-index:1;
+  overflow:hidden;
+  background:#43d8df;
+}
+.splashV3Water{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.splashV3Sea:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(105deg,transparent 0 17%,rgba(255,255,255,.08) 22%,transparent 29% 44%,rgba(255,255,255,.09) 50%,transparent 58%),
+    radial-gradient(ellipse at 48% 5%,rgba(255,255,255,.24),transparent 26%);
+  mix-blend-mode:screen;
+  animation:v3Surface 9s ease-in-out infinite alternate;
+}
+@keyframes v3Surface{to{transform:translate3d(2%,1%,0) scale(1.025);opacity:.72}}
+
+.splashV3Hero{
+  position:absolute;
+  z-index:20;
+  top:max(2px,env(safe-area-inset-top));
+  left:50%;
+  transform:translateX(-50%);
+  width:min(92vw,600px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.splashV3Logo{
+  display:block;
+  width:min(61vw,350px);
+  max-height:17svh;
+  object-fit:contain;
+  margin:0 auto 1px;
+  filter:drop-shadow(0 5px 2px rgba(23,50,77,.16));
+}
+.splashV3Tag{
+  margin:0 0 7px;
+  padding:5px 12px;
+  border-radius:999px;
+  color:#17324d;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(23,50,77,.12);
+  box-shadow:0 2px 0 rgba(23,50,77,.14);
+  font-weight:950;
+  font-size:clamp(.78rem,2.2vw,.96rem);
+  white-space:nowrap;
+}
+.splashV3Buttons{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.splashV3 .enterGame,.splashV3 .soundPrompt{
+  min-height:48px;
+  margin:0!important;
+}
+.splashV3 .enterGame{padding:10px 20px!important}
+.splashV3 .soundPrompt{padding:8px 12px!important}
+
+.splashV3Sun{
+  position:absolute;
+  z-index:4;
+  right:2.5vw;
+  top:24.5svh;
+  width:clamp(100px,18vw,145px);
+  height:auto;
+}
+.splashV3Cloud{
+  position:absolute;
+  z-index:3;
+  height:auto;
+  opacity:.98;
+}
+.splashV3Cloud.v3CloudLeft{
+  left:-3vw;
+  top:24.8svh;
+  width:clamp(155px,29vw,230px);
+}
+.splashV3Cloud.v3CloudMid{
+  left:34vw;
+  top:29.7svh;
+  width:clamp(110px,20vw,165px);
+  opacity:.9;
+}
+.splashV3Tower{
+  position:absolute;
+  z-index:7;
+  top:46svh;
+  left:50%;
+  transform:translateX(-50%);
+  width:clamp(105px,18vw,150px);
+}
+.splashV3Lighthouse{display:block;width:100%;height:auto}
+
+.splashV3Boat{
+  position:absolute;
+  z-index:9;
+  width:clamp(150px,25vw,235px);
+  animation:v3BoatFloat 3s ease-in-out infinite;
+}
+.splashV3Boat .boatArt{
+  width:100%;
+  filter:
+    drop-shadow(0 12px 7px rgba(0,102,120,.24))
+    drop-shadow(0 1px 0 rgba(255,255,255,.85));
+}
+.splashV3BoatDeck{left:5%;bottom:22%;transform:rotate(-2deg)}
+.splashV3BoatPontoon{right:2%;bottom:8%;animation-duration:3.25s}
+.splashV3BoatCenter{right:24%;bottom:27%;width:clamp(135px,22vw,205px);animation-delay:.5s}
+@keyframes v3BoatFloat{
+  0%,100%{translate:0 0}
+  50%{translate:0 -5px}
+}
+.splashV3Build{
+  position:absolute;
+  z-index:30;
+  left:50%;
+  bottom:max(8px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  color:#17324d;
+  opacity:.45;
+  white-space:nowrap;
+}
+
+@media(max-width:520px){
+  .splashV3Sky{height:37svh}
+  .splashV3Horizon{top:35.5svh}
+  .splashV3Sea{top:36svh}
+  .splashV3Hero{width:96vw}
+  .splashV3Logo{width:min(64vw,300px);max-height:15svh}
+  .splashV3Tag{font-size:.74rem;padding:4px 9px;margin-bottom:6px}
+  .splashV3 .enterGame{font-size:.86rem!important;padding:9px 15px!important}
+  .splashV3 .soundPrompt{font-size:.78rem!important;padding:7px 9px!important}
+  .splashV3Sun{top:25svh;right:1vw;width:106px}
+  .splashV3Cloud.v3CloudLeft{top:26svh;left:-8vw;width:160px}
+  .splashV3Cloud.v3CloudMid{top:31svh;left:35vw;width:112px}
+  .splashV3Tower{top:47svh;width:118px}
+  .splashV3Boat{width:145px}
+  .splashV3BoatDeck{left:-1%;bottom:21%}
+  .splashV3BoatPontoon{right:-4%;bottom:8%}
+  .splashV3BoatCenter{right:20%;bottom:28%;width:128px}
+}
+
+/* ===== Captain School V5: self-contained turtle ===== */
+.captainSchoolV5 .turtleCoach{
+  right:10px!important;
+  bottom:92px!important;
+  width:min(680px,calc(100vw - 20px))!important;
+}
+.captainSchoolV5 .coachBubble{
+  margin-right:74px!important;
+  padding:17px 18px 68px!important;
+}
+.captainSchoolV5 .coachNext{
+  left:18px!important;
+  right:128px!important;
+  bottom:15px!important;
+  min-height:44px!important;
+}
+.captainSchoolV5 .turtleCoachAvatar{
+  position:absolute!important;
+  right:-8px!important;
+  bottom:-4px!important;
+  width:150px!important;
+  height:150px!important;
+  z-index:7!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+}
+.captainSchoolV5 .turtleGuideSvg{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:visible!important;
+}
+@media(max-width:430px){
+  .captainSchoolV5 .turtleCoach{right:7px!important;bottom:90px!important;width:calc(100vw - 14px)!important}
+  .captainSchoolV5 .coachBubble{margin-right:64px!important;padding:15px 14px 66px!important}
+  .captainSchoolV5 .coachNext{right:112px!important}
+  .captainSchoolV5 .turtleCoachAvatar{width:132px!important;height:132px!important;right:-5px!important;bottom:0!important}
+}
