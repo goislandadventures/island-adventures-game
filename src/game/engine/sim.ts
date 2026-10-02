@@ -169,21 +169,211 @@ export function setPrice(state:CompanyState,type:TripProduct['type'],price:numbe
   return {...state,products:state.products.map(p=>p.type===type?{...p,price:Math.max(99,Math.round(price))}:p)};
 }
 
+type KeysClimateProfile={
+  high:number; low:number; precip:number; wind:number; clarity:number;
+};
+
+const keysClimate:Record<number,KeysClimateProfile>={
+  // NOAA/NWS Marathon International Airport 1991-2020 normals (USW00012896).
+  1:{high:75.8,low:64.2,precip:1.64,wind:13.5,clarity:.84},
+  2:{high:78.1,low:66.4,precip:1.70,wind:13.2,clarity:.84},
+  3:{high:80.7,low:68.5,precip:1.33,wind:12.8,clarity:.85},
+  4:{high:84.1,low:72.5,precip:2.11,wind:12.0,clarity:.83},
+  5:{high:87.5,low:75.8,precip:3.36,wind:10.8,clarity:.79},
+  6:{high:90.3,low:78.5,precip:4.23,wind:9.2,clarity:.76},
+  7:{high:90.9,low:79.4,precip:3.77,wind:8.6,clarity:.76},
+  8:{high:91.6,low:79.7,precip:5.32,wind:9.0,clarity:.73},
+  9:{high:89.9,low:78.4,precip:6.37,wind:10.0,clarity:.70},
+  10:{high:86.2,low:75.8,precip:5.90,wind:11.5,clarity:.71},
+  11:{high:81.2,low:70.8,precip:1.79,wind:12.7,clarity:.81},
+  12:{high:77.9,low:67.5,precip:2.20,wind:13.6,clarity:.83}
+};
+const monthLengths:Record<number,number>={1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31};
+
+function weatherUnit(seed:number,day:number,salt:number){
+  const mixed=(seed^Math.imul(day+31,0x45d9f3b)^salt)>>>0;
+  return new RNG(mixed).next();
+}
+function weatherSigned(seed:number,day:number,salt:number){
+  return weatherUnit(seed,day,salt)*2-1;
+}
+function smoothWeatherNoise(seed:number,day:number,salt:number){
+  return weatherSigned(seed,day-2,salt)*.10
+    +weatherSigned(seed,day-1,salt)*.20
+    +weatherSigned(seed,day,salt)*.40
+    +weatherSigned(seed,day+1,salt)*.20
+    +weatherSigned(seed,day+2,salt)*.10;
+}
+function climateForGameDay(day:number){
+  const cal=calendarForDay(day);
+  const current=keysClimate[cal.month];
+  const nextMonth=cal.month===12?1:cal.month+1;
+  const next=keysClimate[nextMonth];
+  const blend=(cal.dayOfMonth-1)/monthLengths[cal.month];
+  const mix=(a:number,b:number)=>a+(b-a)*blend;
+  return {
+    calendar:cal,
+    high:mix(current.high,next.high),
+    low:mix(current.low,next.low),
+    precip:mix(current.precip,next.precip),
+    wind:mix(current.wind,next.wind),
+    clarity:mix(current.clarity,next.clarity)
+  };
+}
+function frontInfluence(seed:number,day:number){
+  let temp=0,wind=0,rain=0,storm=0;
+  let direction:WeatherDay['windDirection']|undefined;
+  for(let blockOffset=-1;blockOffset<=1;blockOffset++){
+    const block=Math.floor((day-1)/7)+blockOffset;
+    if(block<0)continue;
+    const blockStart=block*7+1;
+    const cal=calendarForDay(blockStart);
+    const chance:Record<number,number>={1:.42,2:.40,3:.32,4:.20,5:.07,6:.02,7:.01,8:.01,9:.02,10:.06,11:.18,12:.38};
+    const rng=new RNG((seed^Math.imul(block+17,0x27d4eb2d)^0x13579bdf)>>>0);
+    if(!rng.chance(chance[cal.month]??.05))continue;
+    const frontDay=blockStart+rng.int(1,5);
+    const diff=day-frontDay;
+    if(diff===-1){wind+=2;rain+=16;storm+=.06;direction=rng.pick<WeatherDay['windDirection']>(['S','SW','W']);}
+    if(diff===0){temp-=rng.int(4,8);wind+=rng.int(6,10);rain+=rng.int(8,20);storm+=.08;direction=rng.pick<WeatherDay['windDirection']>(['NW','N']);}
+    if(diff===1){temp-=rng.int(5,10);wind+=rng.int(5,9);rain-=8;storm-=.03;direction=rng.pick<WeatherDay['windDirection']>(['N','NE']);}
+    if(diff===2){temp-=rng.int(2,6);wind+=rng.int(2,6);rain-=5;direction=rng.pick<WeatherDay['windDirection']>(['NE','E']);}
+  }
+  return {temp,wind,rain,storm,direction};
+}
+function wetSeasonPulse(seed:number,day:number){
+  let temp=0,wind=0,rain=0,storm=0,clarity=0;
+  let direction:WeatherDay['windDirection']|undefined;
+  for(let blockOffset=-1;blockOffset<=1;blockOffset++){
+    const block=Math.floor((day-1)/5)+blockOffset;
+    if(block<0)continue;
+    const blockStart=block*5+1;
+    const cal=calendarForDay(blockStart);
+    const chance:Record<number,number>={1:.03,2:.03,3:.03,4:.06,5:.16,6:.26,7:.22,8:.31,9:.38,10:.34,11:.10,12:.04};
+    const rng=new RNG((seed^Math.imul(block+41,0x165667b1)^0x2468ace0)>>>0);
+    if(!rng.chance(chance[cal.month]??.05))continue;
+    const start=blockStart+rng.int(0,3);
+    const length=rng.int(2,4);
+    const diff=day-start;
+    if(diff>=0&&diff<length){
+      const peak=1-Math.abs(diff-(length-1)/2)/Math.max(1,length/2);
+      temp-=1+peak*2;
+      wind+=1+peak*rng.int(1,4);
+      rain+=18+peak*rng.int(8,22);
+      storm+=.07+peak*.11;
+      clarity-=.05+peak*.09;
+      direction=rng.pick<WeatherDay['windDirection']>(['E','SE','S']);
+    }
+  }
+  return {temp,wind,rain,storm,clarity,direction};
+}
+function tropicalMoisturePulse(seed:number,day:number){
+  let temp=0,wind=0,rain=0,storm=0,clarity=0;
+  let direction:WeatherDay['windDirection']|undefined;
+  for(let blockOffset=-1;blockOffset<=1;blockOffset++){
+    const block=Math.floor((day-1)/10)+blockOffset;
+    if(block<0)continue;
+    const blockStart=block*10+1;
+    const cal=calendarForDay(blockStart);
+    const chance:Record<number,number>={6:.02,7:.03,8:.08,9:.13,10:.10,11:.02};
+    const rng=new RNG((seed^Math.imul(block+73,0x9e3779b1)^0x5bd1e995)>>>0);
+    if(!rng.chance(chance[cal.month]??0))continue;
+    const start=blockStart+rng.int(1,7);
+    const length=rng.int(2,4);
+    const diff=day-start;
+    if(diff>=0&&diff<length){
+      const peak=1-Math.abs(diff-(length-1)/2)/Math.max(1,length/2);
+      temp-=1+peak*2;
+      wind+=4+peak*rng.int(3,8);
+      rain+=22+peak*rng.int(12,28);
+      storm+=.12+peak*.18;
+      clarity-=.08+peak*.12;
+      direction=rng.pick<WeatherDay['windDirection']>(['E','SE','S','SW']);
+    }
+  }
+  return {temp,wind,rain,storm,clarity,direction};
+}
+function seasonalWindDirection(seed:number,day:number,month:number):WeatherDay['windDirection']{
+  const rng=new RNG((seed^Math.imul(day+101,0x7feb352d)^0x31415926)>>>0);
+  if(month>=5&&month<=9)return rng.pick<WeatherDay['windDirection']>(['E','E','SE','SE','E','S','NE']);
+  if(month===10||month===11)return rng.pick<WeatherDay['windDirection']>(['E','NE','E','SE','N','NE']);
+  return rng.pick<WeatherDay['windDirection']>(['ENE' as WeatherDay['windDirection'],'NE','E','NE','E','N'].filter((x):x is WeatherDay['windDirection']=>x!=='ENE'));
+}
+
 export function generateWeather(state:CompanyState):WeatherDay{
-  const rng=new RNG(state.seed+state.day*9973);
-  const directions=['N','NE','E','SE','S','SW','W','NW'] as const;
-  const island=islands.find(i=>i.id===state.islandId);
-  const exposure=island?.weatherExposure??'moderate';
-  const windShift=exposure==='protected'?-2:exposure==='exposed'?2:0;
-  const stormShift=exposure==='protected'?-.04:exposure==='exposed'?.04:0;
+  const climate=climateForGameDay(state.day);
+  const cal=climate.calendar;
+  const front=frontInfluence(state.seed,state.day);
+  const wet=wetSeasonPulse(state.seed,state.day);
+  const tropical=tropicalMoisturePulse(state.seed,state.day);
+
+  const tempNoise=smoothWeatherNoise(state.seed,state.day,0x11111111);
+  const moistureNoise=smoothWeatherNoise(state.seed,state.day,0x22222222);
+  const windNoise=smoothWeatherNoise(state.seed,state.day,0x33333333);
+  const clarityNoise=smoothWeatherNoise(state.seed,state.day,0x44444444);
+  const gustRoll=weatherUnit(state.seed,state.day,0x55555555);
+  const showerRoll=weatherUnit(state.seed,state.day,0x66666666);
+
+  const wetSeason=cal.month>=5&&cal.month<=10;
+  const monthlyRainBase=clamp(12+climate.precip*6.6,14,58);
+  const convectiveBoost=wetSeason?Math.max(0,showerRoll-.52)*32:Math.max(0,showerRoll-.82)*18;
+  const rainChance=clamp(
+    monthlyRainBase
+    +moistureNoise*18
+    +convectiveBoost
+    +front.rain+wet.rain+tropical.rain,
+    4,92
+  );
+
+  const stormBase=wetSeason?.07:.025;
+  const stormRisk=clamp(
+    stormBase
+    +Math.max(0,moistureNoise)*.08
+    +(rainChance/100)*(wetSeason?.11:.055)
+    +front.storm+wet.storm+tropical.storm,
+    .01,.62
+  );
+
+  const gustBoost=Math.pow(gustRoll,3)*(wetSeason?8:11);
+  const windKts=clamp(Math.round(
+    climate.wind
+    +windNoise*4.2
+    +gustBoost
+    +front.wind+wet.wind+tropical.wind
+  ),3,32);
+
+  const temperatureF=clamp(Math.round(
+    climate.high
+    +tempNoise*(wetSeason?2.2:3.4)
+    +front.temp+wet.temp+tropical.temp
+    +(rainChance>70?-1:0)
+  ),58,95);
+
+  const rainClarityPenalty=Math.max(0,rainChance-35)*.0023;
+  const windClarityPenalty=Math.max(0,windKts-11)*.006;
+  const waterClarity=Number(clamp(
+    climate.clarity
+    +clarityNoise*.08
+    -rainClarityPenalty
+    -windClarityPenalty
+    +wet.clarity+tropical.clarity,
+    .32,.96
+  ).toFixed(2));
+
+  let windDirection=front.direction??tropical.direction??wet.direction??seasonalWindDirection(state.seed,state.day,cal.month);
+  // Rare local variability keeps otherwise similar days from repeating exactly.
+  if(!front.direction&&!tropical.direction&&!wet.direction&&weatherUnit(state.seed,state.day,0x77777777)>.88){
+    const dirs:WeatherDay['windDirection'][]=['N','NE','E','SE','S','SW','W','NW'];
+    windDirection=dirs[(dirs.indexOf(windDirection)+1+Math.floor(weatherUnit(state.seed,state.day,0x88888888)*3))%dirs.length];
+  }
+
   return {
     day:state.day,
-    windKts:clamp(rng.int(4,28)+windShift,3,30),
-    windDirection:rng.pick(directions),
-    rainChance:rng.int(5,75),
-    stormRisk:Number(clamp(rng.next()*.32+stormShift,.02,.42).toFixed(2)),
-    waterClarity:Number((.45+rng.next()*.5).toFixed(2)),
-    temperatureF:rng.int(74,90)
+    windKts,
+    windDirection,
+    rainChance:Math.round(rainChance),
+    stormRisk:Number(stormRisk.toFixed(2)),
+    waterClarity,
+    temperatureF
   };
 }
 
