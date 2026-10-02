@@ -1210,3 +1210,17 @@ input:focus,select:focus{
   .captainSchoolV5 .coachNext{right:112px!important}
   .captainSchoolV5 .turtleCoachAvatar{width:132px!important;height:132px!important;right:-5px!important;bottom:0!important}
 }
+
+/* Exact Captain School turtle artwork */
+.captainSchoolV5 .turtleCoachAvatar img{
+  position:static!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  background:transparent!important;
+  border:0!important;
+  filter:drop-shadow(0 8px 6px rgba(23,50,77,.28))!important;
+}
