@@ -3483,4 +3483,320 @@ input:focus,select:focus{
     scroll-behavior:auto!important;
   }
   .splashV10World,.v10Island,.v10Lighthouse,.v10BoatWrap,.splashV10Logo{transform:none!important}
+}\n\n/* === CINEMATIC SPLASH RESET === */
+.cinematicSplash{
+  min-height:100svh;
+  width:100%;
+  overflow:hidden;
+  background:#046f98;
+  color:#fff;
 }
+.cinematicSplashScene{
+  position:relative;
+  width:100%;
+  height:100svh;
+  min-height:580px;
+  overflow:hidden;
+  isolation:isolate;
+  background:#047aa4;
+}
+.cinematicSplashCanvas{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  display:block;
+  filter:saturate(1.08) contrast(1.035);
+}
+.cinematicSplashAtmosphere{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(0,33,70,.12),transparent 18%,transparent 74%,rgba(0,20,45,.26)),
+    radial-gradient(circle at 78% 22%,rgba(255,244,186,.16),transparent 18%),
+    radial-gradient(ellipse at 50% 58%,transparent 40%,rgba(0,37,63,.09) 76%,rgba(0,27,51,.2) 100%);
+  box-shadow:inset 0 0 110px rgba(0,22,49,.18);
+}
+.cinematicSplashAtmosphere:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.22;
+  background:
+    linear-gradient(115deg,transparent 0 42%,rgba(255,255,255,.17) 48%,transparent 54%),
+    linear-gradient(73deg,transparent 0 52%,rgba(109,235,255,.12) 57%,transparent 63%);
+  transform:translateX(-6%);
+  animation:cinematicLightSweep 11s ease-in-out infinite alternate;
+}
+.cinematicSplashTitle{
+  position:absolute;
+  z-index:10;
+  top:calc(env(safe-area-inset-top) + clamp(18px,4.5svh,48px));
+  left:50%;
+  width:min(94vw,760px);
+  transform:translateX(-50%);
+  text-align:center;
+  pointer-events:none;
+}
+.cinematicSplashEyebrow{
+  margin-bottom:clamp(3px,.8svh,8px);
+  color:rgba(240,253,255,.88);
+  font-size:clamp(.56rem,1.35vw,.78rem);
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.23em;
+  text-shadow:0 2px 12px rgba(0,30,56,.68);
+}
+.cinematicGameLogo{
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(-7px,-.7vw,-3px);
+  font-family:Impact,Haettenschweiler,"Arial Narrow Bold","Arial Black",sans-serif;
+  line-height:.77;
+  letter-spacing:-.045em;
+  transform:scaleX(1.025);
+  filter:drop-shadow(0 18px 25px rgba(0,30,54,.28));
+}
+.cinematicGameLogo span{
+  display:block;
+  font-size:clamp(4.1rem,13.5vw,8.4rem);
+  color:#f8fbf4;
+  background:
+    linear-gradient(180deg,#fffdf8 0%,#effcff 38%,#d6edf0 62%,#f4eee2 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  -webkit-text-stroke:clamp(1.5px,.2vw,3px) #122c42;
+  paint-order:stroke fill;
+  text-shadow:
+    0 2px 0 #ffffff,
+    0 5px 0 #6c8796,
+    0 9px 0 #17324d,
+    0 15px 28px rgba(0,26,52,.44);
+}
+.cinematicGameLogo span:last-child{
+  font-size:clamp(3.45rem,11.5vw,7.25rem);
+  color:#dff9ff;
+}
+.cinematicSplashTitle p{
+  margin:clamp(10px,1.5svh,16px) 0 0;
+  color:#f1ffff;
+  font-size:clamp(.78rem,2vw,1rem);
+  font-weight:850;
+  letter-spacing:.02em;
+  text-shadow:0 2px 10px rgba(0,34,58,.72);
+}
+.cinematicSplashControls{
+  position:absolute;
+  z-index:12;
+  left:50%;
+  bottom:calc(max(60px,env(safe-area-inset-bottom) + 48px));
+  transform:translateX(-50%);
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+  width:min(92vw,620px);
+}
+.cinematicSplashControls button{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.72)!important;
+  border-radius:8px!important;
+  box-shadow:
+    0 8px 0 rgba(5,32,53,.86),
+    0 14px 24px rgba(0,29,52,.34),
+    inset 0 1px 0 rgba(255,255,255,.86)!important;
+  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease!important;
+}
+.cinematicSplashControls button:after{
+  content:"";
+  position:absolute;
+  top:-140%;
+  left:-55%;
+  width:34%;
+  height:380%;
+  transform:rotate(19deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);
+  animation:cinematicButtonSweep 6s ease-in-out infinite;
+}
+.cinematicEnter{
+  flex:1;
+  min-height:63px;
+  padding:8px 22px!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:#102b41!important;
+  background:
+    linear-gradient(180deg,#fff097 0%,#ffd45c 49%,#f5b82e 100%)!important;
+}
+.cinematicEnter strong{
+  position:relative;
+  z-index:1;
+  font-size:clamp(.92rem,2vw,1.12rem);
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:.095em;
+}
+.cinematicEnter span{
+  position:relative;
+  z-index:1;
+  margin-top:5px;
+  font-size:clamp(.61rem,1.35vw,.72rem);
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.07em;
+  opacity:.72;
+}
+.cinematicTheme{
+  flex:0 0 112px;
+  min-height:63px;
+  padding:8px 10px!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:#eafcff!important;
+  background:
+    linear-gradient(180deg,rgba(17,101,143,.92),rgba(6,64,102,.96))!important;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.cinematicTheme b{
+  position:relative;
+  z-index:1;
+  font-size:1rem;
+  line-height:1;
+}
+.cinematicTheme span{
+  position:relative;
+  z-index:1;
+  margin-top:5px;
+  font-size:.56rem;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.11em;
+}
+.cinematicTheme.playing{
+  background:linear-gradient(180deg,rgba(21,134,145,.95),rgba(5,78,104,.98))!important;
+}
+.cinematicSplashControls button:hover{filter:brightness(1.05) saturate(1.04)}
+.cinematicSplashControls button:active{
+  transform:translateY(7px)!important;
+  box-shadow:
+    0 2px 0 rgba(5,32,53,.86),
+    0 7px 13px rgba(0,29,52,.25),
+    inset 0 1px 0 rgba(255,255,255,.86)!important;
+}
+.cinematicSplashFooter{
+  position:absolute;
+  z-index:11;
+  left:0;
+  right:0;
+  bottom:0;
+  min-height:38px;
+  padding:
+    8px max(14px,env(safe-area-inset-right))
+    max(8px,env(safe-area-inset-bottom))
+    max(14px,env(safe-area-inset-left));
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  color:rgba(239,251,255,.75);
+  background:linear-gradient(180deg,rgba(0,19,34,0),rgba(0,18,33,.68));
+  font-size:clamp(.48rem,1vw,.62rem);
+  font-weight:750;
+  letter-spacing:.1em;
+  text-shadow:0 2px 7px rgba(0,18,32,.8);
+}
+.cinematicSplashFooter>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.cinematicSplashFooter strong{
+  color:rgba(255,255,255,.94);
+  font-size:clamp(.55rem,1.2vw,.7rem);
+}
+@keyframes cinematicLightSweep{
+  to{transform:translateX(6%) scale(1.02);opacity:.35}
+}
+@keyframes cinematicButtonSweep{
+  0%,69%{left:-55%;opacity:0}
+  76%{opacity:.75}
+  91%{left:120%;opacity:0}
+  100%{left:120%;opacity:0}
+}
+@media(max-width:600px){
+  .cinematicSplashTitle{
+    top:calc(env(safe-area-inset-top) + 14px);
+    width:96vw;
+  }
+  .cinematicSplashEyebrow{
+    font-size:.52rem;
+    letter-spacing:.19em;
+  }
+  .cinematicGameLogo span{
+    font-size:clamp(3.7rem,17.5vw,6rem);
+  }
+  .cinematicGameLogo span:last-child{
+    font-size:clamp(3.05rem,14.8vw,5.1rem);
+  }
+  .cinematicSplashTitle p{
+    max-width:92vw;
+    margin-left:auto;
+    margin-right:auto;
+    font-size:.74rem;
+  }
+  .cinematicSplashControls{
+    bottom:calc(max(56px,env(safe-area-inset-bottom) + 44px));
+    width:min(94vw,520px);
+    gap:8px;
+  }
+  .cinematicEnter{
+    min-height:57px;
+    padding:7px 13px!important;
+  }
+  .cinematicTheme{
+    flex-basis:88px;
+    min-height:57px;
+  }
+  .cinematicSplashFooter{
+    padding-left:11px;
+    padding-right:11px;
+    font-size:.46rem;
+  }
+  .cinematicSplashFooter strong{font-size:.52rem}
+}
+@media(max-width:390px){
+  .cinematicSplashEyebrow{display:none}
+  .cinematicSplashTitle{top:calc(env(safe-area-inset-top) + 10px)}
+  .cinematicSplashTitle p{font-size:.68rem;margin-top:8px}
+  .cinematicSplashControls{gap:7px}
+  .cinematicTheme{flex-basis:82px}
+}
+@media(max-height:700px){
+  .cinematicSplashTitle{
+    top:calc(env(safe-area-inset-top) + 7px);
+  }
+  .cinematicGameLogo span{font-size:clamp(3rem,11vw,5.8rem)}
+  .cinematicGameLogo span:last-child{font-size:clamp(2.6rem,9.5vw,5rem)}
+  .cinematicSplashTitle p{margin-top:6px}
+  .cinematicSplashControls{
+    bottom:calc(max(48px,env(safe-area-inset-bottom) + 38px));
+  }
+  .cinematicSplashControls button{min-height:50px}
+}
+@media(prefers-reduced-motion:reduce){
+  .cinematicSplashAtmosphere:after,
+  .cinematicSplashControls button:after{
+    animation:none!important;
+  }
+}\n
