@@ -74,40 +74,26 @@ jobs:
             TAG="$2"
             EMAIL="smoke-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${TAG}@example.com"
             export EMAIL
-            node - <<'NODE' > /tmp/auth.json
-          const crypto=require('crypto');
-          const salt=crypto.randomBytes(16);
-          const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');
-          process.stdout.write(JSON.stringify({
-            email:process.env.EMAIL,
-            displayName:'Smoke Captain',
-            passwordSalt:salt.toString('base64'),
-            passwordProof:proof.toString('base64'),
-            marketingOptIn:false
-          }));
-          NODE
-            STATUS=$(curl -sS -o /tmp/register.json -w "%{http_code}" -c /tmp/cookies.txt               -H "Content-Type: application/json" -X POST "$BASE/api/auth/register" --data-binary @/tmp/auth.json)
+            node -e "const crypto=require('crypto');const salt=crypto.randomBytes(16);const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');process.stdout.write(JSON.stringify({email:process.env.EMAIL,displayName:'Smoke Captain',passwordSalt:salt.toString('base64'),passwordProof:proof.toString('base64'),marketingOptIn:false}))" > /tmp/auth.json
+
+            STATUS=$(curl -sS -o /tmp/register.json -w "%{http_code}" -c /tmp/cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/register" --data-binary @/tmp/auth.json)
             echo "$BASE register -> $STATUS $(cat /tmp/register.json)"
             test "$STATUS" = "201"
 
             STATUS=$(curl -sS -o /tmp/me.json -w "%{http_code}" -b /tmp/cookies.txt "$BASE/api/auth/me")
             echo "$BASE me -> $STATUS $(cat /tmp/me.json)"
             test "$STATUS" = "200"
-            node -e "const j=require('/tmp/me.json'); if(j.player?.email!==process.env.EMAIL) process.exit(1)"
+            node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('/tmp/me.json','utf8'));if(j.player?.email!==process.env.EMAIL)process.exit(1)"
 
             curl -sS -o /dev/null -b /tmp/cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/logout"
 
             STATUS=$(curl -sS -o /tmp/salt.json -w "%{http_code}" "$BASE/api/auth/salt?email=$EMAIL")
-            echo "$BASE salt -> $STATUS"
+            echo "$BASE salt -> $STATUS $(cat /tmp/salt.json)"
             test "$STATUS" = "200"
-            export SALT=$(node -e "process.stdout.write(require('/tmp/salt.json').salt)")
-            node - <<'NODE' > /tmp/login.json
-          const crypto=require('crypto');
-          const salt=Buffer.from(process.env.SALT,'base64');
-          const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');
-          process.stdout.write(JSON.stringify({email:process.env.EMAIL,passwordProof:proof.toString('base64')}));
-          NODE
-            STATUS=$(curl -sS -o /tmp/login-response.json -w "%{http_code}" -c /tmp/login-cookies.txt               -H "Content-Type: application/json" -X POST "$BASE/api/auth/login" --data-binary @/tmp/login.json)
+            export SALT=$(node -e "const fs=require('fs');process.stdout.write(JSON.parse(fs.readFileSync('/tmp/salt.json','utf8')).salt)")
+            node -e "const crypto=require('crypto');const salt=Buffer.from(process.env.SALT,'base64');const proof=crypto.pbkdf2Sync(process.env.TEST_PASSWORD,salt,120000,32,'sha256');process.stdout.write(JSON.stringify({email:process.env.EMAIL,passwordProof:proof.toString('base64')}))" > /tmp/login.json
+
+            STATUS=$(curl -sS -o /tmp/login-response.json -w "%{http_code}" -c /tmp/login-cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/login" --data-binary @/tmp/login.json)
             echo "$BASE login -> $STATUS $(cat /tmp/login-response.json)"
             test "$STATUS" = "200"
           }
