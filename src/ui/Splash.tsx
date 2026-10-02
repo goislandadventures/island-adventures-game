@@ -91,13 +91,38 @@ function KeysWater(){
 
 export default function Splash({onEnter}:{onEnter:()=>void}){
   const audioRef=useRef<HTMLAudioElement|null>(null);
-  const [soundBlocked,setSoundBlocked]=useState(false);
+  const [soundPlaying,setSoundPlaying]=useState(false);
   useEffect(()=>{
-    const audio=new Audio('/audio/splash-theme.mp3');audio.preload='auto';audio.loop=true;audio.volume=.7;audioRef.current=audio;
-    audio.play().then(()=>setSoundBlocked(false)).catch(()=>setSoundBlocked(true));
-    return()=>{audio.pause();audio.currentTime=0};
+    const audio=new Audio('/audio/splash-theme.mp3');
+    audio.preload='metadata';
+    audio.loop=true;
+    audio.volume=.7;
+    audioRef.current=audio;
+    const handlePause=()=>setSoundPlaying(false);
+    const handlePlay=()=>setSoundPlaying(true);
+    audio.addEventListener('pause',handlePause);
+    audio.addEventListener('play',handlePlay);
+    return()=>{
+      audio.pause();
+      audio.currentTime=0;
+      audio.removeEventListener('pause',handlePause);
+      audio.removeEventListener('play',handlePlay);
+    };
   },[]);
-  const startSound=async()=>{try{await audioRef.current?.play();setSoundBlocked(false)}catch{setSoundBlocked(true)}};
+  const toggleSound=async()=>{
+    const audio=audioRef.current;
+    if(!audio)return;
+    if(!audio.paused){
+      audio.pause();
+      audio.currentTime=0;
+      return;
+    }
+    try{
+      await audio.play();
+    }catch{
+      setSoundPlaying(false);
+    }
+  };
   const enter=()=>{const audio=audioRef.current;onEnter();if(audio){try{audio.pause();audio.currentTime=0}catch{}}};
 
   return <main className="splash splashV4"><div className="splashV4Scene">
@@ -116,7 +141,7 @@ export default function Splash({onEnter}:{onEnter:()=>void}){
       <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV4Logo"/>
       <div className="splashV4Tag">Build your fleet. Rule the islands.</div>
       <div className="splashV4Buttons">
-        {soundBlocked&&<button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
+        <button className="soundPrompt" onClick={toggleSound}>{soundPlaying?'■ Stop theme':'♫ Tap for theme'}</button>
         <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
       </div>
     </div>
