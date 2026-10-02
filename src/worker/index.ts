@@ -24,7 +24,7 @@ function cookieToken(request: Request) {
 async function currentPlayer(request: Request, env: Env) {
   const token=cookieToken(request); if (!token) return null;
   const tokenHash=await sha256(token); const now=Date.now();
-  return env.DB.prepare(`SELECT p.id,p.email,p.display_name,p.marketing_opt_in,p.tutorial_completed FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash,now).first();
+  return env.DB.prepare(`SELECT p.id,p.email,p.display_name,p.marketing_opt_in,p.tutorial_completed,p.force_password_change FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash,now).first();
 }
 async function createSession(playerId:string, env:Env) {
   const raw=b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -110,10 +110,23 @@ export default {
       if (!ok) return json({error:'Invalid email or password.'},401);
       await env.DB.prepare('UPDATE players SET last_seen_at=? WHERE id=?').bind(Date.now(),p.id).run();
       const cookie=await createSession(p.id,env);
-      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed)}},200,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
+      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed),mustChangePassword:Boolean(p.force_password_change)}},200,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
     }
 
-    if (url.pathname === '/api/auth/me' && request.method==='GET') return json({player:await currentPlayer(request,env)});
+    if (url.pathname === '/api/auth/change-password' && request.method==='POST') {
+      const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
+      const body:any=await request.json();
+      const passwordProof=String(body.passwordProof||''), passwordSalt=String(body.passwordSalt||'');
+      if(!validB64(passwordProof,32)||!validB64(passwordSalt,16)) return json({error:'Invalid password update.'},400);
+      const passwordHash='v2:'+await sha256(passwordProof);
+      await env.DB.prepare('UPDATE players SET password_hash=?,password_salt=?,force_password_change=0,last_seen_at=? WHERE id=?').bind(passwordHash,passwordSalt,Date.now(),player.id).run();
+      return json({ok:true,player:{id:player.id,email:player.email,displayName:player.display_name,marketingOptIn:Boolean(player.marketing_opt_in),tutorialCompleted:Boolean(player.tutorial_completed),mustChangePassword:false}},200,{'Cache-Control':'no-store'});
+    }
+
+    if (url.pathname === '/api/auth/me' && request.method==='GET') {
+      const p:any=await currentPlayer(request,env);
+      return json({player:p?{...p,mustChangePassword:Boolean(p.force_password_change)}:null});
+    }
 
     if (url.pathname === '/api/tutorial/complete' && request.method==='POST') {
       const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
