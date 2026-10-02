@@ -66,7 +66,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const hurricane=useMemo(()=>hurricaneForDay(state),[state.day,state.seed]);
   const businessEvent=useMemo(()=>hurricane?null:businessEventForDay(state),[state.day,state.seed,state.lastBusinessEventDay,hurricane]);
   const todaysBookings=useMemo(()=>generateDemand(state,weather),[state,weather]);
-  const currentIsland=islands.find(i=>i.id===state.islandId)!;
+  const currentIsland=islands.find(i=>i.id===state.islandId)??islands[0];
   const currentMarina=marinas.find(m=>m.id===state.marinaId);
   const ready=Boolean(currentMarina&&state.boats.length>0);
 
