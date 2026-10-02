@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS players (
   marketing_opt_in INTEGER NOT NULL DEFAULT 0,
   marketing_opt_in_at INTEGER,
   tutorial_completed INTEGER NOT NULL DEFAULT 0,
+  force_password_change INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
   last_seen_at INTEGER NOT NULL
 );
