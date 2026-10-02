@@ -19,7 +19,7 @@ export const captainCandidates:StaffMember[]=[
   {id:'capt-morgan',name:'Morgan Lee',role:'captain',skill:.93,reliability:.95,hourlyRate:55}
 ];
 
-export interface PlanAssessment { stars:number; reasons:string[]; headline:string; }
+export interface PlanAssessment { experienceScore:number; reasons:string[]; headline:string; }
 
 export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
   return {day:1,seed,captainName,companyName,companyColor,cash:STARTING_CASH,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:STARTING_CASH,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'search',reviewAsk:true},loans:[],startupLoanTaken:false};
@@ -245,7 +245,7 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
   return kept;
 }
 export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripDecision,weather:WeatherDay,boatOverride?:OwnedBoat):PlanAssessment{
-  if(decision==='cancel')return {stars:0,reasons:['Rescheduled trips do not receive a trip review.'],headline:'No trip review'};
+  if(decision==='cancel')return {experienceScore:0,reasons:['Rescheduled trips do not receive a trip review.'],headline:'No trip review'};
   const boat=boatOverride??state.boats.find(b=>b.insured)??state.boats[0];
   const reasons:string[]=[];
   const criticalReasons:string[]=[];
@@ -292,13 +292,13 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
   // Reviews are intentionally forgiving. Minor imperfections never stack into a bad rating.
   // A 4-star trip requires at least one genuinely critical operating mistake.
   // 1-star reviews are reserved for catastrophic events handled outside normal trip scoring.
-  const stars=criticalReasons.length?4:5;
-  const headline=stars===4
+  const experienceScore=criticalReasons.length?4:5;
+  const headline=experienceScore===4
     ? `4★ critical error: ${criticalReasons[0]}`
     : reasons.length
       ? '5★ trip — minor issues did not ruin the experience'
       : '5★ experience on plan';
-  return {stars,reasons,headline};
+  return {experienceScore,reasons,headline};
 }
 
 function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean,booking:Booking):Review{
@@ -306,14 +306,15 @@ function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean,b
   const five=protectedWater
     ? [`${booking.customerLabel}: The captain changed the plan for the weather and absolutely nailed it.`,`${booking.customerLabel}: Calmer water was the right call and we still had an amazing day.`]
     : [`${booking.customerLabel}: Best day of our trip.`,`${booking.customerLabel}: The captain knew exactly where to go.`,`${booking.customerLabel}: Exactly what we wanted — ${profile.likes}.`];
-  const text=assessment.stars===5?rng.pick(five):assessment.reasons[0]??'One part of the trip missed the mark.';
-  return {stars:assessment.stars,text,reasons:assessment.reasons};
+  const stars=assessment.experienceScore;
+  const text=stars===5?rng.pick(five):assessment.reasons[0]??'One part of the trip missed the mark.';
+  return {stars,text,reasons:assessment.reasons};
 }
 
-function shouldLeaveReview(rng:RNG,state:CompanyState,stars:number):boolean{
+function shouldLeaveReview(rng:RNG,state:CompanyState,experienceScore:number):boolean{
   const ask=state.marketing?.reviewAsk??true;
-  if(stars===1)return true;
-  if(stars===4)return rng.chance(ask?.42:.22);
+  if(experienceScore===1)return true;
+  if(experienceScore===4)return rng.chance(ask?.42:.22);
   return rng.chance(ask?.86:.34);
 }
 
@@ -323,8 +324,8 @@ function channelCommission(source:Booking['source']):number{
   return 0;
 }
 
-function calculateTip(rng:RNG,state:CompanyState,booking:Booking,stars:number,marina?:Marina):number{
-  if(stars<5||booking.neverTips)return 0;
+function calculateTip(rng:RNG,state:CompanyState,booking:Booking,experienceScore:number,marina?:Marina):number{
+  if(experienceScore<5||booking.neverTips)return 0;
   const profile=customerProfiles[booking.customerType];
   const base=.04+rng.next()*Math.max(.01,booking.tipCeiling-.04);
   const rate=clamp(base+profile.tipBias+(marina?.tipBonus??0),0,.40);
@@ -444,14 +445,14 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     });
 
     tripExpense+=Math.round(booking.revenue*channelCommission(booking.source));
-    const tip=calculateTip(rng,state,booking,assessment.stars,marina);
+    const tip=calculateTip(rng,state,booking,assessment.experienceScore,marina);
     revenue+=booking.revenue;tips+=tip;expenses+=tripExpense;tripsRun+=1;
 
     let review:Review|undefined;
-    if(shouldLeaveReview(rng,state,assessment.stars)){review=createReview(rng,assessment,protectedWater,booking);reviews.push(review);}
+    if(shouldLeaveReview(rng,state,assessment.experienceScore)){review=createReview(rng,assessment,protectedWater,booking);reviews.push(review);}
     const captainNote=chosen.length>1?` Two boats worked together for this ${booking.partySize}-guest group.`:'';
-    const tipNote=tip>0?` Tip: $${tip}.`:assessment.stars<5?' No tip because the trip was below 5★.':booking.neverTips?' Great trip, but this group simply did not tip.':' No tip this time.';
-    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.stars/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${captainNote}${tipNote}`});
+    const tipNote=tip>0?` Tip: ${tip}.`:assessment.experienceScore<5?' No tip because the guest experience missed the mark.':booking.neverTips?' Great trip, but this group simply did not tip.':' No tip this time.';
+    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.experienceScore/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${captainNote}${tipNote}`});
   });
 
   let maintenanceEvent:string|undefined;
