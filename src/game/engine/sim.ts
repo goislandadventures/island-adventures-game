@@ -167,10 +167,8 @@ function operatingBoatCount(state:CompanyState):number{
   return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
 export function generateDemoDemand(state:CompanyState):Booking[]{
-  if(!state.boats.length)return [];
   const rng=new RNG((state.seed^0x5f3759df)+(state.day*104729));
-  const products=[...state.products];
-  if(!products.length)return [];
+  const products=(state.products?.length?[...state.products]:structuredClone(defaultProducts));
   const firstIndex=rng.int(0,products.length-1);
   const first=products[firstIndex];
   const remaining=products.filter((_,i)=>i!==firstIndex);
@@ -211,8 +209,8 @@ export function generateDemoDemand(state:CompanyState):Booking[]{
 }
 
 export function generateDemand(state:CompanyState,weather=generateWeather(state),market?:MarketingMarketSnapshot,demoMode=false):Booking[]{
-  if(!state.boats.length)return [];
   if(state.day<=7)return generateDemoDemand(state);
+  if(!state.boats.length)return [];
   if(hurricaneForDay(state))return [];
   const island=islands.find(i=>i.id===state.islandId)!;
   const rng=new RNG(state.seed^(state.day*7919));
