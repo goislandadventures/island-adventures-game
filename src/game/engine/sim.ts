@@ -170,7 +170,6 @@ export function setPrice(state:CompanyState,type:TripProduct['type'],price:numbe
 }
 
 export function generateWeather(state:CompanyState):WeatherDay{
-  if(state.day===1)return {day:1,windKts:17,windDirection:'E',rainChance:20,stormRisk:.08,waterClarity:.72,temperatureF:82};
   const rng=new RNG(state.seed+state.day*9973);
   const directions=['N','NE','E','SE','S','SW','W','NW'] as const;
   const island=islands.find(i=>i.id===state.islandId);
@@ -297,55 +296,99 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
   if(decision==='cancel')return {experienceScore:0,reasons:['Rescheduled trips do not receive a trip review.'],headline:'No trip review'};
   const boat=boatOverride??state.boats.find(b=>b.insured)??state.boats[0];
   const reasons:string[]=[];
-  const criticalReasons:string[]=[];
-  const add=(critical:boolean,reason:string)=>{
-    reasons.push(reason);
-    if(critical)criticalReasons.push(reason);
-  };
 
-  if(decision==='run'&&weather.stormRisk>.24)add(true,`You chose to run with elevated storm risk (${Math.round(weather.stormRisk*100)}%).`);
-
-  if(booking.tripType==='snorkel'){
-    if(decision==='run'&&weather.windKts>14)add(true,`You ran exposed snorkeling in ${weather.windKts} kt wind instead of moving to protected water or rescheduling.`);
-    else if(decision==='run'&&weather.windKts>=11)add(false,`You ran snorkeling in ${weather.windKts} kt wind, making the water rougher than guests expected.`);
-    if(decision==='run'&&weather.waterClarity<.55)add(false,`You ran the snorkel with only ${Math.round(weather.waterClarity*100)}% water clarity instead of rescheduling.`);
-    if(decision==='protected'&&weather.windKts<10&&weather.waterClarity>=.60)add(false,'You moved the snorkel to protected water even though conditions supported the experience guests booked.');
-  }
-
-  if(booking.tripType==='sandbar'){
-    if(decision==='run'&&weather.windKts>25)add(true,`You ran the sandbar in ${weather.windKts} kt wind, which made the ride seriously uncomfortable.`);
-  }
-
-  if(booking.tripType==='sunset'){
-    if(decision==='run'&&weather.windKts>25)add(true,`You ran the sunset cruise in ${weather.windKts} kt wind, which made the ride seriously uncomfortable.`);
-  }
+  if(decision==='run'&&weather.stormRisk>.18)reasons.push('The forecast is unsettled. Running exposed carries more weather risk.');
+  if(booking.tripType==='snorkel'&&decision==='run'&&weather.windKts>=11)reasons.push('Exposed snorkeling could be rough today; protected water lowers that risk.');
+  if(booking.tripType==='snorkel'&&decision==='run'&&weather.waterClarity<.62)reasons.push('Visibility may disappoint snorkel-focused guests today.');
+  if((booking.tripType==='sandbar'||booking.tripType==='sunset')&&decision==='run'&&weather.windKts>=20)reasons.push('The ride may be rough enough to affect guest comfort.');
+  if(decision==='protected'&&weather.windKts<10&&weather.stormRisk<.10)reasons.push('Protected water is safer, but some guests may feel they gave up part of the experience they booked.');
 
   if(boat){
-    if(boat.condition<.45)add(!['sandbar','sunset'].includes(booking.tripType),`${boat.name} was in poor condition (${Math.round(boat.condition*100)}%). Service it before carrying guests.`);
-    else if(boat.condition<.60)add(false,`${boat.name} needed service; guests noticed the ${Math.round(boat.condition*100)}% condition.`);
-    if(boat.reliability<.50)add(false,`${boat.name} was below 50% reliability and the trip felt less polished.`);
+    if(boat.condition<.60)reasons.push(`${boat.name} is showing wear. Guests may notice if the trip is otherwise demanding.`);
+    if(boat.reliability<.55)reasons.push(`${boat.name} is less reliable than ideal, which adds operational risk.`);
   }
 
-  if(booking.customerType==='family'&&decision==='run'&&weather.windKts>=16)add(false,'This family valued a comfortable ride, and the conditions were rough for their expectations.');
-  if(booking.customerType==='snorkeler'&&booking.tripType==='snorkel'&&decision==='run'&&weather.waterClarity<.65)add(false,`These serious snorkelers expected better visibility than ${Math.round(weather.waterClarity*100)}% clarity.`);
-  if(booking.customerType==='luxury'&&boat&&boat.condition<.75)add(false,'Premium private guests expected a more polished boat condition.');
-  if(booking.customerType==='celebration'&&booking.tripType==='sandbar'&&decision==='protected'&&weather.windKts<16)add(false,'The celebration group wanted the sandbar experience they booked, and conditions were still workable.');
+  if(booking.customerType==='family'&&decision==='run'&&weather.windKts>=15)reasons.push('This family values comfort, so a rough ride matters more to them.');
+  if(booking.customerType==='snorkeler'&&booking.tripType==='snorkel'&&weather.waterClarity<.68)reasons.push('Serious snorkelers care more about visibility than most guests.');
+  if(booking.customerType==='luxury'&&boat&&boat.condition<.75)reasons.push('Premium guests are more sensitive to boat condition.');
+  if(booking.customerType==='celebration'&&booking.tripType==='sandbar'&&decision==='protected'&&weather.windKts<16)reasons.push('This group booked the sandbar experience, so changing plans has a tradeoff.');
   if(booking.customerType==='bargain'){
     const product=state.products.find(p=>p.type===booking.tripType);
     const ref=referencePrice[booking.tripType]??product?.price??booking.revenue;
-    if((product?.price??booking.revenue)>ref*1.25)add(false,'Value-focused guests felt the trip price was high for the experience delivered.');
+    if((product?.price??booking.revenue)>ref*1.25)reasons.push('Value-focused guests may be tougher to please at this price.');
   }
 
-  // Reviews are intentionally forgiving. Minor imperfections never stack into a bad rating.
-  // A 4-star trip requires at least one genuinely critical operating mistake.
-  // 1-star reviews are reserved for catastrophic events handled outside normal trip scoring.
-  const experienceScore=criticalReasons.length?4:5;
-  const headline=experienceScore===4
-    ? `4★ critical error: ${criticalReasons[0]}`
-    : reasons.length
-      ? '5★ trip — minor issues did not ruin the experience'
-      : '5★ experience on plan';
-  return {experienceScore,reasons,headline};
+  return {
+    experienceScore:5,
+    reasons,
+    headline:reasons.length?'This plan carries tradeoffs; the final outcome is not guaranteed.':'Solid plan, but every charter still has some uncertainty.'
+  };
+}
+
+interface HiddenTripOutcome {
+  assessment:PlanAssessment;
+  eventNote?:string;
+}
+
+function resolveHiddenTripOutcome(
+  rng:RNG,
+  state:CompanyState,
+  booking:Booking,
+  decision:TripDecision,
+  weather:WeatherDay,
+  boat?:OwnedBoat
+):HiddenTripOutcome{
+  const factors:Array<{weight:number;reason:string;note:string}>=[];
+  const add=(weight:number,reason:string,note:string)=>{
+    if(weight>0)factors.push({weight:clamp(weight,0,.70),reason,note});
+  };
+
+  if(decision==='run'){
+    add(weather.stormRisk*.95,'A passing storm caught the trip and hurt the guest experience.','A passing storm made part of the trip rougher than planned.');
+
+    if(booking.tripType==='snorkel'){
+      add(Math.max(0,weather.windKts-8)*.035,'The exposed snorkel turned rough enough to hurt the experience.','The snorkel conditions became rougher than the guests expected.');
+      add(Math.max(0,.70-weather.waterClarity)*.65,'Visibility was worse than the snorkel guests hoped.','Underwater visibility disappointed the snorkel group.');
+    }else if(booking.tripType==='sandbar'||booking.tripType==='sunset'){
+      add(Math.max(0,weather.windKts-16)*.025,'The ride became rough enough to hurt guest comfort.','The ride got rough enough for the guests to notice.');
+      add((weather.rainChance/100)*(booking.tripType==='sunset'?.14:.07),'Weather interrupted part of the experience.','A weather change interrupted part of the trip.');
+    }else{
+      add(Math.max(0,weather.windKts-14)*.02,'Conditions became rough enough to affect the trip.','Conditions deteriorated during part of the charter.');
+      add((weather.rainChance/100)*.06,'Weather interrupted part of the experience.','A weather change interrupted part of the trip.');
+    }
+  }else if(decision==='protected'){
+    add(weather.stormRisk*.28,'Even protected water could not completely avoid the unsettled weather.','Unsettled weather still reached the protected route.');
+    if(booking.tripType==='snorkel')add(Math.max(0,.62-weather.waterClarity)*.32,'Visibility was still disappointing in protected water.','Visibility remained below what the snorkel guests hoped for.');
+    if(weather.windKts<10&&weather.stormRisk<.10){
+      const planTradeoff=booking.customerType==='celebration'||booking.customerType==='luxury'?0.10:0.055;
+      add(planTradeoff,'The guests felt the protected-water change gave up too much of what they booked.','The safer route felt like too much of a compromise to this group.');
+    }
+  }
+
+  if(boat){
+    add(Math.max(0,.70-boat.condition)*.24,'Guests noticed the boat was rough around the edges.','The boat condition took some polish off the experience.');
+    add(Math.max(0,.60-boat.reliability)*.16,'A small boat issue interrupted the otherwise good trip.','A minor boat issue interrupted the flow of the trip.');
+  }
+
+  if(booking.customerType==='family'&&decision==='run')add(Math.max(0,weather.windKts-13)*.012,'The ride was rougher than this family was comfortable with.','The family found part of the ride rough.');
+  if(booking.customerType==='snorkeler'&&booking.tripType==='snorkel')add(Math.max(0,.72-weather.waterClarity)*.22,'The snorkel-focused guests wanted better visibility.','The serious snorkelers were disappointed by visibility.');
+  if(booking.customerType==='luxury'&&boat)add(Math.max(0,.80-boat.condition)*.10,'Premium guests noticed details other groups might have ignored.','Premium guests noticed a few rough edges.');
+  if(booking.customerType==='bargain'){
+    const product=state.products.find(p=>p.type===booking.tripType);
+    const ref=referencePrice[booking.tripType]??product?.price??booking.revenue;
+    add(Math.max(0,((product?.price??booking.revenue)/ref)-1.15)*.14,'Value-focused guests felt the experience did not quite match the price.','The group questioned the value for the price paid.');
+  }
+
+  const combined=1-factors.reduce((survival,f)=>survival*(1-f.weight),1);
+  const outcomeRisk=clamp(.015+combined,.015,.82);
+  if(!rng.chance(outcomeRisk)){
+    return {assessment:{experienceScore:5,reasons:[],headline:'5★ experience'}};
+  }
+
+  const strongest=[...factors].sort((a,b)=>b.weight-a.weight)[0];
+  const reason=strongest?.reason??'A few small things added up and kept the trip from feeling perfect.';
+  const eventNote=strongest?.note??'A few small things kept the charter from feeling completely smooth.';
+  return {assessment:{experienceScore:4,reasons:[reason],headline:'The trip landed just short of perfect.'},eventNote};
 }
 
 function createReview(rng:RNG,assessment:PlanAssessment,protectedWater:boolean,booking:Booking):Review{
