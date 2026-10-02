@@ -1224,3 +1224,222 @@ input:focus,select:focus{
   border:0!important;
   filter:drop-shadow(0 8px 6px rgba(23,50,77,.28))!important;
 }
+
+/* ===== Splash V4: clear bright Keys day, horizon at user-marked level ===== */
+.splashV4{
+  min-height:100svh!important;
+  overflow:hidden!important;
+  background:#82d8f5!important;
+}
+.splashV4Scene{
+  position:relative!important;
+  width:100%!important;
+  min-height:100svh!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background:#82d8f5!important;
+}
+.splashV4Sky{
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  height:60svh!important;
+  z-index:0!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 52% 22%,rgba(255,255,255,.48),transparent 24%),
+    linear-gradient(180deg,#79cdf5 0%,#8edbf7 46%,#a7e7f7 78%,#b7eef8 100%)!important;
+}
+.splashV4Horizon{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  top:59.8svh!important;
+  height:2px!important;
+  z-index:6!important;
+  background:rgba(236,255,255,.72)!important;
+  box-shadow:0 1px 5px rgba(255,255,255,.22)!important;
+  filter:none!important;
+  opacity:1!important;
+}
+.splashV4Sea{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  top:60svh!important;
+  bottom:0!important;
+  z-index:1!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,#179fb9 0%,#25b9c9 28%,#42d3d7 62%,#68e5df 100%)!important;
+}
+.splashV4Sea .splashV3Water{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  opacity:.96!important;
+}
+.splashV4Sea:after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(108deg,transparent 0 17%,rgba(255,255,255,.07) 22%,transparent 28% 45%,rgba(255,255,255,.08) 51%,transparent 59%),
+    radial-gradient(ellipse at 50% 4%,rgba(255,255,255,.18),transparent 25%)!important;
+  mix-blend-mode:screen!important;
+  animation:v4Surface 9s ease-in-out infinite alternate!important;
+}
+@keyframes v4Surface{to{transform:translate3d(1.5%,.8%,0) scale(1.02);opacity:.76}}
+
+.splashV4Hero{
+  position:absolute!important;
+  z-index:30!important;
+  top:max(2px,env(safe-area-inset-top))!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(94vw,620px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  text-align:center!important;
+}
+.splashV4Logo{
+  display:block!important;
+  width:min(61vw,360px)!important;
+  max-height:17svh!important;
+  object-fit:contain!important;
+  margin:0 auto 1px!important;
+  filter:drop-shadow(0 5px 2px rgba(23,50,77,.14))!important;
+}
+.splashV4Tag{
+  margin:0 0 7px!important;
+  padding:5px 12px!important;
+  border-radius:999px!important;
+  color:#17324d!important;
+  background:rgba(255,255,255,.9)!important;
+  border:1px solid rgba(23,50,77,.12)!important;
+  box-shadow:0 2px 0 rgba(23,50,77,.14)!important;
+  font-weight:950!important;
+  white-space:nowrap!important;
+}
+.splashV4Buttons{
+  display:flex!important;
+  justify-content:center!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+
+.splashV4 .splashV3Sun{
+  position:absolute!important;
+  z-index:7!important;
+  top:34svh!important;
+  right:2.5vw!important;
+  width:clamp(118px,20vw,160px)!important;
+  height:auto!important;
+}
+.splashV4 .splashV3Cloud{
+  position:absolute!important;
+  z-index:5!important;
+  height:auto!important;
+  opacity:.98!important;
+}
+.splashV4 .splashV3Cloud.v3CloudLeft{
+  left:-4vw!important;
+  top:36svh!important;
+  width:clamp(180px,31vw,250px)!important;
+  transform:none!important;
+}
+.splashV4 .splashV3Cloud.v3CloudMid{
+  left:37vw!important;
+  top:45svh!important;
+  width:clamp(125px,22vw,180px)!important;
+  transform:none!important;
+  opacity:.92!important;
+}
+
+.splashV4Tower{
+  position:absolute!important;
+  z-index:10!important;
+  top:54svh!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:clamp(112px,19vw,155px)!important;
+}
+.splashV4Tower .splashV3Lighthouse{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+}
+.splashV4Boat{
+  position:absolute!important;
+  z-index:12!important;
+  width:clamp(150px,25vw,235px)!important;
+  animation:v4BoatFloat 3s ease-in-out infinite!important;
+}
+.splashV4Boat .boatArt{
+  width:100%!important;
+  filter:drop-shadow(0 11px 7px rgba(0,95,116,.22)) drop-shadow(0 1px 0 rgba(255,255,255,.9))!important;
+}
+.splashV4BoatDeck{left:4%!important;bottom:18%!important}
+.splashV4BoatPontoon{right:1%!important;bottom:5%!important;animation-duration:3.25s!important}
+.splashV4BoatCenter{right:23%!important;bottom:25%!important;width:clamp(138px,22vw,210px)!important;animation-delay:.45s!important}
+@keyframes v4BoatFloat{0%,100%{translate:0 0}50%{translate:0 -5px}}
+
+.splashV4Build{
+  position:absolute!important;
+  z-index:40!important;
+  left:50%!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  color:#17324d!important;
+  opacity:.42!important;
+  white-space:nowrap!important;
+}
+
+/* Exact turtle: embedded image, no network/public-path dependency */
+.captainSchoolV5 .turtleCoachAvatar{
+  width:162px!important;
+  height:162px!important;
+  right:-14px!important;
+  bottom:-5px!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  z-index:8!important;
+}
+.captainSchoolV5 .turtleCoachAvatar img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  background:transparent!important;
+  border:0!important;
+  filter:drop-shadow(0 8px 6px rgba(23,50,77,.28))!important;
+}
+.captainSchoolV5 .coachBubble{margin-right:82px!important;padding-right:18px!important}
+.captainSchoolV5 .coachNext{right:136px!important}
+
+@media(max-width:520px){
+  .splashV4Sky{height:60svh!important}
+  .splashV4Horizon{top:59.8svh!important}
+  .splashV4Sea{top:60svh!important}
+  .splashV4Hero{width:96vw!important}
+  .splashV4Logo{width:min(64vw,310px)!important;max-height:15svh!important}
+  .splashV4Tag{font-size:.74rem!important;padding:4px 9px!important;margin-bottom:6px!important}
+  .splashV4 .enterGame{font-size:.86rem!important;padding:9px 15px!important}
+  .splashV4 .soundPrompt{font-size:.78rem!important;padding:7px 9px!important}
+  .splashV4 .splashV3Sun{top:34.5svh!important;right:-1vw!important;width:122px!important}
+  .splashV4 .splashV3Cloud.v3CloudLeft{top:36.5svh!important;left:-9vw!important;width:185px!important}
+  .splashV4 .splashV3Cloud.v3CloudMid{top:47svh!important;left:39vw!important;width:128px!important}
+  .splashV4Tower{top:55svh!important;width:122px!important}
+  .splashV4Boat{width:145px!important}
+  .splashV4BoatDeck{left:-1%!important;bottom:17%!important}
+  .splashV4BoatPontoon{right:-4%!important;bottom:5%!important}
+  .splashV4BoatCenter{right:19%!important;bottom:25%!important;width:130px!important}
+  .captainSchoolV5 .turtleCoachAvatar{width:146px!important;height:146px!important;right:-10px!important;bottom:-1px!important}
+  .captainSchoolV5 .coachBubble{margin-right:72px!important}
+  .captainSchoolV5 .coachNext{right:124px!important}
+}
