@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { changePassword, loadCompany, login, me, register, type Player } from './api';
 import type { CompanyState } from '../game/types/models';
 
-export type GameMode='demo'|'owner'|'registered';
+export type GameMode='demo'|'registered';
 
 export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Player,state?:CompanyState|null)=>void}){
   const [view,setView]=useState<'choose'|'account'|'change'>('choose');
@@ -101,8 +101,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     <h2>How do you want to play?</h2>
     <button className="modeChoice primary" disabled={checkingSession} onClick={chooseRegistered}><b>🏆 Play & Compete</b><span>{checkingSession?'Checking your account…':signedInPlayer?`Continue as ${signedInPlayer.displayName||signedInPlayer.display_name||signedInPlayer.email}. Cloud save and leaderboards.`:'Create an account, save in the cloud and chase the leaderboards.'}</span></button>
     <button className="modeChoice" onClick={()=>onStart('demo')}><b>🎮 Try One Week</b><span>No account. Play all 7 days of Captain School and learn the core game.</span></button>
-    <button className="modeChoice devChoice" onClick={()=>onStart('owner')}><b>🧪 Development Test</b><span>Full local testing with no login. Never enters public rankings.</span></button>
-    {signedInPlayer&&<p className="fine signedInNote">Signed in account detected. You can still choose Demo or Development Test without affecting your online company.</p>}
+    {signedInPlayer&&<p className="fine signedInNote">Signed in account detected. You can still choose the Demo without affecting your online company.</p>}
     <p className="fine">Account email is used for your game account. Marketing email is optional and requires the separate checkbox above. <a href="https://www.goislandadventures.com/privacy-policy-2/" target="_blank" rel="noreferrer">Privacy Policy</a></p>
   </section></main>;
 }
