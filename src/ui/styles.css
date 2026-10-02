@@ -3802,3 +3802,342 @@ input:focus,select:focus{
     animation:none!important;
   }
 }
+
+/* === FORTNITE-REFERENCE SPLASH RESET === */
+.splashFortniteReset{
+  min-height:100svh!important;
+  width:100%!important;
+  overflow:hidden!important;
+  background:#058fc1!important;
+  color:#fff!important;
+}
+.splashFortniteScene{
+  position:relative!important;
+  width:100%!important;
+  height:100svh!important;
+  min-height:580px!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background:#0796c4!important;
+}
+.splashFortnitePhoto,
+.splashFortniteFallback{
+  position:absolute!important;
+  inset:-2%!important;
+  z-index:0!important;
+  width:104%!important;
+  height:104%!important;
+}
+.splashFortnitePhoto{
+  display:block!important;
+  object-fit:cover!important;
+  object-position:center 54%!important;
+  filter:saturate(1.12) contrast(1.035) brightness(1.015)!important;
+  transform:scale(1.018)!important;
+  animation:splashFortniteCamera 18s ease-in-out infinite alternate!important;
+}
+.splashFortniteFallback{
+  background:
+    radial-gradient(circle at 76% 23%,rgba(255,226,107,.9) 0 4.5%,rgba(255,226,107,.18) 8%,transparent 18%),
+    linear-gradient(180deg,#0571b8 0%,#0baed9 43%,#64e0e8 63%,#09a9c3 64%,#047ea8 100%)!important;
+}
+.splashFortniteColorGrade{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  background:
+    linear-gradient(180deg,rgba(0,42,90,.15) 0%,rgba(0,75,114,.02) 25%,rgba(0,159,186,.05) 57%,rgba(0,68,98,.16) 100%),
+    radial-gradient(ellipse at 50% 50%,transparent 42%,rgba(0,45,74,.14) 100%)!important;
+  mix-blend-mode:multiply!important;
+}
+.splashFortniteWaterGlow{
+  position:absolute!important;
+  z-index:2!important;
+  left:-15%!important;
+  right:-15%!important;
+  bottom:-6%!important;
+  height:46%!important;
+  pointer-events:none!important;
+  opacity:.72!important;
+  background:
+    repeating-linear-gradient(176deg,rgba(255,255,255,.11) 0 1px,transparent 1px 15px),
+    radial-gradient(ellipse at 50% 0%,rgba(210,255,250,.2),transparent 48%)!important;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,.2))!important;
+  animation:splashFortniteWater 9s linear infinite!important;
+}
+.splashFortniteVignette{
+  position:absolute!important;
+  inset:0!important;
+  z-index:3!important;
+  pointer-events:none!important;
+  box-shadow:
+    inset 0 0 100px rgba(0,28,57,.16),
+    inset 0 -130px 100px rgba(0,37,60,.24)!important;
+  background:
+    linear-gradient(180deg,rgba(0,35,66,.08),transparent 22%,transparent 70%,rgba(0,32,52,.18))!important;
+}
+.splashFortniteBrand{
+  position:absolute!important;
+  z-index:10!important;
+  top:calc(env(safe-area-inset-top) + clamp(18px,4.2svh,42px))!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  width:min(92vw,620px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  text-align:center!important;
+  pointer-events:none!important;
+}
+.splashFortniteLogo{
+  display:block!important;
+  width:min(72vw,330px)!important;
+  height:auto!important;
+  max-height:22svh!important;
+  object-fit:contain!important;
+  margin:0 auto!important;
+  filter:
+    drop-shadow(0 2px 0 rgba(255,255,255,.16))
+    drop-shadow(0 7px 2px rgba(0,24,50,.35))
+    drop-shadow(0 20px 24px rgba(0,30,55,.24))!important;
+}
+.splashFortniteSubtitle{
+  margin-top:4px!important;
+  color:rgba(248,255,255,.96)!important;
+  font-size:clamp(.56rem,1.25vw,.72rem)!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.2em!important;
+  text-shadow:0 2px 10px rgba(0,34,58,.74)!important;
+}
+.splashFortniteTagline{
+  margin-top:8px!important;
+  color:rgba(246,255,255,.92)!important;
+  font-size:clamp(.76rem,1.8vw,.95rem)!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+  text-shadow:0 2px 10px rgba(0,34,58,.74)!important;
+}
+.splashFortniteActions{
+  position:absolute!important;
+  z-index:12!important;
+  left:50%!important;
+  bottom:calc(max(60px,env(safe-area-inset-bottom) + 49px))!important;
+  transform:translateX(-50%)!important;
+  width:min(92vw,600px)!important;
+  display:flex!important;
+  align-items:stretch!important;
+  justify-content:center!important;
+  gap:9px!important;
+}
+.splashFortniteActions button{
+  position:relative!important;
+  overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.7)!important;
+  border-radius:8px!important;
+  box-shadow:
+    0 8px 0 rgba(7,36,57,.88),
+    0 15px 26px rgba(0,31,50,.3),
+    inset 0 1px 0 rgba(255,255,255,.84)!important;
+  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease!important;
+}
+.splashFortniteActions button:before{
+  content:""!important;
+  position:absolute!important;
+  top:-130%!important;
+  left:-60%!important;
+  width:32%!important;
+  height:360%!important;
+  transform:rotate(18deg)!important;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent)!important;
+  animation:splashFortniteShine 6.5s ease-in-out infinite!important;
+}
+.splashFortniteEnter{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  min-height:62px!important;
+  padding:9px 20px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#12334c!important;
+  background:linear-gradient(180deg,#fff18f 0%,#ffd252 52%,#f5b52a 100%)!important;
+}
+.splashFortniteEnter strong{
+  position:relative!important;
+  z-index:1!important;
+  font-size:clamp(.92rem,2.15vw,1.1rem)!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.09em!important;
+}
+.splashFortniteEnter span{
+  position:relative!important;
+  z-index:1!important;
+  margin-top:5px!important;
+  font-size:clamp(.6rem,1.3vw,.72rem)!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.07em!important;
+  opacity:.72!important;
+}
+.splashFortniteTheme{
+  flex:0 0 108px!important;
+  min-height:62px!important;
+  padding:8px 10px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#effdff!important;
+  background:linear-gradient(180deg,rgba(15,104,149,.92),rgba(5,60,98,.96))!important;
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+.splashFortniteTheme.playing{
+  background:linear-gradient(180deg,rgba(18,133,143,.96),rgba(5,82,104,.98))!important;
+}
+.splashFortniteTheme b{
+  position:relative!important;
+  z-index:1!important;
+  font-size:1rem!important;
+  line-height:1!important;
+}
+.splashFortniteTheme span{
+  position:relative!important;
+  z-index:1!important;
+  margin-top:5px!important;
+  font-size:.56rem!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:.11em!important;
+  white-space:nowrap!important;
+}
+.splashFortniteActions button:hover{
+  filter:brightness(1.055) saturate(1.035)!important;
+}
+.splashFortniteActions button:active{
+  transform:translateY(7px)!important;
+  box-shadow:
+    0 2px 0 rgba(7,36,57,.88),
+    0 7px 14px rgba(0,31,50,.25),
+    inset 0 1px 0 rgba(255,255,255,.84)!important;
+}
+.splashFortniteFooter{
+  position:absolute!important;
+  z-index:11!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  min-height:43px!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  padding:
+    8px max(14px,env(safe-area-inset-right))
+    max(8px,env(safe-area-inset-bottom))
+    max(14px,env(safe-area-inset-left))!important;
+  color:rgba(242,253,255,.77)!important;
+  background:linear-gradient(180deg,rgba(0,16,28,0),rgba(0,17,29,.78))!important;
+  font-size:clamp(.48rem,1vw,.61rem)!important;
+  line-height:1.1!important;
+  font-weight:780!important;
+  letter-spacing:.095em!important;
+  text-shadow:0 2px 6px rgba(0,14,24,.9)!important;
+}
+.splashFortniteFooterLeft{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+.splashFortniteFooterLeft strong{
+  color:rgba(255,255,255,.96)!important;
+  font-size:clamp(.54rem,1.15vw,.68rem)!important;
+}
+.splashFortniteFooterRight{
+  white-space:nowrap!important;
+}
+@keyframes splashFortniteCamera{
+  from{transform:scale(1.018) translate3d(-.35%,0,0)}
+  to{transform:scale(1.04) translate3d(.35%,-.25%,0)}
+}
+@keyframes splashFortniteWater{
+  to{background-position:180px 30px,0 0}
+}
+@keyframes splashFortniteShine{
+  0%,68%{left:-60%;opacity:0}
+  75%{opacity:.72}
+  91%{left:120%;opacity:0}
+  100%{left:120%;opacity:0}
+}
+@media(max-width:600px){
+  .splashFortniteBrand{
+    top:calc(env(safe-area-inset-top) + 13px)!important;
+    width:96vw!important;
+  }
+  .splashFortniteLogo{
+    width:min(74vw,300px)!important;
+    max-height:18svh!important;
+  }
+  .splashFortniteSubtitle{
+    margin-top:3px!important;
+    font-size:.51rem!important;
+    letter-spacing:.17em!important;
+  }
+  .splashFortniteTagline{
+    margin-top:6px!important;
+    font-size:.72rem!important;
+    max-width:91vw!important;
+  }
+  .splashFortniteActions{
+    width:94vw!important;
+    bottom:calc(max(58px,env(safe-area-inset-bottom) + 47px))!important;
+    gap:8px!important;
+  }
+  .splashFortniteEnter{
+    min-height:58px!important;
+    padding:8px 12px!important;
+  }
+  .splashFortniteTheme{
+    flex-basis:88px!important;
+    min-height:58px!important;
+  }
+  .splashFortniteFooter{
+    padding-left:11px!important;
+    padding-right:11px!important;
+    font-size:.45rem!important;
+  }
+}
+@media(max-width:390px){
+  .splashFortniteLogo{
+    width:min(76vw,285px)!important;
+  }
+  .splashFortniteSubtitle{
+    font-size:.48rem!important;
+  }
+  .splashFortniteTagline{
+    font-size:.68rem!important;
+  }
+  .splashFortniteTheme{
+    flex-basis:82px!important;
+  }
+}
+@media(max-height:700px){
+  .splashFortniteLogo{max-height:15.5svh!important}
+  .splashFortniteBrand{top:calc(env(safe-area-inset-top) + 7px)!important}
+  .splashFortniteTagline{margin-top:4px!important}
+  .splashFortniteActions{
+    bottom:calc(max(48px,env(safe-area-inset-bottom) + 38px))!important;
+  }
+  .splashFortniteActions button{min-height:50px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .splashFortnitePhoto,
+  .splashFortniteWaterGlow,
+  .splashFortniteActions button:before{
+    animation:none!important;
+  }
+}
