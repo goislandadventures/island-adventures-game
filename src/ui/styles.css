@@ -3483,7 +3483,9 @@ input:focus,select:focus{
     scroll-behavior:auto!important;
   }
   .splashV10World,.v10Island,.v10Lighthouse,.v10BoatWrap,.splashV10Logo{transform:none!important}
-}\n\n/* === CINEMATIC SPLASH RESET === */
+}
+
+/* === CINEMATIC SPLASH RESET === */
 .cinematicSplash{
   min-height:100svh;
   width:100%;
@@ -3799,4 +3801,4 @@ input:focus,select:focus{
   .cinematicSplashControls button:after{
     animation:none!important;
   }
-}\n
+}
