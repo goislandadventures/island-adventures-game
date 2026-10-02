@@ -1,91 +1,115 @@
 import { useEffect,useRef,useState } from 'react';
 import BoatArt from './BoatArt';
 
-function SunArt(){
-  return <svg className="splashV3Sun" viewBox="0 0 180 180" aria-hidden="true">
+function AlligatorReefTower(){
+  const braces:Array<[number,number,number,number]>=[];
+  const levels=[190,245,305,370,440,515,595,660];
+  const left=(y:number)=>160-(y-150)*.13;
+  const right=(y:number)=>160+(y-150)*.13;
+  for(let i=0;i<levels.length-1;i++){
+    const y1=levels[i],y2=levels[i+1];
+    braces.push([left(y1),y1,right(y2),y2],[right(y1),y1,left(y2),y2]);
+  }
+  return <svg className="splashV5TowerArt" viewBox="0 0 320 760" aria-hidden="true">
     <defs>
-      <radialGradient id="v3SunFace" cx=".35" cy=".25"><stop stopColor="#fff894"/><stop offset=".52" stopColor="#ffd82f"/><stop offset="1" stopColor="#f6a900"/></radialGradient>
-      <linearGradient id="v3SunGlass" x1="0" x2="1"><stop stopColor="#2e526c"/><stop offset=".5" stopColor="#101d2c"/><stop offset="1" stopColor="#315d77"/></linearGradient>
-      <filter id="v3SunShadow"><feDropShadow dx="0" dy="7" stdDeviation="5" floodColor="#d29000" floodOpacity=".22"/></filter>
+      <linearGradient id="v5Steel" x1="0" x2="1"><stop stopColor="#f9ffff"/><stop offset=".22" stopColor="#b7c7c9"/><stop offset=".52" stopColor="#f7ffff"/><stop offset=".78" stopColor="#8d9da0"/><stop offset="1" stopColor="#53656a"/></linearGradient>
+      <linearGradient id="v5Column" x1="0" x2="1"><stop stopColor="#eef5f2"/><stop offset=".45" stopColor="#ffffff"/><stop offset=".78" stopColor="#b6c6c4"/><stop offset="1" stopColor="#7c8f90"/></linearGradient>
+      <linearGradient id="v5Rust" x1="0" x2="1"><stop stopColor="#40241d"/><stop offset=".4" stopColor="#9b4f35"/><stop offset=".68" stopColor="#d78452"/><stop offset="1" stopColor="#3a241f"/></linearGradient>
+      <radialGradient id="v5Glass" cx=".4" cy=".25"><stop stopColor="#d9fbff"/><stop offset=".55" stopColor="#65aab3"/><stop offset="1" stopColor="#17313b"/></radialGradient>
+      <filter id="v5TowerShadow" x="-40%" y="-20%" width="180%" height="160%"><feDropShadow dx="0" dy="15" stdDeviation="12" floodColor="#063e54" floodOpacity=".34"/></filter>
+      <filter id="v5Glow"><feGaussianBlur stdDeviation="3"/></filter>
     </defs>
-    <g filter="url(#v3SunShadow)">
-      {[0,45,90,135,180,225,270,315].map(a=><path key={a} d="M90 4 L104 28 L76 28 Z" fill="#ffc42d" transform={`rotate(${a} 90 90)`}/>)}
-      <circle cx="90" cy="90" r="58" fill="url(#v3SunFace)" stroke="#e8a500" strokeWidth="3"/>
-      <path d="M48 69 Q65 59 84 66 L81 91 Q61 99 47 83Z" fill="url(#v3SunGlass)" stroke="#17324d" strokeWidth="5"/>
-      <path d="M96 66 Q115 59 133 69 L133 83 Q119 99 99 91Z" fill="url(#v3SunGlass)" stroke="#17324d" strokeWidth="5"/>
-      <path d="M83 71 Q90 67 97 71" fill="none" stroke="#17324d" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M61 108 Q90 132 121 107 Q115 137 90 140 Q66 136 61 108Z" fill="#fff" stroke="#d79b00" strokeWidth="3"/>
+    <g filter="url(#v5TowerShadow)">
+      <ellipse cx="160" cy="709" rx="128" ry="24" fill="#d9efcf" opacity=".82"/>
+      <ellipse cx="160" cy="712" rx="89" ry="13" fill="#7fcbb7" opacity=".45"/>
+
+      <path d="M82 690 L144 178 M238 690 L176 178" stroke="url(#v5Steel)" strokeWidth="11" fill="none" strokeLinecap="round"/>
+      <path d="M100 690 L151 178 M220 690 L169 178" stroke="#52676b" strokeWidth="5" fill="none" opacity=".92"/>
+
+      {levels.map(y=><path key={y} d={`M ${left(y)} ${y} L ${right(y)} ${y}`} stroke="#728488" strokeWidth="5" opacity=".96"/>)}
+      {braces.map((b,i)=><path key={i} d={`M ${b[0]} ${b[1]} L ${b[2]} ${b[3]}`} stroke="#75888c" strokeWidth="4.2" opacity=".94"/>)}
+
+      <path d="M141 590 L147 202 L173 202 L179 590 Z" fill="url(#v5Column)" stroke="#6e8080" strokeWidth="4"/>
+      <path d="M151 214 L151 578" stroke="#fff" strokeWidth="3" opacity=".72"/>
+
+      <path d="M116 176 H204 L195 205 H125 Z" fill="#111d23" stroke="#061116" strokeWidth="5"/>
+      <path d="M124 150 H196 V179 H124 Z" fill="url(#v5Glass)" stroke="#0b171c" strokeWidth="6"/>
+      <path d="M132 154 V175 M147 152 V177 M162 152 V177 M177 152 V177 M190 154 V175" stroke="#10252b" strokeWidth="3" opacity=".9"/>
+      <path d="M117 145 L160 122 L203 145 Z" fill="#0f181d" stroke="#050b0e" strokeWidth="5"/>
+      <rect x="151" y="113" width="18" height="12" rx="3" fill="#121b20"/>
+      <circle cx="160" cy="119" r="4.5" fill="#fff2a4" opacity=".9"/>
+      <circle cx="160" cy="119" r="10" fill="#fff4b8" opacity=".15" filter="url(#v5Glow)"/>
+
+      <path d="M112 209 H208 L200 229 H120 Z" fill="url(#v5Rust)" stroke="#42251f" strokeWidth="4"/>
+      <path d="M105 230 H215" stroke="#1a2d33" strokeWidth="8"/>
+      <path d="M115 233 L101 681 M205 233 L219 681" stroke="#1d3238" strokeWidth="5" opacity=".65"/>
+
+      <path d="M88 669 H232" stroke="#182f35" strokeWidth="11" strokeLinecap="round"/>
+      <path d="M102 650 H218" stroke="#718387" strokeWidth="5"/>
+      <path d="M92 670 L76 700 M228 670 L244 700" stroke="#1b3137" strokeWidth="7"/>
+
+      <g opacity=".28">
+        <path d="M129 246 L144 246 M122 305 L140 305 M113 371 L136 371 M105 443 L132 443 M97 518 L128 518" stroke="#c96d44" strokeWidth="5"/>
+        <path d="M191 246 L176 246 M198 305 L180 305 M207 371 L184 371 M215 443 L188 443" stroke="#8f533a" strokeWidth="4"/>
+      </g>
     </g>
   </svg>;
 }
 
-function CloudArt({className}:{className:string}){
-  return <svg className={`splashV3Cloud ${className}`} viewBox="0 0 250 130" aria-hidden="true">
+function KeysDepthWater(){
+  return <svg className="splashV5WaterArt" viewBox="0 0 1000 1200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <radialGradient id={`v3Cloud-${className}`} cx=".35" cy=".16"><stop stopColor="#fff"/><stop offset=".56" stopColor="#f2f8ff"/><stop offset="1" stopColor="#b8d9f6"/></radialGradient>
-      <filter id={`v3CloudShadow-${className}`}><feDropShadow dx="0" dy="7" stdDeviation="6" floodColor="#2f7fa7" floodOpacity=".16"/></filter>
+      <linearGradient id="v5Sea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#078fb0"/>
+        <stop offset=".22" stopColor="#12abc2"/>
+        <stop offset=".5" stopColor="#26c5cc"/>
+        <stop offset=".74" stopColor="#4ed9d1"/>
+        <stop offset="1" stopColor="#7fe6d9"/>
+      </linearGradient>
+      <radialGradient id="v5SandA"><stop stopColor="#f2f0b8" stopOpacity=".68"/><stop offset=".45" stopColor="#bde8cc" stopOpacity=".48"/><stop offset="1" stopColor="#76d3c8" stopOpacity="0"/></radialGradient>
+      <radialGradient id="v5SandB"><stop stopColor="#e7efb5" stopOpacity=".54"/><stop offset=".5" stopColor="#a5dfca" stopOpacity=".35"/><stop offset="1" stopColor="#5fc8c0" stopOpacity="0"/></radialGradient>
+      <pattern id="v5Caustics" width="140" height="90" patternUnits="userSpaceOnUse">
+        <path d="M-10 31 C26 6 56 52 91 25 C111 10 132 15 151 32" fill="none" stroke="#efffff" strokeWidth="3" strokeOpacity=".20"/>
+        <path d="M12 78 C38 56 70 92 104 62 C122 47 142 51 157 67" fill="none" stroke="#ffffff" strokeWidth="2" strokeOpacity=".15"/>
+      </pattern>
+      <filter id="v5WaterSoft"><feGaussianBlur stdDeviation="16"/></filter>
     </defs>
-    <g filter={`url(#v3CloudShadow-${className})`}>
-      <ellipse cx="124" cy="91" rx="92" ry="25" fill={`url(#v3Cloud-${className})`}/>
-      <circle cx="66" cy="76" r="35" fill={`url(#v3Cloud-${className})`}/>
-      <circle cx="111" cy="56" r="48" fill={`url(#v3Cloud-${className})`}/>
-      <circle cx="157" cy="64" r="41" fill={`url(#v3Cloud-${className})`}/>
-      <circle cx="196" cy="80" r="30" fill={`url(#v3Cloud-${className})`}/>
-      <ellipse cx="104" cy="43" rx="31" ry="12" fill="#fff" opacity=".7"/>
+    <rect width="1000" height="1200" fill="url(#v5Sea)"/>
+    <ellipse cx="520" cy="430" rx="420" ry="200" fill="url(#v5SandA)" filter="url(#v5WaterSoft)"/>
+    <ellipse cx="210" cy="790" rx="300" ry="190" fill="url(#v5SandB)" filter="url(#v5WaterSoft)"/>
+    <ellipse cx="840" cy="915" rx="310" ry="200" fill="url(#v5SandA)" opacity=".72" filter="url(#v5WaterSoft)"/>
+    <ellipse cx="500" cy="1090" rx="410" ry="180" fill="#b9ebd5" opacity=".18" filter="url(#v5WaterSoft)"/>
+    <rect width="1000" height="1200" fill="url(#v5Caustics)" opacity=".9"/>
+    <g fill="none" stroke="#e9ffff" strokeLinecap="round">
+      <path d="M-20 260 C180 222 322 255 491 217 C655 180 802 195 1040 152" strokeWidth="5" opacity=".18"/>
+      <path d="M-10 307 C161 281 332 312 499 277 C688 237 822 251 1040 213" strokeWidth="3" opacity=".14"/>
+      <path d="M-10 654 C145 623 315 650 468 615 C633 577 818 586 1030 547" strokeWidth="5" opacity=".17"/>
+      <path d="M-10 714 C170 679 328 711 491 671 C648 632 832 643 1040 601" strokeWidth="3" opacity=".14"/>
+      <path d="M-20 1007 C152 974 319 1004 489 966 C662 926 823 945 1030 903" strokeWidth="4" opacity=".15"/>
+    </g>
+    <g fill="#ffffff" opacity=".36">
+      <ellipse cx="127" cy="495" rx="74" ry="4"/>
+      <ellipse cx="365" cy="348" rx="49" ry="3"/>
+      <ellipse cx="724" cy="482" rx="83" ry="4"/>
+      <ellipse cx="889" cy="693" rx="56" ry="3"/>
+      <ellipse cx="533" cy="859" rx="69" ry="4"/>
+      <ellipse cx="206" cy="1040" rx="57" ry="3"/>
     </g>
   </svg>;
 }
 
-function Lighthouse(){
-  return <svg className="splashV3Lighthouse" viewBox="0 0 170 250" aria-hidden="true">
-    <defs>
-      <linearGradient id="v3Tower" x1="0" x2="1"><stop stopColor="#f8f6ef"/><stop offset=".45" stopColor="#bcc6c7"/><stop offset="1" stopColor="#718086"/></linearGradient>
-      <linearGradient id="v3Rust" x1="0" x2="1"><stop stopColor="#7f3a29"/><stop offset=".5" stopColor="#c77949"/><stop offset="1" stopColor="#743128"/></linearGradient>
-      <filter id="v3TowerShadow"><feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#0c6572" floodOpacity=".24"/></filter>
-    </defs>
-    <g filter="url(#v3TowerShadow)">
-      <ellipse cx="85" cy="222" rx="70" ry="22" fill="#e8e0a9" opacity=".88"/>
-      <ellipse cx="85" cy="225" rx="42" ry="14" fill="#8abf9c" opacity=".72"/>
-      <path d="M54 211 L73 52 M116 211 L97 52 M54 211 H116 M60 169 H110 M65 128 H105 M69 88 H101" stroke="url(#v3Tower)" strokeWidth="9" fill="none"/>
-      <path d="M54 211 L97 52 M116 211 L73 52 M60 169 L105 128 M110 169 L65 128 M65 128 L101 88 M105 128 L69 88" stroke="#718087" strokeWidth="4" opacity=".85"/>
-      <rect x="60" y="40" width="50" height="20" rx="4" fill="url(#v3Rust)"/>
-      <rect x="65" y="15" width="40" height="28" rx="5" fill="#243f4c"/>
-      <rect x="72" y="20" width="26" height="17" rx="2" fill="#8bd7e5"/>
-      <path d="M58 15 L85 -2 L112 15 Z" fill="#263943"/>
-      <circle cx="85" cy="8" r="4" fill="#ffe17a"/>
-    </g>
-  </svg>;
-}
-
-function KeysWater(){
-  return <svg className="splashV3Water" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs>
-      <linearGradient id="v3Sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#179fb9"/><stop offset=".28" stopColor="#25b9c9"/><stop offset=".62" stopColor="#42d3d7"/><stop offset="1" stopColor="#68e5df"/></linearGradient>
-      <radialGradient id="v3Sand" cx=".5" cy=".5"><stop stopColor="#dff7db" stopOpacity=".88"/><stop offset=".5" stopColor="#bcebd8" stopOpacity=".56"/><stop offset="1" stopColor="#8edbce" stopOpacity="0"/></radialGradient>
-      <filter id="v3Soft"><feGaussianBlur stdDeviation="7"/></filter>
-    </defs>
-    <rect width="1000" height="1000" fill="url(#v3Sea)"/>
-    <ellipse cx="535" cy="500" rx="410" ry="245" fill="url(#v3Sand)"/>
-    <g fill="#116c78" opacity=".055" filter="url(#v3Soft)">
-      <path d="M62 330 C130 286 205 293 260 337 C302 372 294 424 238 451 C175 480 105 456 72 405 C51 373 49 350 62 330Z"/>
-      <path d="M700 302 C767 267 845 283 885 326 C918 361 899 403 844 424 C784 448 726 428 694 387 C675 362 678 325 700 302Z"/>
-      <path d="M114 687 C184 642 262 653 312 696 C349 728 338 775 281 802 C218 831 151 807 120 760 C99 729 98 705 114 687Z"/>
-      <path d="M690 712 C762 667 847 680 895 724 C930 756 914 802 854 828 C789 857 721 829 689 781 C669 751 672 727 690 712Z"/>
-      <path d="M420 820 C468 790 526 799 557 827 C581 850 571 884 531 903 C486 924 441 907 418 873 C404 852 406 832 420 820Z"/>
-    </g>
-    <g fill="#397b70" opacity=".045">
-      <path d="M265 560 C318 526 372 535 403 567 C427 591 418 626 379 643 C335 663 290 648 268 616 C255 597 254 576 265 560Z"/>
-      <path d="M608 576 C655 545 706 552 736 581 C758 603 750 633 714 650 C674 669 632 655 611 625 C598 606 597 590 608 576Z"/>
-    </g>
-    <g fill="none" stroke="#efffff" strokeOpacity=".22" strokeWidth="4">
-      <path d="M0 414 C160 386 275 406 405 381 C560 351 687 358 1000 314"/>
-      <path d="M0 443 C161 418 283 438 416 412 C579 380 716 387 1000 349"/>
-      <path d="M0 742 C178 708 298 727 434 695 C610 653 759 672 1000 632"/>
-      <path d="M0 775 C177 742 310 759 450 727 C619 688 768 701 1000 665"/>
-    </g>
-    <g fill="#fff" opacity=".28">
-      <ellipse cx="176" cy="523" rx="54" ry="4"/><ellipse cx="826" cy="514" rx="72" ry="4"/><ellipse cx="486" cy="731" rx="44" ry="3"/><ellipse cx="718" cy="865" rx="62" ry="3"/>
-    </g>
+function DistantFleet(){
+  const boats=[
+    {x:80,y:95,s:.62},{x:205,y:72,s:.44},{x:318,y:104,s:.54},{x:478,y:76,s:.42},
+    {x:610,y:108,s:.55},{x:746,y:82,s:.46},{x:865,y:102,s:.58}
+  ];
+  return <svg className="splashV5DistantFleet" viewBox="0 0 950 180" aria-hidden="true">
+    {boats.map((b,i)=><g key={i} transform={`translate(${b.x} ${b.y}) scale(${b.s})`}>
+      <ellipse cx="0" cy="18" rx="58" ry="7" fill="#084e61" opacity=".18"/>
+      <path d="M-49 4 Q-12 -10 43 1 Q34 16 8 20 H-24 Q-41 16 -49 4Z" fill="#fff7df" stroke="#284a59" strokeWidth="3"/>
+      <path d="M-6 -8 H26 L34 1 H-18Z" fill="#2a7d95"/>
+      <path d="M-3 -13 Q7 -31 18 -31 Q29 -31 34 -13" fill="none" stroke="#344c50" strokeWidth="4"/>
+    </g>)}
   </svg>;
 }
 
@@ -117,34 +141,35 @@ export default function Splash({onEnter}:{onEnter:()=>void}){
       audio.currentTime=0;
       return;
     }
-    try{
-      await audio.play();
-    }catch{
-      setSoundPlaying(false);
-    }
+    try{await audio.play()}catch{setSoundPlaying(false)}
   };
   const enter=()=>{const audio=audioRef.current;onEnter();if(audio){try{audio.pause();audio.currentTime=0}catch{}}};
 
-  return <main className="splash splashV4"><div className="splashV4Scene">
-    <div className="splashV4Sky">
-      <CloudArt className="v3CloudLeft"/>
-      <CloudArt className="v3CloudMid"/>
-      <SunArt/>
+  return <main className="splash splashV5"><div className="splashV5Scene">
+    <div className="splashV5Sky">
+      <div className="splashV5Atmosphere"/>
+      <div className="splashV5CloudBand cloudBandOne"/>
+      <div className="splashV5CloudBand cloudBandTwo"/>
     </div>
-    <div className="splashV4Horizon"/>
-    <div className="splashV4Sea"><KeysWater/></div>
-    <div className="splashV4Tower"><Lighthouse/></div>
-    <div className="splashV4Boat splashV4BoatDeck"><BoatArt kind="deck"/></div>
-    <div className="splashV4Boat splashV4BoatPontoon"><BoatArt kind="pontoon"/></div>
-    <div className="splashV4Boat splashV4BoatCenter"><BoatArt kind="center-console"/></div>
-    <div className="splashV4Hero">
-      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV4Logo"/>
-      <div className="splashV4Tag">Build your fleet. Rule the islands.</div>
-      <div className="splashV4Buttons">
+    <div className="splashV5Horizon"/>
+    <div className="splashV5Sea"><KeysDepthWater/></div>
+
+    <DistantFleet/>
+    <div className="splashV5Tower"><AlligatorReefTower/></div>
+
+    <div className="splashV5Boat splashV5BoatLeft"><span className="splashV5Wake"/><BoatArt kind="center-console"/></div>
+    <div className="splashV5Boat splashV5BoatRight"><span className="splashV5Wake"/><BoatArt kind="deck"/></div>
+
+    <div className="splashV5Hero">
+      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV5Logo"/>
+      <div className="splashV5Tag">Build your fleet. Rule the islands.</div>
+      <div className="splashV5Buttons">
         <button className="soundPrompt" onClick={toggleSound}>{soundPlaying?'■ Stop theme':'♫ Tap for theme'}</button>
         <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
       </div>
     </div>
-    <small className="splashV4Build">Version 1.0 © 2026</small>
+
+    <div className="splashV5Location">ALLIGATOR REEF · FLORIDA KEYS</div>
+    <small className="splashV5Build">Version 1.0 © 2026</small>
   </div></main>;
 }
