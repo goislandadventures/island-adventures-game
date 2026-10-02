@@ -9,89 +9,90 @@ export interface TutorialDay {
 export const weekOneTutorial: TutorialDay[] = [
   {
     day:1,
-    title:'Get a boat. Get some guests.',
-    summary:'You have $10,000, no boat, and one week to figure this out. Start simple.',
+    title:'Build your first little boat business',
+    summary:'You have $10,000, no boat, and no clue what kind of day is coming. That is enough to start.',
     lessons:[
-      'Pick a marina. A slip is just a parking spot for your boat.',
-      'Look at the hull year, engine year, and engine hours separately. An old boat with a newer low-hour engine can be a great deal.',
-      'You can stay debt-free or take one startup loan up to $20,000. The interest is painful and the payment comes every day.',
-      'Insurance is your choice. It costs money, but an uninsured boat can become a total loss later.',
-      'Check the weather before every trip. A sandbar trip and a snorkel trip can need totally different plans.'
+      'Pick a marina. Think of the slip as your boat’s parking spot. Nicer marinas cost more, can make insurance pricier, and can attract better tips.',
+      'Shop the boat, not just the year. Hull age, engine age, engine hours, condition, and reliability all matter.',
+      'Need a better boat? You can take one startup loan up to $20,000. It helps today, but the high-interest payment follows you every single day.',
+      'Insurance is optional. Skipping it saves money now. If a major hurricane destroys an uninsured boat later, that boat is simply gone.',
+      'Before each trip, read the weather and decide for yourself. Nothing is preselected. You are the captain.'
     ],
-    goal:'Get a marina, pick a boat, decide on insurance and debt, then finish Day 1 with cash still in the bank.'
+    goal:'Get a slip, get a boat, make your insurance/debt choices, then finish your first day without running out of cash.'
   },
   {
     day:2,
-    title:'Make the phone ring',
-    summary:'Guests cannot book you if they never hear about you.',
+    title:'Make people actually find you',
+    summary:'A great boat with zero guests is just an expensive floating chair.',
     lessons:[
-      'You can spend money on Search, Maps, Social, Hotels, or Content to help people find you.',
-      'More marketing can bring more bookings, but the money leaves your bank account whether the phone rings or not.',
-      'If nobody books today, you are not stuck. Work on the boat or close the day and try again tomorrow.',
-      'A good price helps you get booked. A good trip helps people come back.',
-      'Ask happy guests for reviews. Great reviews make future bookings easier.'
+      'Open Grow. Google Search can find guests who are ready to book, but it is the most expensive place to compete.',
+      'Maps is strong for nearby visitors. Social is cheaper but usually lower intent. Hotels send warmer guests but take a referral cut. Content/PR is slower but can build long-term discovery.',
+      'Real players affect the market. If every active player piles into the same channel, that channel becomes crowded, your dollars buy less, and the other channels may become bargains.',
+      'Your daily marketing budget is a hard cap. Crowding does not charge beyond it; it makes each dollar less effective.',
+      'No bookings today? You are not stuck. Work on the boat or close the day and try again tomorrow.'
     ],
-    goal:'Pick a marketing plan and try to fill the calendar without burning all your cash.'
+    goal:'Choose a marketing channel and budget you can afford, then see whether the phone starts ringing.'
   },
   {
     day:3,
-    title:'Boats eat money',
-    summary:'Fuel, repairs and engine service are part of owning a boat. Ignore them and the boat gets revenge.',
+    title:'Boats are hungry little money monsters',
+    summary:'Every trip earns money and quietly adds wear to the boat underneath you.',
     lessons:[
-      'Every trip adds 90 minutes to the engine clock.',
-      'Engines need a 100-hour service and a bigger 300-hour service.',
-      'When the 300-hour service is due, it also covers the 100-hour service at that same time.',
-      'Skip service too long and reliability starts falling. That means more breakdowns and worse trips.'
+      'Every trip adds exactly 90 minutes to that boat’s engine hours.',
+      'Engines need a 100-hour service and a bigger 300-hour service. If the 300-hour service is due, it covers the 100-hour service at the same time.',
+      'A 100-hour service costs about half of the 300-hour service. Skip either too long and reliability begins to fall.',
+      'Quiet days are useful. A dock check or scheduled service can be smarter than waiting for something expensive to break.'
     ],
-    goal:'Check the Fleet tab and know when your next engine service is due.'
+    goal:'Open Fleet, find your engine hours, and know which service comes next.'
   },
   {
     day:4,
-    title:'One boat is easy. Two boats is chaos.',
-    summary:'More boats can make more money, but only if somebody can drive them.',
+    title:'One captain can only drive one boat',
+    summary:'More boats can make more money, but only when you have people to run them.',
     lessons:[
-      'You can run one boat yourself.',
-      'Hire another captain before expecting a second boat to earn money.',
-      'Groups of 7–12 need two boats and two captains.',
-      'Extra boats also mean more fuel, service, insurance and surprise repair bills.'
+      'You run the first boat yourself. Every extra boat needs another captain before it adds real daily capacity.',
+      'Groups of 7–12 need two boats and two captains working together.',
+      'Captains cost money only when they run trips, and better captains cost more.',
+      'Another boat also means another engine clock, more fuel, more maintenance, and another thing a hurricane can destroy.'
     ],
-    goal:'Learn what it takes to run two boats before you rush out and buy one.'
+    goal:'Use Fleet to understand exactly what a second working boat would require before buying one.'
   },
   {
     day:5,
-    title:'Where did all the money go?',
-    summary:'A day can look busy and still barely make money.',
+    title:'Busy does not always mean profitable',
+    summary:'A full calendar feels great until the bills start taking bites out of every trip.',
     lessons:[
-      'Fares come in, then fuel, boat wear, loan payments, captain pay, marketing and booking fees start taking bites out of it.',
-      'Some websites can take a big cut of a booking. Direct bookings keep more money in your pocket.',
-      'Tips help, but never count on them. Some guests do not tip even after a perfect day.',
-      'Any trip below 5★ gets no tip at all.'
+      'Fares are only the top line. Fuel, boat wear, captain pay, marketing, loan payments, marina costs, service, and booking fees all come out underneath.',
+      'Direct bookings keep more of the fare. Marketplace and hotel bookings can bring guests, but they cost you commission.',
+      'Tips can be huge on a great trip—sometimes up to 40%—but some guests never tip no matter how good the day was.',
+      'Four stars or lower means no tip. Five stars give you a chance at one, not a guarantee.'
     ],
-    goal:'Open the Books tab and see what you really kept after the day was over.'
+    goal:'Open Books and figure out what you actually kept after the money came in and went back out.'
   },
   {
     day:6,
-    title:'Chase the five stars',
-    summary:'Five stars are not random. The choices you make create the review.',
+    title:'Five stars are earned, not rolled',
+    summary:'The game does not randomly steal stars from you. Your decisions create the review.',
     lessons:[
-      'A good captain changes the plan when the weather says to change it.',
-      'Snorkelers care about clear water. Families care about comfort. Premium guests notice the boat.',
-      'If the game shows a reason a trip may lose a star, fix that reason before you leave the dock.',
-      'Ask happy guests for reviews. More great reviews help future guests trust you.'
+      'Different guests care about different things. Families want comfort, serious snorkelers care about visibility, and premium guests notice a tired-looking boat.',
+      'Weather decisions happen trip by trip. A sandbar trip may run normally while snorkeling moves to calmer water.',
+      'Poor maintenance, rough choices, bad visibility, and unnecessary plan changes can all cost stars.',
+      'Ask happy guests for reviews. Reviews help future guests trust you and make your marketing stronger.'
     ],
-    goal:'Try to send every completed trip home as a 5★ trip.'
+    goal:'Finish every trip you can as a 5★ trip—and understand exactly why any trip falls short.'
   },
   {
     day:7,
-    title:'You are running the show now',
-    summary:'Tomorrow the training wheels come off.',
+    title:'Now the real game starts',
+    summary:'Tomorrow I stop telling you what to look at. The islands, bills, weather, and other players keep moving anyway.',
     lessons:[
-      'Busy season begins February 14 and runs through September 1. Good marketing matters a lot.',
-      'After September 1, business gets painfully slow unless you have built a strong name and strong marketing.',
-      'Hurricane season runs June through November. Later, you may have to choose whether to haul the boats or gamble with them in the water.',
-      'New islands, bigger groups, more boats and more bills are waiting after Captain School.'
+      'Every game begins February 1. Business starts a little slow, then strong marketers can get very busy from February 14 through September 1.',
+      'After September 1, slow season hits hard. Strong marketers may hold about half of busy-season demand; weak marketers can fall near one-fifth.',
+      'Hurricane season runs June through November. When a hurricane appears, decide whether to pay to haul the fleet or gamble with the boats in the water.',
+      'Category 3, 4, or 5 destroys boats left in the water. Insurance may soften the loss; no insurance means no boat.',
+      'After Captain School, used boats, financing, captains, live marketing competition, expansion, owner events, and the leaderboards are all yours to manage.'
     ],
-    goal:'Finish Day 7, then build the company any way you want.'
+    goal:'Finish Day 7. From Day 8 on, build the company your way and try not to go broke doing it.'
   }
 ];
 
