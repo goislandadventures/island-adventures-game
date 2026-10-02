@@ -113,6 +113,21 @@ export default {
       return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed),mustChangePassword:Boolean(p.force_password_change)}},200,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
     }
 
+    if (url.pathname === '/api/auth/recover' && request.method==='POST') {
+      const body:any=await request.json();
+      const email=String(body.email||'').trim().toLowerCase();
+      const recoveryCode=String(body.recoveryCode||'').trim();
+      if(!email||recoveryCode.length<20) return json({error:'Invalid recovery code.'},401);
+      const p:any=await env.DB.prepare('SELECT * FROM players WHERE email=?').bind(email).first();
+      if(!p?.recovery_token_hash) return json({error:'Invalid or expired recovery code.'},401);
+      const suppliedHash=await sha256(recoveryCode);
+      if(String(p.recovery_token_hash)!==suppliedHash) return json({error:'Invalid or expired recovery code.'},401);
+      await env.DB.prepare('UPDATE players SET recovery_token_hash=NULL,force_password_change=1,last_seen_at=? WHERE id=?').bind(Date.now(),p.id).run();
+      await env.DB.prepare('DELETE FROM sessions WHERE player_id=?').bind(p.id).run();
+      const cookie=await createSession(p.id,env);
+      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed),mustChangePassword:true}},200,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
+    }
+
     if (url.pathname === '/api/auth/change-password' && request.method==='POST') {
       const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
       const body:any=await request.json();
