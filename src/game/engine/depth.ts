@@ -58,6 +58,59 @@ export function marketingStrength(state:CompanyState,market?:MarketingMarketSnap
   return clamp(.10+performance.bookingBoost*.48+reputation*.22+reviews*.13+reviewHabit,0,1);
 }
 
+function gameDayForDate(gameYear:number,month:number,dayOfMonth:number):number{
+  const index=gameMonths.findIndex(m=>m.num===month);
+  if(index<0)throw new Error('Invalid game month.');
+  const before=gameMonths.slice(0,index).reduce((sum,m)=>sum+m.len,0);
+  return (gameYear-1)*365+before+dayOfMonth;
+}
+
+function memorialDayOfMonth(gameYear:number):number{
+  const dayNames:CalendarInfo['dayOfWeek'][]=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  for(let d=31;d>=25;d--){
+    const absolute=gameDayForDate(gameYear,5,d);
+    if(dayNames[(absolute-1)%7]==='Mon')return d;
+  }
+  return 31;
+}
+
+function holidayProfile(gameYear:number,month:number,dayOfMonth:number){
+  const absolute=gameDayForDate(gameYear,month,dayOfMonth);
+  const memorial=memorialDayOfMonth(gameYear);
+  const memorialMonday=gameDayForDate(gameYear,5,memorial);
+  const memorialWeekend=absolute>=memorialMonday-3&&absolute<=memorialMonday;
+  const julyFourthWeekend=month===7&&dayOfMonth>=2&&dayOfMonth<=5;
+  const laborDay=month===9&&dayOfMonth>=1&&dayOfMonth<=7&&calendarForAbsoluteDay(absolute).dayOfWeek==='Mon';
+  const laborWeekend=laborDay||(
+    month===9&&dayOfMonth<=7&&
+    (()=>{for(let d=1;d<=7;d++){const a=gameDayForDate(gameYear,9,d);if(calendarForAbsoluteDay(a).dayOfWeek==='Mon')return absolute>=a-3&&absolute<=a;}return false;})()
+  );
+  const thanksgiving=month===11&&dayOfMonth>=22&&dayOfMonth<=28&&calendarForAbsoluteDay(absolute).dayOfWeek==='Thu';
+  let thanksgivingWeekend=false;
+  if(month===11){
+    for(let d=22;d<=28;d++){
+      const a=gameDayForDate(gameYear,11,d);
+      if(calendarForAbsoluteDay(a).dayOfWeek==='Thu'&&absolute>=a&&absolute<=a+3){thanksgivingWeekend=true;break;}
+    }
+  }
+  const hellWeek=(month===12&&dayOfMonth>=24)||(month===1&&dayOfMonth<=1);
+  if(memorialWeekend)return {label:'Memorial Day Weekend',peak:true,multiplier:2.05,crowdRisk:.055};
+  if(julyFourthWeekend)return {label:'July 4th Weekend',peak:true,multiplier:2.10,crowdRisk:.060};
+  if(hellWeek)return {label:'Hell Week',peak:true,multiplier:1.78,crowdRisk:.045};
+  if(laborWeekend)return {label:'Labor Day Weekend',peak:false,multiplier:1.55,crowdRisk:.028};
+  if(thanksgiving||thanksgivingWeekend)return {label:'Thanksgiving Weekend',peak:false,multiplier:1.50,crowdRisk:.026};
+  return {label:undefined as string|undefined,peak:false,multiplier:1,crowdRisk:0};
+}
+
+function calendarForAbsoluteDay(day:number):{dayOfWeek:CalendarInfo['dayOfWeek']}{
+  const dayNames:CalendarInfo['dayOfWeek'][]=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  return {dayOfWeek:dayNames[(day-1)%7]};
+}
+
+export function activeHotelDealsForDay(state:CompanyState,day=state.day){
+  return (state.activeHotelDeals??[]).filter(d=>d.startDay<=day&&d.endDay>=day);
+}
+
 export function calendarForDay(day:number,state?:CompanyState,market?:MarketingMarketSnapshot):CalendarInfo{
   const dayNames:CalendarInfo['dayOfWeek'][]=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const dayOfWeek=dayNames[(day-1)%7];
@@ -74,20 +127,33 @@ export function calendarForDay(day:number,state?:CompanyState,market?:MarketingM
   const afterFeb14=monthNumber>2||(monthNumber===2&&dayOfMonth>=14);
   const throughSep1=monthNumber<9||(monthNumber===9&&dayOfMonth<=1);
   const season:CalendarInfo['season']=monthNumber===2&&dayOfMonth<14?'warmup':afterFeb14&&throughSep1?'busy':'slow';
+
   let seasonMult:number;
-  if(season==='busy')seasonMult=.88+strength*.55;
-  else if(season==='warmup')seasonMult=.42+strength*.34;
-  else seasonMult=strength>=.62?.50:strength>=.42?.34:.20;
-  const weekend=dayOfWeek==='Fri'||dayOfWeek==='Sat'||dayOfWeek==='Sun';
-  const weekendMult=weekend?1.10:.95;
-  const demandMultiplier=Number((seasonMult*weekendMult).toFixed(2));
+  if(season==='busy')seasonMult=.90+strength*.58;
+  else if(monthNumber===9)seasonMult=strength>=.62?.38:strength>=.42?.27:.16;
+  else if(season==='warmup')seasonMult=.48+strength*.34;
+  else seasonMult=strength>=.62?.58:strength>=.42?.42:.27;
+
+  const isWeekend=dayOfWeek==='Fri'||dayOfWeek==='Sat'||dayOfWeek==='Sun';
+  const weekendMult=isWeekend?1.38:.92;
+  const holiday=holidayProfile(gameYear,monthNumber,dayOfMonth);
+  const hotelDeals=state?activeHotelDealsForDay(state,day):[];
+  const hotelBoost=hotelDeals.reduce((sum,d)=>sum+d.demandBoost,0);
+  const demandMultiplier=Number((seasonMult*weekendMult*holiday.multiplier*(1+hotelBoost)).toFixed(2));
   const date=`${monthInfo.name} ${dayOfMonth}`;
-  const note=season==='busy'
-    ? `${date}: busy season. Strong marketing can keep the calendar packed.`
-    : season==='warmup'
-      ? `${date}: the year starts slowly, but things wake up around February 14.`
-      : `${date}: slow season. Strong marketers can hold about half their busy-season demand; weak marketing can fall near one-fifth.`;
-  return {day,week,dayOfWeek,month:monthNumber,monthName:monthInfo.name,dayOfMonth,gameYear,season,demandMultiplier,note,marketingStrength:strength,marketingLabel};
+
+  let note:string;
+  if(monthNumber===8&&dayOfMonth===1)note=`${date}: slow season is one month away. Build cash reserves, keep maintenance current and prepare now for September.`;
+  else if(monthNumber===12&&dayOfMonth===1)note=`${date}: Hell Week starts December 24. Prepare the boats, crew and cash cushion before the holiday rush.`;
+  else if(holiday.label)note=`${date}: ${holiday.label}. Demand is unusually high, but crowded docks and heavy boat traffic raise operating risk.`;
+  else if(monthNumber===9&&dayOfMonth>1)note=`${date}: September is the slowest month of the year. Strong marketing and hotel partnerships matter more now.`;
+  else if(season==='busy')note=`${date}: busy season runs February 14 through September 1. Weekends materially outpace normal weekdays.`;
+  else if(season==='warmup')note=`${date}: early February is still warming up. Busy season begins February 14.`;
+  else note=`${date}: slow season. Weekends and holiday periods can still create sharp demand spikes.`;
+
+  if(hotelDeals.length)note+=` ${hotelDeals.length} hotel agreement${hotelDeals.length===1?' is':'s are'} active today.`;
+  const crowdRisk=Math.max(holiday.crowdRisk,isWeekend&&season==='busy'?.014:0);
+  return {day,week,dayOfWeek,month:monthNumber,monthName:monthInfo.name,dayOfMonth,gameYear,season,demandMultiplier,note,marketingStrength:strength,marketingLabel,isWeekend,holidayLabel:holiday.label,peakDemand:holiday.peak,crowdRisk};
 }
 
 export function customerForTrip(rng:RNG,tripType:TripType,source:Booking['source']):{type:CustomerType;label:string}{
@@ -280,7 +346,7 @@ export function businessEventForDay(state:CompanyState):BusinessEvent|null{
       id:'hotel-partner',title:'A hotel wants to send you guests',
       description:'A nearby hotel likes your reviews. They will send visitors your way, but they want a cut.',
       choices:[
-        {id:'accept',label:'Make the deal',detail:'Pay $250 to get set up and gain a little reputation.',cashDelta:-250,reputationDelta:.018},
+        {id:'accept',label:'Make the 7-day deal',detail:'Pay $250. This hotel sends meaningful extra demand for 7 game days, and overlapping hotel agreements stack.',cashDelta:-250,reputationDelta:.018},
         {id:'pass',label:'Skip it',detail:'Keep your cash and do your own marketing.',cashDelta:0,reputationDelta:0}
       ]
     },
@@ -317,10 +383,20 @@ export function resolveBusinessEvent(state:CompanyState,event:BusinessEvent,choi
   const choice:BusinessEventChoice|undefined=event.choices.find(c=>c.id===choiceId);
   if(!choice)throw new Error('That choice is not available.');
   if(choice.cashDelta<0&&state.cash<Math.abs(choice.cashDelta))throw new Error('You do not have enough cash for that choice.');
+  const activeHotelDeals=(state.activeHotelDeals??[]).filter(d=>d.endDay>=state.day);
+  if(event.id==='hotel-partner'&&choiceId==='accept'){
+    activeHotelDeals.push({
+      id:`hotel-${event.day}-${activeHotelDeals.length+1}`,
+      startDay:event.day,
+      endDay:event.day+6,
+      demandBoost:.22
+    });
+  }
   return {
     ...state,
     cash:state.cash+choice.cashDelta,
     reputation:clamp(state.reputation+choice.reputationDelta,.1,1),
+    activeHotelDeals,
     lastBusinessEventDay:event.day,
     ledger:choice.cashDelta!==0?[...state.ledger,{day:state.day,category:'event',amount:choice.cashDelta,memo:`${event.title}: ${choice.label}`}]:state.ledger
   };
