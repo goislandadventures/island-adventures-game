@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { changePassword, loadCompany, login, me, register, type Player } from './api';
+import { changePassword, loadCompany, login, me, recover, register, type Player } from './api';
 import type { CompanyState } from '../game/types/models';
 
 export type GameMode='demo'|'registered';
 
 export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Player,state?:CompanyState|null)=>void}){
-  const [view,setView]=useState<'choose'|'account'|'change'>('choose');
+  const [view,setView]=useState<'choose'|'account'|'change'|'recover'>('choose');
   const [kind,setKind]=useState<'login'|'register'>('register');
   const [email,setEmail]=useState('');
   const [displayName,setDisplayName]=useState('');
@@ -20,6 +20,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   const [pendingPlayer,setPendingPlayer]=useState<Player|undefined>();
   const [newPassword,setNewPassword]=useState('');
   const [showNewPassword,setShowNewPassword]=useState(false);
+  const [recoveryCode,setRecoveryCode]=useState('');
 
   useEffect(()=>{
     let alive=true;
@@ -65,6 +66,16 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     }catch(e){setError((e as Error).message)} finally{setBusy(false)}
   };
 
+  const submitRecovery=async()=>{
+    setBusy(true);setError('');
+    try{
+      const r=await recover({email,recoveryCode});
+      setPendingPlayer(r.player);
+      setNewPassword('');
+      setView('change');
+    }catch(e){setError((e as Error).message)}finally{setBusy(false)}
+  };
+
   const submitPasswordChange=async()=>{
     setBusy(true);setError('');
     try{
@@ -73,6 +84,17 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
       onStart('registered',r.player||pendingPlayer,company.state);
     }catch(e){setError((e as Error).message)}finally{setBusy(false)}
   };
+
+  if(view==='recover') return <main className="modeShell"><section className="modeCard accountCard">
+    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
+    <span className="eyebrow">ACCOUNT RECOVERY</span><h2>Recover your owner account</h2>
+    <p>Enter the one-time recovery code for this account. It expires permanently as soon as it works.</p>
+    <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
+    <label>Recovery code<input value={recoveryCode} onChange={e=>setRecoveryCode(e.target.value)} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="One-time recovery code"/></label>
+    {error&&<p className="formError">{error}</p>}
+    <button className="primary big" disabled={busy||!email||!recoveryCode} onClick={submitRecovery}>{busy?'Recovering…':'Recover Account'}</button>
+    <button className="textBtn" onClick={()=>{setError('');setView('account');setKind('login')}}>← Back to sign in</button>
+  </section></main>;
 
   if(view==='change') return <main className="modeShell"><section className="modeCard accountCard">
     <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
@@ -93,6 +115,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     {error&&<p className="formError">{error}</p>}
     <button className="primary big" disabled={busy||!email||!password||(kind==='register'&&!displayName)} onClick={submit}>{busy?'Connecting…':kind==='register'?'Create Account & Play':'Sign In'}</button>
     <button className="textBtn" onClick={()=>setKind(kind==='register'?'login':'register')}>{kind==='register'?'Already have an account? Sign in':'Need an account? Create one'}</button>
+    {kind==='login'&&<button className="textBtn" onClick={()=>{setError('');setRecoveryCode('');setView('recover')}}>Recover account</button>}
     <button className="textBtn" onClick={()=>setView('choose')}>← Back</button>
   </section></main>;
 
