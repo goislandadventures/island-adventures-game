@@ -59,8 +59,14 @@ jobs:
         if: steps.cf.outputs.ready == 'true'
         run: npm run test:captain-school
 
+      - name: Write build ID
+        if: steps.cf.outputs.ready == 'true'
+        run: echo "$GITHUB_SHA" > public/build-id.txt
+
       - name: Build
         if: steps.cf.outputs.ready == 'true'
+        env:
+          VITE_BUILD_ID: ${{ github.sha }}
         run: npm run build
 
       - name: Deploy Worker and assets
