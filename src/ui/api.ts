@@ -35,6 +35,9 @@ export async function register(payload:{email:string;displayName:string;password
     marketingOptIn:payload.marketingOptIn
   })});
 }
+export async function recover(payload:{email:string;recoveryCode:string}){
+  return api<{player:Player}>('/api/auth/recover',{method:'POST',body:JSON.stringify({email:payload.email,recoveryCode:payload.recoveryCode})});
+}
 export async function login(payload:{email:string;password:string}){
   const salt=await api<{salt:string}>('/api/auth/salt?email='+encodeURIComponent(payload.email.trim().toLowerCase()));
   const proof=await passwordProof(payload.password,salt.salt);
