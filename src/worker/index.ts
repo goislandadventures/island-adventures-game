@@ -139,7 +139,9 @@ export default {
 
     if (url.pathname === '/api/auth/me' && request.method==='GET') {
       const p:any=await currentPlayer(request,env);
-      return json({player:p?{...p,mustChangePassword:Boolean(p.force_password_change)}:null});
+      const headers:Record<string,string>={'Cache-Control':'no-store'};
+      if(!p&&cookieToken(request))headers['Set-Cookie']='ia_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+      return json({player:p?{...p,mustChangePassword:Boolean(p.force_password_change)}:null},200,headers);
     }
 
     if (url.pathname === '/api/tutorial/complete' && request.method==='POST') {
@@ -156,7 +158,7 @@ export default {
     if (url.pathname === '/api/company' && request.method==='GET') {
       const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
       const row:any=await env.DB.prepare('SELECT state_json FROM companies WHERE player_id=?').bind(player.id).first();
-      return json({state:row?.state_json?JSON.parse(row.state_json):null});
+      return json({state:row?.state_json?JSON.parse(row.state_json):null},200,{'Cache-Control':'no-store'});
     }
 
     if (url.pathname === '/api/company/sync' && request.method==='POST') {
