@@ -6,11 +6,12 @@ function baseState(seed:number){
   state=rentSlip(state,'old-cut-docks');
   state.cash=100000;
   state=buyBoat(state,'old-deck-19');
-  state.day=8;
-  state.reputation=.95;
-  state.reviewCount=50;
-  state.rating=4.9;
-  state.products=state.products.map(p=>({...p,baseDemand:1,price:Math.min(p.price,399)}));
+  state.day=60;
+  state.reputation=1;
+  state.reviewCount=100;
+  state.rating=5;
+  state.marketing={dailyBudget:250,focus:'search',reviewAsk:true};
+  state.products=state.products.map(p=>({...p,baseDemand:2,price:Math.min(p.price,399)}));
   return state;
 }
 
