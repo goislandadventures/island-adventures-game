@@ -106,8 +106,13 @@ export function buyBoat(state:CompanyState,templateId='old-deck-19'):CompanyStat
   if(state.cash<boat.basePrice)throw new Error('Not enough cash to buy boat.');
   const condition=clamp(boat.reliability+.08,.55,.91);
   const owned:OwnedBoat={...boat,instanceId:`${boat.id}-${state.day}-${state.boats.length+1}`,year:boat.hullYear,engineYear:boat.engineYear,condition,engineHours:boat.startingEngineHours,purchasePrice:boat.basePrice,insured:false,insuranceDeclined:false,marinaId:state.marinaId,next100Service:nextHundred(boat.startingEngineHours),next300Service:nextThreeHundred(boat.startingEngineHours)};
-  const cash=state.cash-boat.basePrice;
-  return {...state,cash,companyValue:state.daysOperated===0?startupValue(cash,state.debt):state.companyValue,boats:[...state.boats,owned],ledger:[...state.ledger,{day:state.day,category:'boat',amount:-boat.basePrice,memo:`Purchased ${boat.name}`}]};
+  const additionalSlip=state.boats.length?marina.monthlySlip:0;
+  const total=boat.basePrice+additionalSlip;
+  if(state.cash<total)throw new Error(`You need enough cash for the boat plus ${additionalSlip ? 'another marina slip' : 'the purchase'}.`);
+  const cash=state.cash-total;
+  const ledger=[...state.ledger,{day:state.day,category:'boat',amount:-boat.basePrice,memo:`Purchased ${boat.name}`}];
+  if(additionalSlip)ledger.push({day:state.day,category:'marina',amount:-additionalSlip,memo:`Additional monthly slip for ${boat.name} at ${marina.name}`});
+  return {...state,cash,companyValue:state.daysOperated===0?startupValue(cash,state.debt):state.companyValue,boats:[...state.boats,owned],ledger};
 }
 
 export function insuranceQuote(boat:OwnedBoat,marina?:Marina):number{
@@ -404,6 +409,19 @@ function operatingBoatCount(state:CompanyState):number{
   if(!state.boats.length)return 0;
   return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
+
+export function captainPerformance(state:CompanyState,captain:StaffMember):{effectiveQuality:number;mistakeRisk:number;repairRisk:number}{
+  const playerReviewQuality=state.reviewCount>0?clamp(state.rating/5,0,1):clamp(state.reputation,.1,1);
+  const playerQuality=clamp(playerReviewQuality*.72+state.reputation*.28,.1,1);
+  const captainBase=clamp(captain.skill*.58+captain.reliability*.42,.1,1);
+  const minRate=Math.min(...captainCandidates.map(c=>c.hourlyRate));
+  const maxRate=Math.max(...captainCandidates.map(c=>c.hourlyRate));
+  const cheapness=maxRate===minRate?0:clamp((maxRate-captain.hourlyRate)/(maxRate-minRate),0,1);
+  const effectiveQuality=clamp(playerQuality*.60+captainBase*.40,.1,.995);
+  const mistakeRisk=clamp(.006+cheapness*.050+(1-effectiveQuality)*.035,.005,.095);
+  const repairRisk=clamp(.025+cheapness*.110+(1-effectiveQuality)*.070,.020,.240);
+  return {effectiveQuality,mistakeRisk,repairRisk};
+}
 export function generateDemoDemand(state:CompanyState):Booking[]{
   const rng=new RNG((state.seed^0x5f3759df)+(state.day*104729));
   const products=(state.products?.length?[...state.products]:structuredClone(defaultProducts));
@@ -482,7 +500,7 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
       bookings.push({id:`D${state.day}-${product.type}-${rng.int(1000,9999)}`,tripType:product.type,partySize,revenue:product.price*boatsRequired,source,guestExpectation:Number((.55+rng.next()*.4).toFixed(2)),timeSlot:product.type==='sunset'?'evening':rng.pick(slots),customerType:customer.type,customerLabel:customer.label,boatsRequired,neverTips,tipCeiling});
     }
   }
-  const maxBoatTrips=capacity*2;
+  const maxBoatTrips=Math.min(4,capacity*2);
   const kept:Booking[]=[];
   let boatTrips=0;
   for(const booking of bookings){
@@ -633,8 +651,10 @@ function renewalExpense(state:CompanyState):{state:CompanyState;expense:number}{
   const ledger=[...state.ledger];
   if(expense)ledger.push({day:state.day,category:'insurance',amount:-expense,memo:'Annual insurance renewal'});
   if(state.day>1&&(state.day-1)%30===0&&marina){
-    expense+=marina.monthlySlip;
-    ledger.push({day:state.day,category:'marina',amount:-marina.monthlySlip,memo:`Monthly slip: ${marina.name}`});
+    const slipCount=Math.max(1,state.boats.length);
+    const slipExpense=marina.monthlySlip*slipCount;
+    expense+=slipExpense;
+    ledger.push({day:state.day,category:'marina',amount:-slipExpense,memo:`Monthly slips ×${slipCount}: ${marina.name}`});
   }
   return {state:{...state,boats,ledger},expense};
 }
@@ -782,7 +802,24 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     const protectedWater=decision==='protected';
     const worstBoat=[...chosen].sort((a,b)=>a.condition-b.condition)[0];
     const resolved=resolveHiddenTripOutcome(rng,state,booking,decision,weather,worstBoat);
-    const assessment=resolved.assessment;
+    let assessment=resolved.assessment;
+    let captainMistakeNote:string|undefined;
+    const assignedHiredCaptains=chosen.flatMap(boat=>{
+      const fleetIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
+      const captain=fleetIndex>0?state.staff[fleetIndex-1]:undefined;
+      return captain?[captain]:[];
+    });
+    for(const captain of assignedHiredCaptains){
+      const risk=captainPerformance(state,captain);
+      if(rng.chance(risk.mistakeRisk)){
+        const severe=rng.chance(clamp((.90-risk.effectiveQuality)*.45,.04,.28));
+        const stars=Math.max(severe?3:4,assessment.experienceScore-(severe?2:1));
+        const reason=`Captain ${captain.name} made a preventable service mistake that affected the charter.`;
+        assessment={experienceScore:stars,reasons:[reason,...assessment.reasons],headline:'A crew mistake hurt the guest experience.'};
+        captainMistakeNote=`Captain ${captain.name} made a mistake that affected the trip.`;
+        break;
+      }
+    }
     const island=islands.find(i=>i.id===state.islandId)!;
     const marina=marinas.find(m=>m.id===state.marinaId);
     let tripExpense=0;
@@ -806,7 +843,8 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     const captainNote=chosen.length>1?` Two boats worked together for this ${booking.partySize}-guest group.`:'';
     const tipNote=tip>0?` Tip: ${tip}.`:assessment.experienceScore<5?' No tip because the guest experience missed the mark.':booking.neverTips?' Great trip, but this group simply did not tip.':' No tip this time.';
     const outcomeNote=resolved.eventNote?` ${resolved.eventNote}`:'';
-    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.experienceScore/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${outcomeNote}${captainNote}${tipNote}`});
+    const crewNote=captainMistakeNote?` ${captainMistakeNote}`:'';
+    tripOutcomes.push({bookingId:booking.id,tripType:booking.tripType,timeSlot:booking.timeSlot,decision,revenue:booking.revenue,expenses:tripExpense,tip,satisfaction:assessment.experienceScore/5,review,boatInstanceId:chosen[0].instanceId,boatInstanceIds:chosen.map(b=>b.instanceId),note:`${protectedWater?'Moved this trip to calmer water.':'Ran this trip as booked.'}${outcomeNote}${crewNote}${captainNote}${tipNote}`});
   });
 
   let maintenanceEvent:string|undefined;
@@ -821,7 +859,10 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     const serviceRisk=overdue300?.16:overdue100?.07:0;
     const overdueWear=overdue300?.014:overdue100?.007:0;
     const deferredRisk=(boat.deferredMaintenance??0)*.065;
-    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk+deferredRisk,.01,.50);
+    const fleetIndex=availableBoats.findIndex(b=>b.instanceId===boat.instanceId);
+    const hiredCaptain=fleetIndex>0?state.staff[fleetIndex-1]:undefined;
+    const captainRepairRisk=hiredCaptain?captainPerformance(state,hiredCaptain).repairRisk:0;
+    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk+deferredRisk+captainRepairRisk,.01,.62);
     let condition=clamp(boat.condition-used*.003-overdueWear*used,.20,1);
     let reliability=clamp(boat.reliability-overdueWear*.55*used,.25,.99);
     if(!maintenanceIncident&&rng.chance(failureRisk)){
