@@ -29,23 +29,26 @@ if(preview.reasons.some(r=>/%|storm risk \(/i.test(r)))throw new Error('A hidden
 let riskyDays=0;
 let goodTrips=0;
 let imperfectTrips=0;
-for(let seed=1;seed<=600&&riskyDays<20;seed++){
-  const state=ready(seed);
-  const weather=generateWeather(state);
-  if(!(weather.stormRisk>=.18||weather.windKts>=20))continue;
-  riskyDays++;
-  const bookings=generateDemand(state,weather,undefined,false);
-  const decisions=Object.fromEntries(bookings.map(b=>[b.id,'run'])) as Record<string,'run'>;
-  const out=simulateDay(state,decisions,undefined,false);
-  for(const trip of out.result.tripOutcomes){
-    if(trip.satisfaction>=1)goodTrips++;
-    else imperfectTrips++;
+for(let seed=1;seed<=100&&riskyDays<20;seed++){
+  for(let day=8;day<=35&&riskyDays<20;day++){
+    const state=ready(seed);
+    state.day=day;
+    const weather=generateWeather(state);
+    if(!(weather.stormRisk>=.18||weather.windKts>=20))continue;
+    riskyDays++;
+    const bookings=generateDemand(state,weather,undefined,false);
+    const decisions=Object.fromEntries(bookings.map(b=>[b.id,'run'])) as Record<string,'run'>;
+    const out=simulateDay(state,decisions,undefined,false);
+    for(const trip of out.result.tripOutcomes){
+      if(trip.satisfaction>=1)goodTrips++;
+      else imperfectTrips++;
+    }
+    const exposed=JSON.stringify(out.result);
+    for(const key of ['"outcomeRisk"','"outcomeRoll"','"failureRisk"','"roll"']){
+      if(exposed.includes(key))throw new Error(`Hidden simulation value leaked into DayResult: ${key}`);
+    }
+    if(out.result.reviews.some(r=>r.text.includes('%')||r.reasons.some(x=>/storm risk \(/i.test(x))))throw new Error('A hidden probability leaked into a review.');
   }
-  const exposed=JSON.stringify(out.result);
-  for(const key of ['"outcomeRisk"','"outcomeRoll"','"failureRisk"','"roll"']){
-    if(exposed.includes(key))throw new Error(`Hidden simulation value leaked into DayResult: ${key}`);
-  }
-  if(out.result.reviews.some(r=>r.text.includes('%')||r.reasons.some(x=>/storm risk \(/i.test(x))))throw new Error('A hidden probability leaked into a review.');
 }
 if(riskyDays!==20)throw new Error(`Only found ${riskyDays} qualifying risky-weather days.`);
 if(goodTrips===0||imperfectTrips===0)throw new Error(`Weather outcomes are still effectively binary across risky days: good=${goodTrips}, imperfect=${imperfectTrips}.`);
