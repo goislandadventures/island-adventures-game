@@ -12,7 +12,7 @@ function dismissedDays(mode:'demo'|'owner'|'registered',playerId?:string):number
   try{return JSON.parse(localStorage.getItem(storageKey(mode,playerId))||'[]') as number[];}catch{return [];}
 }
 
-export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete,onOpenHelp}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void;onOpenHelp?:()=>void}){
+export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete,onOpenHelp,onActiveChange}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void;onOpenHelp?:()=>void;onActiveChange?:(active:boolean)=>void}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
   const [dismissed,setDismissed]=useState(()=>dismissedDays(mode,playerId).includes(day));
@@ -48,6 +48,12 @@ export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,o
     onSpotlight?.(next?.spotlight??null);
     setStep(s=>Math.min(s+1,messages.length-1));
   };
+
+  useEffect(()=>{
+    const active=Boolean(tutorial&&!dismissed&&messages.length);
+    onActiveChange?.(active);
+    return()=>onActiveChange?.(false);
+  },[tutorial,dismissed,messages.length,onActiveChange]);
 
   if(!tutorial||dismissed||!messages.length)return null;
   const last=step===messages.length-1;
