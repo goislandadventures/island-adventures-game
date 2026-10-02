@@ -45,6 +45,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
   const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
   const [helpOpen,setHelpOpen]=useState(false);
+  const [captainSchoolActive,setCaptainSchoolActive]=useState(false);
   const [registeredTutorialComplete,setRegisteredTutorialComplete]=useState(
     Boolean(player?.tutorialCompleted||player?.tutorial_completed||(mode==='registered'&&state.day>7))
   );
@@ -167,7 +168,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
-    {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onOpenHelp={()=>setHelpOpen(true)}/>} 
+    {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onOpenHelp={()=>setHelpOpen(true)} onActiveChange={setCaptainSchoolActive}/>} 
     {state.day===8&&mode!=='demo'&&<section className="card weekTwoUnlock"><span className="eyebrow">CAPTAIN SCHOOL COMPLETE</span><h2>Week 2: now you own the decisions.</h2><p>The training wheels are off. Guests want different things, busy season matters, used boats come and go, bills keep showing up, and surprise decisions happen. There is no single right way to build your company now.</p></section>}
     {setupStarted&&<section className="calendarStrip"><div><span>{calendar.monthName.toUpperCase()} {calendar.dayOfMonth} · WEEK {calendar.week}</span><strong>{calendar.season==='busy'?'BUSY SEASON':calendar.season==='warmup'?'WARMING UP':'SLOW SEASON'}</strong></div><p>{calendar.note}</p><b>{calendar.marketingLabel} marketing · Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
 
@@ -212,7 +213,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
-    <button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>
+    {!captainSchoolActive&&<button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
       <button className={`${tab==='dock'?'active ':''}${tutorialSpotlight==='dock'?'coachTarget':''}`} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button>
