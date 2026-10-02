@@ -9,7 +9,8 @@
     "check:core": "tsc -p tsconfig.core.json --noEmit",
     "test:captain-school": "tsx scripts/verify-captain-school.ts",
     "test:maintenance": "tsx scripts/verify-maintenance.ts",
-    "test:hidden-rolls": "tsx scripts/verify-hidden-rolls.ts"
+    "test:hidden-rolls": "tsx scripts/verify-hidden-rolls.ts",
+    "test:weather-climate": "tsx scripts/verify-weather-climate.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
