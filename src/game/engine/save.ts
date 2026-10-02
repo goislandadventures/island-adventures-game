@@ -18,7 +18,8 @@ export function normalizeState(parsed:CompanyState):CompanyState{
       insuranceDeclined:b.insuranceDeclined??false,
       engineYear:b.engineYear??b.year,
       next100Service:b.next100Service??((Math.floor((b.engineHours??0)/100)+1)*100),
-      next300Service:b.next300Service??((Math.floor((b.engineHours??0)/300)+1)*300)
+      next300Service:b.next300Service??((Math.floor((b.engineHours??0)/300)+1)*300),
+      deferredMaintenance:b.deferredMaintenance??0
     }))
   };
 }
