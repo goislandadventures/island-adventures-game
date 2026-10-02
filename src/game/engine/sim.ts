@@ -129,7 +129,7 @@ export function generateWeather(state:CompanyState):WeatherDay{
   const stormShift=exposure==='protected'?-.04:exposure==='exposed'?.04:0;
   return {
     day:state.day,
-    windKts:clamp(rng.int(4,22)+windShift,3,25),
+    windKts:clamp(rng.int(4,28)+windShift,3,30),
     windDirection:rng.pick(directions),
     rainChance:rng.int(5,75),
     stormRisk:Number(clamp(rng.next()*.32+stormShift,.02,.42).toFixed(2)),
@@ -219,15 +219,14 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
   if(decision==='run'&&weather.stormRisk>.24)add(true,`You chose to run with elevated storm risk (${Math.round(weather.stormRisk*100)}%).`);
 
   if(booking.tripType==='snorkel'){
-    if(decision==='run'&&weather.windKts>=16)add(true,`You ran exposed snorkeling in ${weather.windKts} kt wind instead of moving to protected water or rescheduling.`);
+    if(decision==='run'&&weather.windKts>14)add(true,`You ran exposed snorkeling in ${weather.windKts} kt wind instead of moving to protected water or rescheduling.`);
     else if(decision==='run'&&weather.windKts>=11)add(false,`You ran snorkeling in ${weather.windKts} kt wind, making the water rougher than guests expected.`);
     if(decision==='run'&&weather.waterClarity<.55)add(false,`You ran the snorkel with only ${Math.round(weather.waterClarity*100)}% water clarity instead of rescheduling.`);
     if(decision==='protected'&&weather.windKts<10&&weather.waterClarity>=.60)add(false,'You moved the snorkel to protected water even though conditions supported the experience guests booked.');
   }
 
   if(booking.tripType==='sandbar'){
-    if(decision==='run'&&weather.windKts>=21)add(true,`You ran the sandbar in ${weather.windKts} kt wind, which made the ride seriously uncomfortable.`);
-    if(decision==='protected'&&weather.windKts<12)add(false,'You downgraded the sandbar plan even though conditions supported running it as booked.');
+    if(decision==='run'&&weather.windKts>25)add(true,`You ran the sandbar in ${weather.windKts} kt wind, which made the ride seriously uncomfortable.`);
   }
 
   if(booking.tripType==='sunset'){
@@ -237,7 +236,7 @@ export function assessTripPlan(state:CompanyState,booking:Booking,decision:TripD
   }
 
   if(boat){
-    if(boat.condition<.45)add(true,`${boat.name} was in poor condition (${Math.round(boat.condition*100)}%). Service it before carrying guests.`);
+    if(boat.condition<.45)add(booking.tripType!=='sandbar',`${boat.name} was in poor condition (${Math.round(boat.condition*100)}%). Service it before carrying guests.`);
     else if(boat.condition<.60)add(false,`${boat.name} needed service; guests noticed the ${Math.round(boat.condition*100)}% condition.`);
     if(boat.reliability<.50)add(false,`${boat.name} was below 50% reliability and the trip felt less polished.`);
   }
