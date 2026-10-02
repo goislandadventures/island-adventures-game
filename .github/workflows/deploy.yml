@@ -123,6 +123,12 @@ jobs:
 
             curl -sS -o /dev/null -b /tmp/cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/logout"
 
+            STATUS=$(curl -sS -D /tmp/stale-session-headers.txt -o /tmp/stale-session.json -w "%{http_code}" -b /tmp/cookies.txt "$BASE/api/auth/me")
+            echo "$BASE stale session -> $STATUS $(cat /tmp/stale-session.json)"
+            test "$STATUS" = "200"
+            node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('/tmp/stale-session.json','utf8'));if(j.player!==null)process.exit(1)"
+            tr -d '\r' < /tmp/stale-session-headers.txt | grep -qi '^set-cookie: ia_session=.*Max-Age=0'
+
             STATUS=$(curl -sS -o /tmp/salt.json -w "%{http_code}" "$BASE/api/auth/salt?email=$EMAIL")
             echo "$BASE salt -> $STATUS $(cat /tmp/salt.json)"
             test "$STATUS" = "200"
