@@ -3,7 +3,7 @@ import { boatTemplates,islands,marinas } from '../game/data/content';
 import { assessTripPlan,buyBoat,createCompany,declineInsurance,generateDemand,generateWeather,insuranceQuote,insureFleet,rentSlip,setPrice,simulateDay,takeStartupLoan,weatherLabel } from '../game/engine/sim';
 import { businessEventForDay,calendarForDay,customerProfiles,maintainBoat,serviceStatus } from '../game/engine/depth';
 import { hurricaneForDay } from '../game/engine/hurricane';
-import { clearGame,loadGame,normalizeState,saveGame } from '../game/engine/save';
+import { normalizeState } from '../game/engine/save';
 import type { CompanyState,DayResult,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
 import type { GameMode } from './StartMode';
 import type { Player } from './api';
@@ -34,7 +34,7 @@ const companyColors=[
 ];
 
 export default function App({mode,player,initialState,onUpgrade,onReturnTitle,onSwitchMode}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void;onReturnTitle:()=>void;onSwitchMode:()=>void}){
-  const [state,setState]=useState<CompanyState>(()=>initialState?normalizeState(initialState):(mode==='owner'?loadGame():null)??createCompany('',''));
+  const [state,setState]=useState<CompanyState>(()=>initialState?normalizeState(initialState):createCompany('',''));
   const [last,setLast]=useState<DayResult|null>(null);
   const [tab,setTab]=useState<'dock'|'grow'|'fleet'|'books'|'leaders'>('dock');
   const [tripDecisions,setTripDecisions]=useState<Record<string,TripDecision>>({});
@@ -83,9 +83,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const ready=Boolean(currentMarina&&state.boats.length>0);
   const showTutorial=mode==='demo'
     ? !demoComplete&&state.day<=7
-    : mode==='registered'
-      ? !registeredTutorialComplete&&state.day<=7
-      : state.day<=7;
+    : !registeredTutorialComplete&&state.day<=7;
   const tutorialNavigate=(next:TutorialTab)=>{
     setTab(next);
     window.requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'smooth'}));
@@ -105,7 +103,6 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     return()=>{alive=false;window.clearInterval(timer)};
   },[setupStarted]);
 
-  useEffect(()=>{if(mode==='owner'&&setupStarted)saveGame(state);},[state,mode,setupStarted]);
   useEffect(()=>{
     if(mode!=='registered'||!setupStarted)return;
     setSyncStatus('saving');
@@ -113,7 +110,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     return()=>window.clearTimeout(timer);
   },[state,mode,setupStarted]);
 
-  const commit=(next:CompanyState)=>{setState(next);if(mode==='owner')saveGame(next);};
+  const commit=(next:CompanyState)=>setState(next);
   const begin=()=>{if(!captainName.trim()||!companyName.trim())return;commit(createCompany(captainName.trim(),companyName.trim(),companyColor));};
   const chooseMarina=(id:string)=>{try{commit(rentSlip(state,id));}catch(e){alert((e as Error).message)}};
   const chooseBoat=(id:string)=>{try{commit(buyBoat(state,id));}catch(e){alert((e as Error).message)}};
@@ -149,21 +146,6 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     const out=simulateDay(state,tripDecisions,marketingMarket,mode==='demo');
     commit(out.state);setLast(out.result);setTab('dock');
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
-  };
-  const reset=()=>{
-    if(mode!=='owner')return;
-    clearGame();
-    const fresh=createCompany('','');
-    setLast(null);
-    setState(fresh);
-    setCaptainName('');
-    setCompanyName('');
-    setCompanyColor(fresh.companyColor||'#f6c453');
-    setTripDecisions({});
-    setTab('dock');
-    setMenuOpen(false);
-    setHelpOpen(false);
-    window.scrollTo(0,0);
   };
   const restartDemo=()=>{
     if(mode!=='demo')return;
@@ -203,21 +185,21 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
 
   if(!setupStarted)return <main className="shell onboarding">
     <div className="onboardingGameControl">{modeControl}</div>
-    {menuOpen&&mode!=='registered'&&<GameMenu mode={mode} onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onResetDevelopment={reset} onHelp={openHelpFromMenu}/>}
+    {menuOpen&&mode==='demo'&&<GameMenu onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onHelp={openHelpFromMenu}/>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <header className="heroBrand"><img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
     <section className="mapCard introMap"><IslandMap active={0} companyValue={0}/></section>
-    <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-WEEK DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $10,000 and a dream</h2>
+    <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-WEEK DEMO':'REGISTERED OWNER'}</span><h2>Start with $10,000 and a dream</h2>
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
       <label>Charter company<input value={companyName} maxLength={28} placeholder="Keys Adventure Co." onChange={e=>setCompanyName(e.target.value)}/></label>
       <fieldset className="colorField"><legend>Company color</legend><div className="colorRow">{companyColors.map(color=><label className={`colorChoice ${companyColor===color.value?'picked':''}`} key={color.value} style={{background:color.value}} title={color.name}><input type="radio" name="companyColor" value={color.value} checked={companyColor===color.value} onChange={()=>setCompanyColor(color.value)}/><span>{companyColor===color.value?'✓':''}</span></label>)}</div><small>Selected: <i className="selectedColorChip" style={{background:companyColor}}/> {companyColors.find(color=>color.value===companyColor)?.name??'Custom Color'}</small></fieldset>
       <button className="primary big" disabled={!captainName.trim()||!companyName.trim()} onClick={begin}>Launch Company →</button>
-      <p className="fine">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':mode==='owner'?'No login. Local save only and excluded from rankings.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
+      <p className="fine">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
     </section>
   </main>;
 
   return <main className="shell">
-    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className="headerModeActions"><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div>{modeControl}</div></header>
+    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className="headerModeActions"><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':'DEMO'}</div>{modeControl}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onOpenHelp={()=>setHelpOpen(true)} onActiveChange={setCaptainSchoolActive}/>} 
@@ -261,11 +243,11 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
 
     {tab==='fleet'&&<><section className="card page"><span className="eyebrow">FLEET</span><h2>{state.boats.length?`${state.boats.length} boat${state.boats.length>1?'s':''}`:'No boat yet'}</h2>{state.boats.map(b=>{const svc=serviceStatus(b);return <div key={b.instanceId} className="fleetSummary"><div className="bigBoat"><BoatArt kind={b.class}/></div><h3>{b.name}</h3><div className="stats"><div><span>Hull year</span><b>{b.year}</b></div><div><span>Engine year</span><b>{b.engineYear}</b></div><div><span>Condition</span><b>{pct(b.condition)}</b></div><div><span>Reliability</span><b>{pct(b.reliability)}</b></div><div><span>Engine hours</span><b>{b.engineHours.toFixed(1)}</b></div><div><span>Next service</span><b className={svc.kind==='ok'?'positive':'negative'}>{svc.label}</b></div><div><span>Insurance</span><b>{b.insured?'Covered':'No coverage'}</b></div></div></div>})}</section><MarketplacePanel state={state} onChange={commit}/><GrowthPanel state={state} onChange={commit}/></>}
 
-    {tab==='books'&&<><ProgressGoals state={state}/><section className="card page"><span className="eyebrow">COMPANY BOOKS</span><h2>{state.companyName}</h2><div className="resultGrid"><div><span>Fares + tips earned</span><b>{money(state.lifetimeRevenue)}</b></div><div><span>Lifetime profit</span><b>{money(state.lifetimeProfit)}</b></div><div><span>Debt</span><b>{money(state.debt)}</b></div><div><span>Daily loan payments</span><b>{money((state.loans??[]).reduce((s,l)=>s+l.dailyPayment,0))}</b></div><div><span>Days operated</span><b>{state.daysOperated}</b></div></div><h3>Recent ledger</h3>{state.ledger.slice(-8).reverse().map((x,i)=><div className="ledger" key={`${x.day}-${i}`}><span>Day {x.day} · {x.memo}</span><b className={x.amount>=0?'positive':'negative'}>{x.amount>=0?'+':''}{money(x.amount)}</b></div>)}{mode==='owner'&&<button className="dangerBtn" onClick={reset}>Reset Development Save</button>}</section></>}
+    {tab==='books'&&<><ProgressGoals state={state}/><section className="card page"><span className="eyebrow">COMPANY BOOKS</span><h2>{state.companyName}</h2><div className="resultGrid"><div><span>Fares + tips earned</span><b>{money(state.lifetimeRevenue)}</b></div><div><span>Lifetime profit</span><b>{money(state.lifetimeProfit)}</b></div><div><span>Debt</span><b>{money(state.debt)}</b></div><div><span>Daily loan payments</span><b>{money((state.loans??[]).reduce((s,l)=>s+l.dailyPayment,0))}</b></div><div><span>Days operated</span><b>{state.daysOperated}</b></div></div><h3>Recent ledger</h3>{state.ledger.slice(-8).reverse().map((x,i)=><div className="ledger" key={`${x.day}-${i}`}><span>Day {x.day} · {x.memo}</span><b className={x.amount>=0?'positive':'negative'}>{x.amount>=0?'+':''}{money(x.amount)}</b></div>)}</section></>}
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
-    {menuOpen&&mode!=='registered'&&<GameMenu mode={mode} onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onResetDevelopment={reset} onHelp={openHelpFromMenu}/>}
+    {menuOpen&&mode!=='registered'&&<GameMenu onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onHelp={openHelpFromMenu}/>}
     {!captainSchoolActive&&<button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
