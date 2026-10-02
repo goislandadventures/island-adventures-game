@@ -593,3 +593,83 @@ input:focus,select:focus{
   .turtleCoachAvatar img{height:158px;left:-99px;top:-38px}
   .coachNext{right:72px}
 }
+
+/* Polished 3D boat art */
+.boatArt{display:block;width:100%;height:auto;overflow:visible}
+.boatSprite{width:86px;min-width:86px;font-size:0}.boatSprite .boatArt{filter:drop-shadow(0 6px 5px rgba(23,50,77,.18))}
+.bigBoat{font-size:0!important;padding:6px!important;display:flex;justify-content:center}.bigBoat .boatArt{width:min(280px,92%);filter:drop-shadow(0 9px 7px rgba(23,50,77,.2))}
+.marketBoat{width:92px;font-size:0}.marketBoat .boatArt{filter:drop-shadow(0 6px 5px rgba(23,50,77,.16))}
+.growthBoatThumb{width:94px;min-width:94px}.growthBoatThumb .boatArt{filter:drop-shadow(0 5px 4px rgba(23,50,77,.15))}
+.boatPurchaseRow{display:grid!important;grid-template-columns:94px 1fr auto!important}.mapBoat{width:54px!important;font-size:0!important}.mapBoat .boatArt{filter:drop-shadow(0 4px 3px rgba(23,50,77,.25))}
+
+/* Splash rebuilt so no controls are hidden */
+.splash{min-height:100svh;background:#61d5e8;overflow:hidden}
+.splashOcean{min-height:100svh;position:relative;display:block;overflow:hidden;isolation:isolate;background:
+  radial-gradient(ellipse at 48% 70%,rgba(50,185,192,.20),transparent 34%),
+  linear-gradient(180deg,#8fe9f3 0%,#5bd2e5 36%,#31bad2 72%,#24a7c3 100%)}
+.splashHero{position:absolute;z-index:20;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);width:min(92vw,580px);display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:4px;pointer-events:none}
+.splashHero>*{pointer-events:auto}
+.splashLogoImage{width:min(68vw,390px)!important;max-height:21svh;object-fit:contain;margin:0 auto 2px!important}
+.splashTag{font-size:clamp(.8rem,2.3vw,1rem);margin:0 0 8px!important;font-weight:900;background:rgba(255,255,255,.7);backdrop-filter:blur(5px);padding:5px 11px;border-radius:999px;box-shadow:0 2px 0 rgba(23,50,77,.12)}
+.splashButtons{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.enterGame{padding:11px 22px!important}.soundPrompt{padding:8px 12px!important;margin:0!important}
+.devThemeNote{z-index:30;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);white-space:nowrap}
+
+/* Uploaded transparent sky art */
+.splashSunArt{position:absolute;z-index:3;right:4vw;top:22svh;width:clamp(72px,15vw,128px);height:auto;filter:drop-shadow(0 7px 10px rgba(217,161,0,.18))}
+.splashCloudArt{position:absolute;z-index:2;width:clamp(90px,20vw,180px);height:auto;opacity:.88;filter:drop-shadow(0 8px 10px rgba(52,108,147,.12))}
+.splashCloudArt.cloudOne{left:2vw;top:23svh;transform:scale(.86)}
+.splashCloudArt.cloudTwo{left:34vw;top:29svh;transform:scale(.62);opacity:.72}
+.splashCloudArt.cloudThree{right:24vw;top:35svh;transform:scale(.52);opacity:.66}
+
+/* Translucent tropical water with visible reef */
+.reefFloor{position:absolute;z-index:0;left:0;right:0;top:40%;bottom:0;opacity:.48;background:
+  radial-gradient(ellipse at 20% 74%,rgba(249,218,141,.62) 0 8%,rgba(120,167,116,.44) 9% 15%,transparent 16%),
+  radial-gradient(ellipse at 72% 82%,rgba(240,207,131,.55) 0 7%,rgba(92,152,119,.48) 8% 16%,transparent 17%),
+  radial-gradient(ellipse at 52% 58%,rgba(92,150,118,.38) 0 6%,transparent 7%),
+  linear-gradient(180deg,rgba(57,187,200,0),rgba(36,154,168,.18))}
+.reefPatch{position:absolute;border-radius:44% 56% 50% 50%;background:
+  radial-gradient(circle at 28% 35%,#de8e64 0 5%,transparent 6%),
+  radial-gradient(circle at 61% 42%,#9a7650 0 7%,transparent 8%),
+  radial-gradient(circle at 44% 70%,#6b985d 0 8%,transparent 9%),
+  radial-gradient(ellipse,#4d8767 0 44%,#7fb27b 45% 64%,transparent 65%);filter:blur(.2px);opacity:.6}
+.reefA{width:160px;height:80px;left:7%;bottom:8%;transform:rotate(-12deg)}.reefB{width:210px;height:100px;right:7%;bottom:16%;transform:rotate(9deg)}.reefC{width:95px;height:55px;left:42%;bottom:6%;transform:rotate(6deg)}.reefD{width:110px;height:66px;right:35%;bottom:38%;opacity:.34}.reefE{width:80px;height:48px;left:25%;bottom:34%;opacity:.32}
+.waterCaustics{position:absolute;z-index:1;inset:39% 0 0;background:
+  repeating-radial-gradient(ellipse at 30% 30%,rgba(255,255,255,.26) 0 1px,transparent 2px 14px),
+  repeating-radial-gradient(ellipse at 70% 60%,rgba(255,255,255,.16) 0 1px,transparent 2px 18px);
+  background-size:120px 80px,170px 110px;mix-blend-mode:screen;opacity:.42;animation:causticDrift 11s linear infinite}
+@keyframes causticDrift{50%{background-position:34px 18px,-42px 23px}}
+
+/* Realistic shimmer bands */
+.waterShimmer{position:absolute;z-index:5;height:2px;border-radius:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),rgba(255,255,255,.9),rgba(255,255,255,.18),transparent);box-shadow:15px 7px 10px rgba(255,255,255,.22),-23px 13px 12px rgba(255,255,255,.17);animation:waterSpark 3.8s ease-in-out infinite}
+.shimmerOne{width:130px;left:6%;top:58%}.shimmerTwo{width:170px;right:4%;top:53%;animation-delay:.8s}.shimmerThree{width:95px;left:39%;bottom:18%;animation-delay:1.6s}.shimmerFour{width:120px;right:33%;bottom:8%;animation-delay:2.3s}
+@keyframes waterSpark{0%,100%{opacity:.25;transform:scaleX(.7)}50%{opacity:.9;transform:scaleX(1.16)}}
+
+.splashIslandArt{position:absolute;z-index:6;left:-32px;bottom:-2px;width:clamp(180px,31vw,300px);filter:drop-shadow(0 10px 8px rgba(23,50,77,.22))}
+.splashBoat{position:absolute;z-index:9;font-size:0!important;width:clamp(125px,22vw,220px);filter:none!important}.splashBoat .boatArt{filter:drop-shadow(0 9px 6px rgba(23,50,77,.23))}
+.boatOne{left:13%;bottom:17%;animation:boatFloat 2.7s ease-in-out infinite}.boatTwo{right:6%;bottom:11%;animation:boatFloat 3.1s ease-in-out infinite reverse}.boatThree{right:28%;bottom:30%;animation:boatFloat 2.9s ease-in-out infinite .5s}
+@keyframes boatFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
+.splashDolphin{z-index:7}.dolphinOne{right:10%;top:48%}.dolphinTwo{left:29%;bottom:9%}
+
+/* Marketing competition */
+.marketingMarketSummary{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#eaf7fb;border:1px solid #b9dce5;border-radius:10px;padding:9px 10px;margin:10px 0;font-size:.76rem}.marketingMarketSummary span{color:#587382;text-align:right}
+.channelButtons{grid-template-columns:1fr!important}.channelButtons button{padding:10px 11px}.channelButtons em{display:block;font-style:normal;font-size:.68rem;color:#2d6c7d;margin-top:4px}.channelButtons button.selected em{color:#17324d}
+.marketingBudgetHeader{display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px;font-size:.78rem}.marketingBudgetHeader span{color:#637888}.marketingEffect{background:#fff7d9;border:1px solid #e0c86a;border-radius:10px;padding:9px;font-size:.76rem;color:#584d24}
+
+/* Turtle guide uses the full supplied character instead of a cropped face */
+.turtleCoachAvatar{width:116px;height:116px;background:transparent;border:0;box-shadow:none;overflow:visible;right:-8px;bottom:-26px}
+.turtleCoachAvatar img{position:static;width:100%;height:100%;object-fit:contain;max-width:none;filter:drop-shadow(0 7px 5px rgba(23,50,77,.28))}
+.coachBubble{margin-right:58px}
+.coachNext{right:91px}
+
+@media(max-width:520px){
+  .splashHero{top:max(5px,env(safe-area-inset-top));width:94vw}
+  .splashLogoImage{width:min(72vw,330px)!important;max-height:18svh}
+  .splashSunArt{top:19svh;right:1vw;width:82px}
+  .splashCloudArt.cloudOne{top:23svh;left:-4vw}.splashCloudArt.cloudTwo{top:31svh;left:30vw}.splashCloudArt.cloudThree{top:36svh;right:26vw}
+  .splashBoat{width:130px}.boatOne{left:5%;bottom:20%}.boatTwo{right:-1%;bottom:10%}.boatThree{right:25%;bottom:31%;width:116px}
+  .splashIslandArt{width:190px;left:-48px}
+  .boatSprite{width:74px;min-width:74px}.marketBoat,.growthBoatThumb{width:78px;min-width:78px}
+  .boatPurchaseRow{grid-template-columns:78px 1fr!important}.boatPurchaseRow button{grid-column:1/-1}
+  .turtleCoachAvatar{width:108px;height:108px}.coachBubble{margin-right:52px}.coachNext{right:84px}
+}
