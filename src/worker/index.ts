@@ -79,21 +79,20 @@ export default {
     if (url.pathname === '/api/auth/register' && request.method==='POST') {
       const body:any=await request.json();
       const email=String(body.email||'').trim().toLowerCase();
-      const displayName=String(body.displayName||'').trim().slice(0,30);
       const passwordProof=String(body.passwordProof||'');
       const passwordSalt=String(body.passwordSalt||'');
       const marketingOptIn=body.marketingOptIn===true;
-      if (!/^\S+@\S+\.\S+$/.test(email) || displayName.length<2 || !validB64(passwordProof,32) || !validB64(passwordSalt,16)) {
-        return json({error:'Valid email, display name and a 10+ character password are required.'},400);
+      if (!/^\S+@\S+\.\S+$/.test(email) || !validB64(passwordProof,32) || !validB64(passwordSalt,16)) {
+        return json({error:'Valid email and a 10+ character password are required.'},400);
       }
       const exists=await env.DB.prepare('SELECT id FROM players WHERE email=?').bind(email).first();
       if (exists) return json({error:'That email already has an account. Sign in instead.'},409);
       const id=crypto.randomUUID(), now=Date.now();
       const passwordHash='v2:'+await sha256(passwordProof);
       await env.DB.prepare('INSERT INTO players(id,email,display_name,password_hash,password_salt,marketing_opt_in,marketing_opt_in_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?)')
-        .bind(id,email,displayName,passwordHash,passwordSalt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
+        .bind(id,email,'',passwordHash,passwordSalt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
       const cookie=await createSession(id,env);
-      return json({ok:true,player:{id,email,displayName,marketingOptIn,tutorialCompleted:false}},201,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
+      return json({ok:true,player:{id,email,displayName:'',marketingOptIn,tutorialCompleted:false}},201,{'Set-Cookie':cookie,'Cache-Control':'no-store'});
     }
 
     if (url.pathname === '/api/auth/login' && request.method==='POST') {
@@ -191,6 +190,9 @@ export default {
         }
       }
 
+      if(typeof s.captainName==='string'&&s.captainName.trim()){
+        await env.DB.prepare('UPDATE players SET display_name=?,last_seen_at=? WHERE id=?').bind(String(s.captainName).trim().slice(0,30),now,player.id).run();
+      }
       await env.DB.prepare(`INSERT INTO companies(id,player_id,company_name,day,cash,debt,reputation,rating,review_count,company_value,lifetime_revenue,lifetime_profit,island_id,state_json,updated_at)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(player_id) DO UPDATE SET company_name=excluded.company_name,day=excluded.day,cash=excluded.cash,debt=excluded.debt,reputation=excluded.reputation,rating=excluded.rating,review_count=excluded.review_count,company_value=excluded.company_value,lifetime_revenue=excluded.lifetime_revenue,lifetime_profit=excluded.lifetime_profit,island_id=excluded.island_id,state_json=excluded.state_json,updated_at=excluded.updated_at`)
