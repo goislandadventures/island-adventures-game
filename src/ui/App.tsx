@@ -22,6 +22,13 @@ const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency
 const pct=(n:number)=>`${Math.round(n*100)}%`;
 const tripIcon:Record<string,string>={sandbar:'🏝️',snorkel:'🤿',sunset:'🌅',custom:'🧭',eco:'🐬',fishing:'🎣',cruise:'🚤'};
 const sourceFee:Record<string,string>={marketplace:'25% booking-site fee',hotel:'15% hotel referral fee',organic:'Direct · no booking fee',maps:'Direct · no booking fee',social:'Direct · no booking fee',referral:'Direct · no booking fee',repeat:'Direct · no booking fee',paid:'Direct · ad cost already paid',content:'Direct · no booking fee'};
+const companyColors=[
+  {name:'Sunshine Yellow',value:'#f6c453'},
+  {name:'Sunset Coral',value:'#ff8066'},
+  {name:'Island Aqua',value:'#62c8db'},
+  {name:'Palm Green',value:'#67bb70'},
+  {name:'Reef Purple',value:'#9b7de3'}
+];
 
 export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void}){
   const [state,setState]=useState<CompanyState>(()=>initialState?normalizeState(initialState):(mode==='owner'?loadGame():null)??createCompany('',''));
@@ -119,7 +126,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-WEEK DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $10,000 and a dream</h2>
       <label>Captain name<input value={captainName} maxLength={22} placeholder="Captain Jim" onChange={e=>setCaptainName(e.target.value)}/></label>
       <label>Charter company<input value={companyName} maxLength={28} placeholder="Keys Adventure Co." onChange={e=>setCompanyName(e.target.value)}/></label>
-      <fieldset className="colorField"><legend>Company color</legend><div className="colorRow">{['#f6c453','#ff8066','#62c8db','#67bb70','#9b7de3'].map(color=><label className={`colorChoice ${companyColor===color?'picked':''}`} key={color} style={{background:color}}><input type="radio" name="companyColor" value={color} checked={companyColor===color} onChange={()=>setCompanyColor(color)}/><span>{companyColor===color?'✓':''}</span></label>)}</div><small>Selected: <i className="selectedColorChip" style={{background:companyColor}}/> {companyColor}</small></fieldset>
+      <fieldset className="colorField"><legend>Company color</legend><div className="colorRow">{companyColors.map(color=><label className={`colorChoice ${companyColor===color.value?'picked':''}`} key={color.value} style={{background:color.value}} title={color.name}><input type="radio" name="companyColor" value={color.value} checked={companyColor===color.value} onChange={()=>setCompanyColor(color.value)}/><span>{companyColor===color.value?'✓':''}</span></label>)}</div><small>Selected: <i className="selectedColorChip" style={{background:companyColor}}/> {companyColors.find(color=>color.value===companyColor)?.name??'Custom Color'}</small></fieldset>
       <button className="primary big" disabled={!captainName.trim()||!companyName.trim()} onClick={begin}>Launch Company →</button>
       <p className="fine">{mode==='demo'?'No account. Play the full seven-day Captain School tutorial.':mode==='owner'?'No login. Local save only and excluded from rankings.':`Signed in as ${player?.displayName||player?.display_name||player?.email}. Your company will sync to the cloud.`}</p>
     </section>
