@@ -7,6 +7,8 @@ function dismissedDays():number[]{
   try{return JSON.parse(localStorage.getItem(KEY)||'[]') as number[];}catch{return [];}
 }
 
+type CoachMessage={label:string;title?:string;text:string};
+
 export default function TutorialCard({day}:{day:number}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
@@ -17,7 +19,7 @@ export default function TutorialCard({day}:{day:number}){
     setStep(0);
   },[day]);
 
-  const messages=useMemo(()=>{
+  const messages=useMemo<CoachMessage[]>(()=>{
     if(!tutorial)return [];
     const dayOneTour=day===1?[
       {label:'WELCOME TO CAPTAIN SCHOOL',title:'Meet your guide',text:'Before we touch the boats, I’ll show you the five buttons at the bottom. You do not need to know anything about boats or business to play.'},
@@ -51,7 +53,7 @@ export default function TutorialCard({day}:{day:number}){
     <div className="turtleCoach">
       <div className="coachBubble">
         <span>{current.label}</span>
-        {'title' in current&&current.title&&<h3>{current.title}</h3>}
+        {current.title&&<h3>{current.title}</h3>}
         <p>{current.text}</p>
         <div className="coachProgress" aria-label={`Step ${step+1} of ${messages.length}`}>
           {messages.map((_,i)=><i key={i} className={i<=step?'done':''}/>)}
