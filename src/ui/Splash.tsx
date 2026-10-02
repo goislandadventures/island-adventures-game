@@ -60,30 +60,30 @@ function Lighthouse(){
 function KeysWater(){
   return <svg className="splashV3Water" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="v3Sea" x1="0" y1="0" x2=".18" y2="1"><stop stopColor="#74ebee"/><stop offset=".34" stopColor="#48dce0"/><stop offset=".72" stopColor="#2bc9d1"/><stop offset="1" stopColor="#22b4c4"/></linearGradient>
+      <linearGradient id="v3Sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#179fb9"/><stop offset=".28" stopColor="#25b9c9"/><stop offset=".62" stopColor="#42d3d7"/><stop offset="1" stopColor="#68e5df"/></linearGradient>
       <radialGradient id="v3Sand" cx=".5" cy=".5"><stop stopColor="#dff7db" stopOpacity=".88"/><stop offset=".5" stopColor="#bcebd8" stopOpacity=".56"/><stop offset="1" stopColor="#8edbce" stopOpacity="0"/></radialGradient>
       <filter id="v3Soft"><feGaussianBlur stdDeviation="7"/></filter>
     </defs>
     <rect width="1000" height="1000" fill="url(#v3Sea)"/>
     <ellipse cx="535" cy="500" rx="410" ry="245" fill="url(#v3Sand)"/>
-    <g fill="#137f82" opacity=".13" filter="url(#v3Soft)">
+    <g fill="#116c78" opacity=".055" filter="url(#v3Soft)">
       <path d="M62 330 C130 286 205 293 260 337 C302 372 294 424 238 451 C175 480 105 456 72 405 C51 373 49 350 62 330Z"/>
       <path d="M700 302 C767 267 845 283 885 326 C918 361 899 403 844 424 C784 448 726 428 694 387 C675 362 678 325 700 302Z"/>
       <path d="M114 687 C184 642 262 653 312 696 C349 728 338 775 281 802 C218 831 151 807 120 760 C99 729 98 705 114 687Z"/>
       <path d="M690 712 C762 667 847 680 895 724 C930 756 914 802 854 828 C789 857 721 829 689 781 C669 751 672 727 690 712Z"/>
       <path d="M420 820 C468 790 526 799 557 827 C581 850 571 884 531 903 C486 924 441 907 418 873 C404 852 406 832 420 820Z"/>
     </g>
-    <g fill="#347c65" opacity=".11">
+    <g fill="#397b70" opacity=".045">
       <path d="M265 560 C318 526 372 535 403 567 C427 591 418 626 379 643 C335 663 290 648 268 616 C255 597 254 576 265 560Z"/>
       <path d="M608 576 C655 545 706 552 736 581 C758 603 750 633 714 650 C674 669 632 655 611 625 C598 606 597 590 608 576Z"/>
     </g>
-    <g fill="none" stroke="#efffff" strokeOpacity=".34" strokeWidth="4">
+    <g fill="none" stroke="#efffff" strokeOpacity=".22" strokeWidth="4">
       <path d="M0 414 C160 386 275 406 405 381 C560 351 687 358 1000 314"/>
       <path d="M0 443 C161 418 283 438 416 412 C579 380 716 387 1000 349"/>
       <path d="M0 742 C178 708 298 727 434 695 C610 653 759 672 1000 632"/>
       <path d="M0 775 C177 742 310 759 450 727 C619 688 768 701 1000 665"/>
     </g>
-    <g fill="#fff" opacity=".22">
+    <g fill="#fff" opacity=".28">
       <ellipse cx="176" cy="523" rx="54" ry="4"/><ellipse cx="826" cy="514" rx="72" ry="4"/><ellipse cx="486" cy="731" rx="44" ry="3"/><ellipse cx="718" cy="865" rx="62" ry="3"/>
     </g>
   </svg>;
@@ -100,26 +100,26 @@ export default function Splash({onEnter}:{onEnter:()=>void}){
   const startSound=async()=>{try{await audioRef.current?.play();setSoundBlocked(false)}catch{setSoundBlocked(true)}};
   const enter=()=>{const audio=audioRef.current;onEnter();if(audio){try{audio.pause();audio.currentTime=0}catch{}}};
 
-  return <main className="splash splashV3"><div className="splashV3Scene">
-    <div className="splashV3Sky">
+  return <main className="splash splashV4"><div className="splashV4Scene">
+    <div className="splashV4Sky">
       <CloudArt className="v3CloudLeft"/>
       <CloudArt className="v3CloudMid"/>
       <SunArt/>
     </div>
-    <div className="splashV3Horizon"/>
-    <div className="splashV3Sea"><KeysWater/></div>
-    <div className="splashV3Tower"><Lighthouse/></div>
-    <div className="splashV3Boat splashV3BoatDeck"><BoatArt kind="deck"/></div>
-    <div className="splashV3Boat splashV3BoatPontoon"><BoatArt kind="pontoon"/></div>
-    <div className="splashV3Boat splashV3BoatCenter"><BoatArt kind="center-console"/></div>
-    <div className="splashV3Hero">
-      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV3Logo"/>
-      <div className="splashV3Tag">Build your fleet. Rule the islands.</div>
-      <div className="splashV3Buttons">
+    <div className="splashV4Horizon"/>
+    <div className="splashV4Sea"><KeysWater/></div>
+    <div className="splashV4Tower"><Lighthouse/></div>
+    <div className="splashV4Boat splashV4BoatDeck"><BoatArt kind="deck"/></div>
+    <div className="splashV4Boat splashV4BoatPontoon"><BoatArt kind="pontoon"/></div>
+    <div className="splashV4Boat splashV4BoatCenter"><BoatArt kind="center-console"/></div>
+    <div className="splashV4Hero">
+      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashV4Logo"/>
+      <div className="splashV4Tag">Build your fleet. Rule the islands.</div>
+      <div className="splashV4Buttons">
         {soundBlocked&&<button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
         <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
       </div>
     </div>
-    <small className="splashV3Build">Development build</small>
+    <small className="splashV4Build">Development build</small>
   </div></main>;
 }
