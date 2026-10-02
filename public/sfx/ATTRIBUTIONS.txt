@@ -1,0 +1,38 @@
+Island Adventures game audio attributions
+
+cash.flac
+Source: OpenRCT2/OpenSoundEffects cash1.flac
+Original: “Cash Register,Sale Sound, old shop.stereo.wav” by Dan_AudioFile; edited by GeneralCamo
+License: Creative Commons Attribution 4.0
+
+service.flac
+Source: OpenRCT2/OpenSoundEffects brake_fix.flac
+Edited by GeneralCamo from CC0 source samples
+License: CC0 1.0 source material
+
+thunder.flac
+Source: OpenRCT2/OpenSoundEffects thunder_4.flac
+Creator: Karst van Galen Last (AuraSpecs)
+License: Creative Commons Attribution 4.0
+
+yay.wav
+Source: jendewalt/jennifer_dewalt
+License: MIT
+
+engine.wav
+Source: jeffotoni/enduro
+Copyright (c) 2026 Jefferson Otoni Lima
+License: MIT
+
+hmm.wav
+Source: Sai-Santosh09/Blade-of-Dawn
+License: MIT
+
+aww.wav
+Source: hunterjpg/Baby-Kart
+License: Apache License 2.0
+
+splash.wav
+Source: orangeduck/Corange demo asset
+Original splash asset: OpenGameArt “slogan droplets”
+License: CC0 / Public Domain
