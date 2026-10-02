@@ -10,6 +10,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   const [email,setEmail]=useState('');
   const [displayName,setDisplayName]=useState('');
   const [password,setPassword]=useState('');
+  const [showPassword,setShowPassword]=useState(false);
   const [marketing,setMarketing]=useState(false);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
@@ -32,7 +33,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     <span className="eyebrow">PLAY & COMPETE</span><h2>{kind==='register'?'Create your owner account':'Welcome back, Captain'}</h2>
     {kind==='register'&&<label>Owner display name<input value={displayName} maxLength={30} onChange={e=>setDisplayName(e.target.value)} placeholder="Captain Jim"/></label>}
     <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
-    <label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="10+ characters"/></label>
+    <label>Password<div className="passwordWrap"><input type={showPassword?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="10+ characters" autoComplete={kind==='register'?'new-password':'current-password'}/><button type="button" className="showPasswordBtn" onClick={()=>setShowPassword(v=>!v)} aria-pressed={showPassword}>{showPassword?'Hide':'Show'}</button></div></label>
     {kind==='register'&&<label className="checkRow"><input type="checkbox" checked={marketing} onChange={e=>setMarketing(e.target.checked)}/><span>Send me occasional Island Adventures news, offers and real-world charter updates. Optional.</span></label>}
     {error&&<p className="formError">{error}</p>}
     <button className="primary big" disabled={busy||!email||!password||(kind==='register'&&!displayName)} onClick={submit}>{busy?'Connecting…':kind==='register'?'Create Account & Play':'Sign In'}</button>
