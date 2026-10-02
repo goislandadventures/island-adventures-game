@@ -462,6 +462,7 @@ export function resolveMaintenanceIncident(state:CompanyState,decision:Maintenan
 }
 
 export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>,market?:MarketingMarketSnapshot,demoMode=false):{state:CompanyState;result:DayResult}{
+  if(input.pendingMaintenance)throw new Error('Resolve the equipment failure before running another day.');
   let state=structuredClone(input);
   state.staff=state.staff??[];
   state.marketing=state.marketing??{dailyBudget:0,focus:'search',reviewAsk:true};
@@ -563,6 +564,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   });
 
   let maintenanceEvent:string|undefined;
+  let maintenanceIncident:MaintenanceIncident|undefined;
   state.boats=state.boats.map(boat=>{
     const used=usage[boat.instanceId]??0;
     if(!used)return boat;
@@ -572,18 +574,23 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     const overdue300=newHours>=boat.next300Service;
     const serviceRisk=overdue300?.16:overdue100?.07:0;
     const overdueWear=overdue300?.014:overdue100?.007:0;
-    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk,.01,.42);
+    const deferredRisk=(boat.deferredMaintenance??0)*.065;
+    const failureRisk=clamp((1-boat.reliability)*(1.2-boat.condition)*.30+Math.max(0,newHours-1000)/10000+(exposed&&weather.windKts>16?.025:0)+serviceRisk+deferredRisk,.01,.50);
     let condition=clamp(boat.condition-used*.003-overdueWear*used,.20,1);
     let reliability=clamp(boat.reliability-overdueWear*.55*used,.25,.99);
-    if(!maintenanceEvent&&rng.chance(failureRisk)){
-      const event=rng.pick([{text:'The battery quit.',cost:240},{text:'The prop hit something expensive.',cost:520},{text:'The bilge pump gave up.',cost:310},{text:'The steering needed a surprise repair.',cost:690}]);
-      maintenanceEvent=`${boat.name}: ${event.text}`;expenses+=event.cost;condition=clamp(condition-.04,.20,1);reliability=clamp(reliability-.02,.25,.99);
+    if(!maintenanceIncident&&rng.chance(failureRisk)){
+      const incident=buildMaintenanceIncident(rng,state.day,boat);
+      maintenanceIncident=incident;
+      maintenanceEvent=`${boat.name}: ${failurePhaseLabel[incident.phase]} — ${incident.title}. Choose how to handle it before the next operating day.`;
+      condition=clamp(condition-.025,.20,1);
+      reliability=clamp(reliability-.015,.20,.99);
     }else if((overdue300||overdue100)&&!maintenanceEvent){
       const due=overdue300?boat.next300Service:boat.next100Service;
       maintenanceEvent=`${boat.name}: engine service is overdue past ${due} hours. Reliability is dropping.`;
     }
     return {...boat,condition,reliability,engineHours:newHours};
   });
+  if(maintenanceIncident)state.pendingMaintenance=maintenanceIncident;
 
   let wildlifeEvent:string|undefined;
   if(tripsRun&&rng.chance(.22))wildlifeEvent=rng.pick(['Dolphins cruised alongside the boat.','A sea turtle surfaced beside the guests.','An eagle ray glided under the boat.','A manatee caused a very slow marina departure.']);
@@ -610,5 +617,5 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   state.companyValue=computeCompanyValue(state);
   state.day+=1;
 
-  return {state,result:{weather,calendar,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,tips,expenses,refunds,maintenanceEvent,wildlifeEvent,loanPayment:loanResult.payment,fixedCosts,summary:`${calendar.monthName} ${calendar.dayOfMonth}: ${tripsRun} trip(s), $${revenue} fares, $${tips} tips, $${expenses} expenses, ${reviews.length} review(s).`}};
+  return {state,result:{weather,calendar,decisions,bookingsGenerated:bookings,tripsRun,reviews,tripOutcomes,revenue,tips,expenses,refunds,maintenanceEvent,maintenanceIncident,wildlifeEvent,loanPayment:loanResult.payment,fixedCosts,summary:`${calendar.monthName} ${calendar.dayOfMonth}: ${tripsRun} trip(s), $${revenue} fares, $${tips} tips, $${expenses} expenses, ${reviews.length} review(s).`}};
 }
