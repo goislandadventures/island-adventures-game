@@ -185,19 +185,30 @@ export function buyUsedBoat(state:CompanyState,listingId:string,finance=false):C
   };
 }
 
-export function serviceStatus(boat:OwnedBoat):{kind:'300hr'|'100hr'|'ok';dueAt:number;overdue:number;label:string}{
-  const due300=boat.engineHours>=boat.next300Service;
-  const due100=boat.engineHours>=boat.next100Service;
-  if(due300){
-    const overdue=Math.max(0,boat.engineHours-boat.next300Service);
-    return {kind:'300hr',dueAt:boat.next300Service,overdue,label:`300-hour service ${overdue>0?`${Math.round(overdue)} hours overdue`:'due now'}`};
-  }
-  if(due100){
-    const overdue=Math.max(0,boat.engineHours-boat.next100Service);
-    return {kind:'100hr',dueAt:boat.next100Service,overdue,label:`100-hour service ${overdue>0?`${Math.round(overdue)} hours overdue`:'due now'}`};
-  }
+export function serviceStatus(boat:OwnedBoat):{kind:'300hr'|'100hr'|'ok';dueAt:number;overdue:number;hoursUntil:number;serviceType:'100hr'|'300hr';label:string}{
   const dueAt=Math.min(boat.next100Service,boat.next300Service);
-  return {kind:'ok',dueAt,overdue:0,label:`Next engine service at ${dueAt} hours`};
+  const serviceType: '100hr'|'300hr' = boat.next300Service<=boat.next100Service?'300hr':'100hr';
+  const delta=Number((dueAt-boat.engineHours).toFixed(1));
+  if(delta<=0){
+    const overdue=Math.max(0,Number((-delta).toFixed(1)));
+    return {
+      kind:serviceType,
+      dueAt,
+      overdue,
+      hoursUntil:0,
+      serviceType,
+      label:`${serviceType==='300hr'?'300-hour':'100-hour'} service ${overdue>0?`${overdue.toFixed(overdue%1?1:0)} engine hours overdue`:'due now'}`
+    };
+  }
+  const hoursUntil=delta;
+  return {
+    kind:'ok',
+    dueAt,
+    overdue:0,
+    hoursUntil,
+    serviceType,
+    label:`${serviceType==='300hr'?'300-hour':'100-hour'} service in ${hoursUntil.toFixed(hoursUntil%1?1:0)} engine hours`
+  };
 }
 
 export function maintainBoat(state:CompanyState,instanceId:string,level:MaintenanceLevel):CompanyState{
@@ -211,8 +222,18 @@ export function maintainBoat(state:CompanyState,instanceId:string,level:Maintena
   const plan=plans[level];
   if(state.cash<plan.cost)throw new Error('Not enough cash for that service.');
   const currentHours=boat.engineHours;
-  const next100=level==='100hr'||level==='300hr'?Number((currentHours+100).toFixed(1)):boat.next100Service;
-  const next300=level==='300hr'?Number((currentHours+300).toFixed(1)):boat.next300Service;
+  const currentService=serviceStatus(boat);
+  if(level==='100hr'&&currentService.serviceType==='300hr')throw new Error('The 300-hour service is due now; it replaces the 100-hour service.');
+  let next100=boat.next100Service;
+  let next300=boat.next300Service;
+  if(level==='100hr'){
+    const remainingIntervalsTo300=Math.max(1,Math.round((boat.next300Service-boat.next100Service)/100));
+    next100=Number((currentHours+100).toFixed(1));
+    next300=Number((currentHours+remainingIntervalsTo300*100).toFixed(1));
+  }else if(level==='300hr'){
+    next100=Number((currentHours+100).toFixed(1));
+    next300=Number((currentHours+300).toFixed(1));
+  }
   const cash=state.cash-plan.cost;
   return {
     ...state,
