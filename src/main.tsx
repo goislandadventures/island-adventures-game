@@ -26,9 +26,29 @@ function Root(){
     return()=>window.cancelAnimationFrame(frame);
   },[entered,mode]);
 
+  const returnToTitle=()=>{
+    setMode(null);
+    setPlayer(undefined);
+    setInitialState(undefined);
+    setEntered(false);
+  };
+  const switchMode=()=>{
+    setMode(null);
+    setPlayer(undefined);
+    setInitialState(undefined);
+    setEntered(true);
+  };
+
   if(!entered)return <Splash onEnter={()=>setEntered(true)}/>;
   if(!mode)return <StartMode onStart={(nextMode,nextPlayer,nextState)=>{setMode(nextMode);setPlayer(nextPlayer);setInitialState(nextState);}}/>;
-  return <App mode={mode} player={player} initialState={initialState??undefined} onUpgrade={()=>{setMode(null);setPlayer(undefined);setInitialState(undefined);}}/>;
+  return <App
+    mode={mode}
+    player={player}
+    initialState={initialState??undefined}
+    onUpgrade={switchMode}
+    onReturnTitle={returnToTitle}
+    onSwitchMode={switchMode}
+  />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><Root/></React.StrictMode>);
