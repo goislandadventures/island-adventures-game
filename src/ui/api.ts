@@ -1,6 +1,6 @@
 import type { CompanyState,MarketingMarketSnapshot } from '../game/types/models';
 
-export type Player = { id:string; email:string; displayName?:string; display_name?:string; marketingOptIn?:boolean; marketing_opt_in?:number; tutorialCompleted?:boolean; tutorial_completed?:number };
+export type Player = { id:string; email:string; displayName?:string; display_name?:string; marketingOptIn?:boolean; marketing_opt_in?:number; tutorialCompleted?:boolean; tutorial_completed?:number; mustChangePassword?:boolean; force_password_change?:number };
 
 async function api<T>(path:string, options:RequestInit={}):Promise<T>{
   const res=await fetch(path,{credentials:'include',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
@@ -42,6 +42,12 @@ export async function login(payload:{email:string;password:string}){
 }
 export const me=()=>api<{player:Player|null}>('/api/auth/me');
 export const logout=()=>api<{ok:boolean}>('/api/auth/logout',{method:'POST'});
+export async function changePassword(password:string){
+  if(password.length<10) throw new Error('Password must be at least 10 characters.');
+  const passwordSalt=newSalt();
+  const proof=await passwordProof(password,passwordSalt);
+  return api<{player:Player}>('/api/auth/change-password',{method:'POST',body:JSON.stringify({passwordProof:proof,passwordSalt})});
+}
 export const completeTutorial=()=>api<{ok:boolean}>('/api/tutorial/complete',{method:'POST'});
 export const loadCompany=()=>api<{state:CompanyState|null}>('/api/company');
 export const syncCompany=(state:CompanyState)=>api<{ok:boolean}>('/api/company/sync',{method:'POST',body:JSON.stringify({state})});
