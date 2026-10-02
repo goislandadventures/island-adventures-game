@@ -22,7 +22,7 @@ function cookieToken(request: Request) {
 async function currentPlayer(request: Request, env: Env) {
   const token=cookieToken(request); if (!token) return null;
   const tokenHash=await sha256(token); const now=Date.now();
-  return env.DB.prepare(`SELECT p.id,p.email,p.display_name,p.marketing_opt_in FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash,now).first();
+  return env.DB.prepare(`SELECT p.id,p.email,p.display_name,p.marketing_opt_in,p.tutorial_completed FROM sessions s JOIN players p ON p.id=s.player_id WHERE s.token_hash=? AND s.expires_at>?`).bind(tokenHash,now).first();
 }
 async function createSession(playerId:string, env:Env) {
   const raw=b64(crypto.getRandomValues(new Uint8Array(32))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
@@ -81,7 +81,7 @@ export default {
       await env.DB.prepare('INSERT INTO players(id,email,display_name,password_hash,password_salt,marketing_opt_in,marketing_opt_in_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?)')
         .bind(id,email,displayName,pw.hash,pw.salt,marketingOptIn?1:0,marketingOptIn?now:null,now,now).run();
       const cookie=await createSession(id,env);
-      return json({ok:true,player:{id,email,displayName,marketingOptIn}},201,{'Set-Cookie':cookie});
+      return json({ok:true,player:{id,email,displayName,marketingOptIn,tutorialCompleted:false}},201,{'Set-Cookie':cookie});
     }
 
     if (url.pathname === '/api/auth/login' && request.method==='POST') {
@@ -92,10 +92,16 @@ export default {
       if (pw.hash!==p.password_hash) return json({error:'Invalid email or password.'},401);
       await env.DB.prepare('UPDATE players SET last_seen_at=? WHERE id=?').bind(Date.now(),p.id).run();
       const cookie=await createSession(p.id,env);
-      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in)}},200,{'Set-Cookie':cookie});
+      return json({ok:true,player:{id:p.id,email:p.email,displayName:p.display_name,marketingOptIn:Boolean(p.marketing_opt_in),tutorialCompleted:Boolean(p.tutorial_completed)}},200,{'Set-Cookie':cookie});
     }
 
     if (url.pathname === '/api/auth/me' && request.method==='GET') return json({player:await currentPlayer(request,env)});
+
+    if (url.pathname === '/api/tutorial/complete' && request.method==='POST') {
+      const player:any=await currentPlayer(request,env); if(!player) return json({error:'Login required.'},401);
+      await env.DB.prepare('UPDATE players SET tutorial_completed=1,last_seen_at=? WHERE id=?').bind(Date.now(),player.id).run();
+      return json({ok:true});
+    }
 
     if (url.pathname === '/api/auth/logout' && request.method==='POST') {
       const token=cookieToken(request); if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha256(token)).run();
