@@ -1,7 +1,7 @@
 import { boatTemplates,marinas } from '../data/content';
 import type {
   Booking, BusinessEvent, BusinessEventChoice, CalendarInfo, CompanyState, CustomerType,
-  Loan, MaintenanceLevel, OwnedBoat, TripType, UsedBoatListing
+  Loan, MaintenanceLevel, MarketingChannelId, MarketingFocus, MarketingMarketSnapshot, OwnedBoat, TripType, UsedBoatListing
 } from '../types/models';
 import { RNG } from './rng';
 
@@ -25,16 +25,40 @@ export function nextThreeHundred(hours:number):number{
   return (Math.floor(hours/300)+1)*300;
 }
 
-export function marketingStrength(state:CompanyState):number{
-  const m=state.marketing??{dailyBudget:0,focus:'organic' as const,reviewAsk:true};
-  const budget=Math.min(1,m.dailyBudget/250);
-  const reviews=Math.min(1,(state.reviewCount??0)/100);
-  const reputation=clamp(state.reputation??.5,0,1);
-  const reviewHabit=m.reviewAsk?.10:0;
-  return clamp(.12+budget*.43+reputation*.22+reviews*.13+reviewHabit,0,1);
+export const marketingChannels:Record<MarketingChannelId,{label:string;detail:string;costIndex:number;maxBookingBoost:number;budgetScale:number}> = {
+  search:{label:'Google Search',detail:'Highest intent, but every click is expensive.',costIndex:1.75,maxBookingBoost:.78,budgetScale:65},
+  maps:{label:'Google Maps',detail:'Strong local intent with lower cost than Search.',costIndex:1.05,maxBookingBoost:.62,budgetScale:55},
+  social:{label:'Social',detail:'Cheap reach, but fewer people are ready to book right now.',costIndex:.65,maxBookingBoost:.40,budgetScale:38},
+  hotel:{label:'Hotels',detail:'Warm visitor referrals, but booked trips pay a referral cut.',costIndex:1.20,maxBookingBoost:.55,budgetScale:50},
+  content:{label:'Content / PR',detail:'Slowest immediate payoff, cheapest long-game visibility.',costIndex:.55,maxBookingBoost:.30,budgetScale:75}
+};
+
+export function canonicalMarketingFocus(focus:MarketingFocus|undefined):MarketingChannelId{
+  return !focus||focus==='organic'?'search':focus;
 }
 
-export function calendarForDay(day:number,state?:CompanyState):CalendarInfo{
+export function marketingPerformance(state:CompanyState,market?:MarketingMarketSnapshot){
+  const m=state.marketing??{dailyBudget:0,focus:'search' as const,reviewAsk:true};
+  const focus=canonicalMarketingFocus(m.focus);
+  const config=marketingChannels[focus];
+  const saturation=clamp(market?.channels?.[focus]?.saturation??0,0,1);
+  const costPressure=config.costIndex*(1+saturation*1.5);
+  const budget=Math.max(0,m.dailyBudget);
+  const reach=budget<=0?0:1-Math.exp(-budget/(config.budgetScale*costPressure));
+  const crowdPenalty=1-saturation*.45;
+  const bookingBoost=clamp(config.maxBookingBoost*reach*crowdPenalty,0,config.maxBookingBoost);
+  return {focus,config,saturation,costPressure,bookingBoost,effectiveBudget:budget/costPressure};
+}
+
+export function marketingStrength(state:CompanyState,market?:MarketingMarketSnapshot):number{
+  const performance=marketingPerformance(state,market);
+  const reviews=Math.min(1,(state.reviewCount??0)/100);
+  const reputation=clamp(state.reputation??.5,0,1);
+  const reviewHabit=state.marketing?.reviewAsk?.10:0;
+  return clamp(.10+performance.bookingBoost*.48+reputation*.22+reviews*.13+reviewHabit,0,1);
+}
+
+export function calendarForDay(day:number,state?:CompanyState,market?:MarketingMarketSnapshot):CalendarInfo{
   const dayNames:CalendarInfo['dayOfWeek'][]=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const dayOfWeek=dayNames[(day-1)%7];
   const week=Math.ceil(day/7);
@@ -45,7 +69,7 @@ export function calendarForDay(day:number,state?:CompanyState):CalendarInfo{
   const monthInfo=gameMonths[monthIndex];
   const dayOfMonth=offset+1;
   const monthNumber=monthInfo.num;
-  const strength=state?marketingStrength(state):.45;
+  const strength=state?marketingStrength(state,market):.45;
   const marketingLabel:CalendarInfo['marketingLabel']=strength>=.62?'Strong':strength>=.42?'Okay':'Weak';
   const afterFeb14=monthNumber>2||(monthNumber===2&&dayOfMonth>=14);
   const throughSep1=monthNumber<9||(monthNumber===9&&dayOfMonth<=1);
