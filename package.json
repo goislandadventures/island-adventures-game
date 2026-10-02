@@ -10,7 +10,8 @@
     "test:captain-school": "tsx scripts/verify-captain-school.ts",
     "test:maintenance": "tsx scripts/verify-maintenance.ts",
     "test:hidden-rolls": "tsx scripts/verify-hidden-rolls.ts",
-    "test:weather-climate": "tsx scripts/verify-weather-climate.ts"
+    "test:weather-climate": "tsx scripts/verify-weather-climate.ts",
+    "test:second-boat": "tsx scripts/verify-second-boat.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
