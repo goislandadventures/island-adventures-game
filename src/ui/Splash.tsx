@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import BoatArt from './BoatArt';
 
 export default function Splash({ onEnter }: { onEnter: () => void }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -21,8 +22,6 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
 
   const enter = () => {
     const audio = audioRef.current;
-    // iOS Safari does not reliably support programmatic volume fades.
-    // Enter the game immediately, then stop/reset the splash theme.
     onEnter();
     if (audio) {
       try { audio.pause(); audio.currentTime = 0; } catch {}
@@ -30,32 +29,38 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
   };
 
   return <main className="splash"><div className="splashOcean">
-    <div className="splashSun" />
+    <div className="reefFloor" aria-hidden="true">
+      <i className="reefPatch reefA"/><i className="reefPatch reefB"/><i className="reefPatch reefC"/>
+      <i className="reefPatch reefD"/><i className="reefPatch reefE"/>
+    </div>
+    <div className="waterCaustics" aria-hidden="true"/>
 
-    <div className="splashCloud cloudOne" />
-    <div className="splashCloud cloudTwo" />
-    <div className="splashCloud cloudThree" />
+    <img src="/branding/splash-sun.png" alt="" aria-hidden="true" className="splashSunArt"/>
 
-    <div className="waterGlimmer glimmerOne" />
-    <div className="waterGlimmer glimmerTwo" />
-    <div className="waterGlimmer glimmerThree" />
-    <div className="waterGlimmer glimmerFour" />
-    <div className="waterGlimmer glimmerFive" />
+    <img src="/branding/splash-cloud.png" alt="" aria-hidden="true" className="splashCloudArt cloudOne"/>
+    <img src="/branding/splash-cloud.png" alt="" aria-hidden="true" className="splashCloudArt cloudTwo"/>
+    <img src="/branding/splash-cloud.png" alt="" aria-hidden="true" className="splashCloudArt cloudThree"/>
+
+    <div className="waterShimmer shimmerOne"/><div className="waterShimmer shimmerTwo"/>
+    <div className="waterShimmer shimmerThree"/><div className="waterShimmer shimmerFour"/>
 
     <div className="splashDolphin dolphinOne">🐬</div>
     <div className="splashDolphin dolphinTwo">🐬</div>
 
     <img src="/images/island-map-3d.svg" alt="" aria-hidden="true" className="splashIslandArt"/>
 
-    <div className="splashBoat boatOne">🚤</div>
-    <div className="splashBoat boatTwo">🛥️</div>
-    <div className="splashBoat boatThree">⛵</div>
-    <div className="splashBoat boatFour">🛶</div>
+    <div className="splashBoat boatOne"><BoatArt kind="deck"/></div>
+    <div className="splashBoat boatTwo"><BoatArt kind="pontoon"/></div>
+    <div className="splashBoat boatThree"><BoatArt kind="center-console"/></div>
 
-    <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashLogoImage"/>
-    <div className="splashTag">Build your fleet. Rule the islands.</div>
-    {soundBlocked && <button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
-    <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
+    <div className="splashHero">
+      <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="splashLogoImage"/>
+      <div className="splashTag">Build your fleet. Rule the islands.</div>
+      <div className="splashButtons">
+        {soundBlocked && <button className="soundPrompt" onClick={startSound}>♫ Tap for theme</button>}
+        <button className="enterGame" onClick={enter}>ENTER THE ISLANDS</button>
+      </div>
+    </div>
     <small className="devThemeNote">Development build</small>
   </div></main>;
 }
