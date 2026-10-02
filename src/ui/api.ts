@@ -42,7 +42,7 @@ export async function login(payload:{email:string;password:string}){
   const proof=await passwordProof(payload.password,salt.salt);
   return api<{player:Player}>('/api/auth/login',{method:'POST',body:JSON.stringify({email:payload.email,passwordProof:proof})});
 }
-export const me=()=>api<{player:Player|null}>('/api/auth/me');
+export const me=()=>api<{player:Player|null}>('/api/auth/me',{cache:'no-store'});
 export const logout=()=>api<{ok:boolean}>('/api/auth/logout',{method:'POST'});
 export async function changePassword(password:string){
   if(password.length<10) throw new Error('Password must be at least 10 characters.');
@@ -51,7 +51,7 @@ export async function changePassword(password:string){
   return api<{player:Player}>('/api/auth/change-password',{method:'POST',body:JSON.stringify({passwordProof:proof,passwordSalt})});
 }
 export const completeTutorial=()=>api<{ok:boolean}>('/api/tutorial/complete',{method:'POST'});
-export const loadCompany=()=>api<{state:CompanyState|null}>('/api/company');
+export const loadCompany=()=>api<{state:CompanyState|null}>('/api/company',{cache:'no-store'});
 export const syncCompany=(state:CompanyState)=>api<{ok:boolean}>('/api/company/sync',{method:'POST',body:JSON.stringify({state})});
 export const loadLeaderboard=(metric:string)=>api<{metric:string;results:any[]}>(`/api/leaderboard?metric=${encodeURIComponent(metric)}`);
 
