@@ -17,6 +17,10 @@ function validB64(value:string,bytes?:number){
 }
 const FAKE_SALT='AAAAAAAAAAAAAAAAAAAAAA==';
 
+export function isCaptainSchoolReviewReset(prior:{day:number},s:{day:number;captainSchoolReviewsReset?:boolean;reviewCount:number;rating:number}){
+  return prior.day===7&&s.day===8&&s.captainSchoolReviewsReset===true&&s.reviewCount===0&&s.rating===0;
+}
+
 function cookieToken(request: Request) {
   const cookie=request.headers.get('cookie')||'';
   return cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('ia_session='))?.split('=')[1] || null;
@@ -182,7 +186,7 @@ export default {
         const revenueDelta=s.lifetimeRevenue-prior.lifetime_revenue;
         const profitDelta=s.lifetimeProfit-prior.lifetime_profit;
         const reviewDelta=s.reviewCount-prior.review_count;
-        const captainSchoolReset=prior.day===7&&s.day===8&&s.captainSchoolReviewsReset===true&&s.reviewCount===0&&s.rating===0;
+        const captainSchoolReset=isCaptainSchoolReviewReset(prior,s);
         if(dayDelta===0&&(revenueDelta!==0||profitDelta!==0||reviewDelta!==0)) return json({error:'Operating results can only advance with a completed game day.'},409);
         if(dayDelta===1){
           const boatCount=Array.isArray(s.boats)?Math.max(1,s.boats.length):1;
