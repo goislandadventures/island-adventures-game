@@ -11,7 +11,8 @@
     "test:maintenance": "tsx scripts/verify-maintenance.ts",
     "test:hidden-rolls": "tsx scripts/verify-hidden-rolls.ts",
     "test:weather-climate": "tsx scripts/verify-weather-climate.ts",
-    "test:second-boat": "tsx scripts/verify-second-boat.ts"
+    "test:second-boat": "tsx scripts/verify-second-boat.ts",
+    "test:calendar-business-save": "tsx scripts/verify-calendar-business-save.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
