@@ -45,7 +45,7 @@ export default function Splash({ onEnter }: { onEnter: () => void }) {
     <div className="splashDolphin dolphinOne">🐬</div>
     <div className="splashDolphin dolphinTwo">🐬</div>
 
-    <div className="splashIsland one">🌴</div>
+    <img src="/images/island-map-3d.svg" alt="" aria-hidden="true" className="splashIslandArt"/>
 
     <div className="splashBoat boatOne">🚤</div>
     <div className="splashBoat boatTwo">🛥️</div>
