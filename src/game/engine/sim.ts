@@ -1,5 +1,5 @@
 import { boatTemplates, defaultProducts, islands, marinas } from '../data/content';
-import type { Booking, CompanyState, DayResult, MarketingFocus, MarketingMarketSnapshot, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
+import type { Booking, CompanyState, DayResult, EquipmentSystem, FailurePhase, MaintenanceDecision, MaintenanceIncident, MarketingFocus, MarketingMarketSnapshot, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
 import { RNG } from './rng';
 import { applyLoanPayments, calendarForDay, canonicalMarketingFocus, customerForTrip, customerProfiles, marketingPerformance, nextHundred, nextThreeHundred, serviceStatus } from './depth';
 import { applyHurricane, hurricaneForDay } from './hurricane';
@@ -12,6 +12,46 @@ const STARTING_CASH=10000;
 const STARTUP_LOAN_APR=.2499;
 const STARTUP_LOAN_DAYS=730;
 const startupValue=(cash:number,debt:number)=>Math.round(cash-debt);
+
+const maintenanceCatalog:Array<{
+  component:EquipmentSystem; title:string; description:string; severity:'minor'|'moderate'|'major';
+  cheapCost:number; premiumCost:number; replaceCost:number;
+}>=[
+  {component:'battery',title:'Battery failure',description:'The battery quit and needs attention before you trust it on another charter.',severity:'minor',cheapCost:140,premiumCost:280,replaceCost:460},
+  {component:'propeller',title:'Prop damage',description:'The prop struck something and came back damaged.',severity:'moderate',cheapCost:260,premiumCost:520,replaceCost:900},
+  {component:'pump',title:'Bilge pump failure',description:'The bilge pump gave up. The boat should not go back into service until you decide how to handle it.',severity:'major',cheapCost:190,premiumCost:360,replaceCost:620},
+  {component:'steering',title:'Steering problem',description:'The steering developed enough play to require a real decision before the next trip.',severity:'major',cheapCost:340,premiumCost:720,replaceCost:1100},
+  {component:'engine',title:'Engine problem',description:'The engine developed a mechanical issue that cannot be ignored forever.',severity:'major',cheapCost:480,premiumCost:1100,replaceCost:2200},
+  {component:'electronics',title:'Electrical failure',description:'A critical electrical circuit failed and needs troubleshooting or replacement.',severity:'moderate',cheapCost:180,premiumCost:420,replaceCost:760},
+  {component:'upholstery',title:'Upholstery damage',description:'The boat came back with damaged seating that guests will notice.',severity:'minor',cheapCost:120,premiumCost:300,replaceCost:620},
+  {component:'safety',title:'Safety gear issue',description:'Inspection found safety equipment that needs repair or replacement.',severity:'major',cheapCost:150,premiumCost:340,replaceCost:680},
+  {component:'navigation',title:'Navigation equipment failure',description:'The navigation electronics are unreliable and need attention.',severity:'moderate',cheapCost:240,premiumCost:540,replaceCost:980}
+];
+
+const failurePhaseLabel:Record<FailurePhase,string>={
+  overnight:'Overnight',
+  inspection:'During inspection',
+  'pre-departure':'Before departure',
+  charter:'During the charter'
+};
+
+function buildMaintenanceIncident(rng:RNG,day:number,boat:OwnedBoat):MaintenanceIncident{
+  const base=rng.pick(maintenanceCatalog);
+  const phase=rng.pick<FailurePhase>(['overnight','inspection','pre-departure','charter']);
+  return {
+    id:`M-${day}-${boat.instanceId}-${rng.int(1000,9999)}`,
+    boatInstanceId:boat.instanceId,
+    boatName:boat.name,
+    component:base.component,
+    phase,
+    title:base.title,
+    description:base.description,
+    severity:base.severity,
+    cheapCost:base.cheapCost,
+    premiumCost:base.premiumCost,
+    replaceCost:base.replaceCost
+  };
+}
 
 export const captainCandidates:StaffMember[]=[
   {id:'capt-casey',name:'Casey Morgan',role:'captain',skill:.78,reliability:.91,hourlyRate:35},
@@ -362,6 +402,63 @@ function computeCompanyValue(state:CompanyState):number{
   const earnedReputation=state.reviewCount*Math.max(20,state.rating*18);
   const profitValue=Math.max(0,state.lifetimeProfit*.20);
   return Math.round(state.cash+fleet-state.debt+earnedReputation+profitValue);
+}
+
+export function resolveMaintenanceIncident(state:CompanyState,decision:MaintenanceDecision):CompanyState{
+  const incident=state.pendingMaintenance;
+  if(!incident)return state;
+  const cost=decision==='cheap'?incident.cheapCost:decision==='premium'?incident.premiumCost:decision==='replace'?incident.replaceCost:0;
+  if(cost>state.cash)throw new Error('Not enough cash for that repair choice.');
+
+  const boats=state.boats.map(boat=>{
+    if(boat.instanceId!==incident.boatInstanceId)return boat;
+    const deferred=boat.deferredMaintenance??0;
+    if(decision==='defer'){
+      return {
+        ...boat,
+        condition:clamp(boat.condition-.035,.20,1),
+        reliability:clamp(boat.reliability-.055,.20,.99),
+        deferredMaintenance:deferred+1
+      };
+    }
+    if(decision==='cheap'){
+      return {
+        ...boat,
+        condition:clamp(boat.condition+.015,.20,1),
+        reliability:clamp(boat.reliability+.005,.20,.99),
+        deferredMaintenance:Math.max(0,deferred-1)
+      };
+    }
+    if(decision==='premium'){
+      return {
+        ...boat,
+        condition:clamp(boat.condition+.055,.20,1),
+        reliability:clamp(boat.reliability+.03,.20,.99),
+        deferredMaintenance:Math.max(0,deferred-1)
+      };
+    }
+    return {
+      ...boat,
+      condition:clamp(boat.condition+.09,.20,1),
+      reliability:clamp(boat.reliability+.06,.20,.99),
+      deferredMaintenance:0
+    };
+  });
+
+  const label=decision==='cheap'?'Budget repair':decision==='premium'?'Premium repair':decision==='replace'?'Component replacement':'Deferred repair';
+  const next:CompanyState={
+    ...state,
+    cash:state.cash-cost,
+    boats,
+    pendingMaintenance:undefined,
+    ledger:[
+      ...state.ledger,
+      {day:state.day,category:'maintenance',amount:-cost,memo:`${label}: ${incident.boatName} · ${incident.title}`}
+    ]
+  };
+  next.lifetimeProfit-=cost;
+  next.companyValue=computeCompanyValue(next);
+  return next;
 }
 
 export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>,market?:MarketingMarketSnapshot,demoMode=false):{state:CompanyState;result:DayResult}{
