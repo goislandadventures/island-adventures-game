@@ -36,3 +36,9 @@ splash.wav
 Source: orangeduck/Corange demo asset
 Original splash asset: OpenGameArt “slogan droplets”
 License: CC0 / Public Domain
+
+
+giggle.wav
+Source: microsoft/pxt-microbit sim/public/sounds/giggle.wav
+Copyright (c) Microsoft Corporation
+License: MIT
