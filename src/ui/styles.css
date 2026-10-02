@@ -725,3 +725,43 @@ input:focus,select:focus{
   .boatTwo{right:-3%;bottom:9%}
   .boatThree{right:25%;bottom:30%;width:110px}
 }
+
+/* Captain School highlights the real control being taught */
+.bottomNav.tutorialNav{
+  z-index:95;
+  pointer-events:none;
+}
+.bottomNav.tutorialNav button{
+  opacity:.34;
+  filter:saturate(.45);
+}
+.bottomNav.tutorialNav button.coachTarget{
+  opacity:1;
+  filter:none;
+  position:relative;
+  z-index:2;
+  background:linear-gradient(#fff9bf,#ffd957)!important;
+  box-shadow:0 0 0 4px rgba(255,255,255,.96),0 0 0 8px rgba(246,196,83,.75),inset 0 -3px 0 #e4ad35!important;
+  transform:translateY(-7px)!important;
+  animation:coachTargetPulse 1.15s ease-in-out infinite alternate;
+}
+.bottomNav.tutorialNav button.coachTarget:after{
+  content:"HERE";
+  position:absolute;
+  left:50%;
+  top:-20px;
+  transform:translateX(-50%);
+  padding:2px 6px;
+  border:2px solid var(--ia-navy);
+  border-radius:7px;
+  background:#fff;
+  color:var(--ia-navy-deep);
+  font-size:.48rem;
+  font-weight:1000;
+  letter-spacing:.08em;
+  box-shadow:0 2px 0 var(--ia-navy-deep);
+}
+@keyframes coachTargetPulse{
+  from{translate:0 0}
+  to{translate:0 -3px}
+}
