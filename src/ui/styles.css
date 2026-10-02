@@ -935,3 +935,43 @@ input:focus,select:focus{
   .coachBubble{margin-right:58px!important}
   .coachNext{right:92px!important}
 }
+
+/* Captain School final avatar placement */
+.turtleCoachAvatar{
+  width:126px!important;
+  height:126px!important;
+  right:-2px!important;
+  bottom:6px!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  z-index:6!important;
+  pointer-events:none!important;
+}
+.turtleCoachAvatar img{
+  position:static!important;
+  display:block!important;
+  width:126px!important;
+  height:126px!important;
+  max-width:126px!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  background:transparent!important;
+  border:0!important;
+  filter:drop-shadow(0 7px 5px rgba(23,50,77,.3))!important;
+}
+.coachBubble{
+  margin-right:54px!important;
+  padding-right:18px!important;
+}
+.coachNext{
+  right:116px!important;
+}
+@media(max-width:430px){
+  .turtleCoachAvatar{width:112px!important;height:112px!important;right:0!important;bottom:7px!important}
+  .turtleCoachAvatar img{width:112px!important;height:112px!important;max-width:112px!important}
+  .coachBubble{margin-right:46px!important;padding-right:14px!important}
+  .coachNext{right:102px!important}
+}
