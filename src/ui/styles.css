@@ -1879,3 +1879,8 @@ input:focus,select:focus{
 .dayAdvanceBox{display:flex;flex-direction:column;gap:3px;margin:16px 0 12px;padding:12px 13px;background:#fff3bd;border:2px solid #17324d;border-radius:14px;box-shadow:0 3px 0 #17324d}
 .dayAdvanceBox b{font-size:1rem}
 .dayAdvanceBox span{font-size:.8rem;color:#526b7c;font-weight:750}
+
+/* Captain School save clarity */
+.coachAutoSave{margin-top:10px;padding:9px 10px;border-radius:10px;background:#eefaf4;border:2px solid rgba(23,50,77,.16);font-size:.78rem;font-weight:800;line-height:1.35;color:#294c3b}
+.tutorialAutoSaveBar{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#eefaf4;border:2px solid rgba(23,50,77,.16);box-shadow:0 2px 0 rgba(23,50,77,.12);font-size:.82rem;font-weight:800;color:#294c3b}
+.choiceSavedToast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:90;padding:9px 14px;border-radius:999px;background:#17324d;color:white;font-weight:900;font-size:.8rem;box-shadow:0 5px 16px rgba(23,50,77,.28);pointer-events:none}
