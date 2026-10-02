@@ -195,13 +195,9 @@ function hasWeatherIncident(result:DayResult){
   });
 }
 
-function resultStars(result:DayResult){
-  const completed=result.tripOutcomes
-    .filter(outcome=>outcome.satisfaction>0)
-    .map(outcome=>Math.max(1,Math.min(5,Math.round(outcome.satisfaction*5))));
-  if(completed.length)return Math.min(...completed);
-  if(result.reviews.length)return Math.min(...result.reviews.map(review=>review.stars));
-  return 0;
+function reviewStars(result:DayResult){
+  if(!result.reviews.length)return 0;
+  return Math.min(...result.reviews.map(review=>review.stars));
 }
 
 export function playDayResultSounds(result:DayResult,_dayNumber:number){
@@ -226,7 +222,7 @@ export function playDayResultSounds(result:DayResult,_dayNumber:number){
     at+=.78;
   }
 
-  const stars=resultStars(result);
+  const stars=reviewStars(result);
   if(stars){
     playGameSound(stars>=5?'yay':stars===4?'hmm':'awww',at+.08);
   }
