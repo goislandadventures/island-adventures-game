@@ -80,7 +80,10 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const calendar=useMemo(()=>calendarForDay(state.day,state,marketingMarket),[state,marketingMarket]);
   const hurricane=useMemo(()=>state.day<=7?null:hurricaneForDay(state),[state.day,state.seed]);
   const businessEvent=useMemo(()=>hurricane?null:businessEventForDay(state),[state.day,state.seed,state.lastBusinessEventDay,hurricane]);
-  const todaysBookings=useMemo(()=>generateDemand(state,weather,marketingMarket,mode==='demo'),[state,weather,marketingMarket,mode]);
+  const todaysBookings=useMemo(()=>{
+    const order:Record<'morning'|'afternoon'|'evening',number>={morning:0,afternoon:1,evening:2};
+    return [...generateDemand(state,weather,marketingMarket,mode==='demo')].sort((a,b)=>order[a.timeSlot]-order[b.timeSlot]);
+  },[state,weather,marketingMarket,mode]);
   const currentIsland=islands.find(i=>i.id===state.islandId)??islands[0];
   const currentMarina=marinas.find(m=>m.id===state.marinaId);
   const ready=Boolean(currentMarina&&state.boats.length>0);
