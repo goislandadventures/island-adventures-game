@@ -75,7 +75,7 @@ export default function TutorialCard({day,onNavigate,onSpotlight}:{day:number;on
         </button>
       </div>
       <div className="turtleCoachAvatar" aria-hidden="true">
-        <img src="/branding/captain-school-turtle.jpg" alt=""/>
+        <img src="/branding/captain-school-turtle.webp" alt=""/>
       </div>
     </div>
   </div>;
