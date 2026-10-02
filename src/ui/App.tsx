@@ -156,9 +156,19 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     const tripsLeavingDock=!hurricane&&todaysBookings.some(b=>(tripDecisions[b.id]??'run')!=='cancel');
     if(tripsLeavingDock)playGameSound('motor');
     const out=simulateDay(state,tripDecisions,marketingMarket,mode==='demo');
-    commit(out.state);setLast(out.result);setTab('dock');
+    let nextState=out.state;
+    if(mode==='registered'&&state.day===7&&out.state.day===8&&!out.state.captainSchoolReviewsReset){
+      nextState={...out.state,rating:0,reviewCount:0,captainSchoolReviewsReset:true,captainSchoolFarewellSeen:false};
+    }
+    commit(nextState);setLast(out.result);setTab('dock');
     playDayResultSounds(out.result,state.day);
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
+  };
+  const finishCaptainSchoolFarewell=()=>{
+    if(mode!=='registered')return;
+    commit({...state,captainSchoolFarewellSeen:true});
+    setTab('dock');
+    window.scrollTo(0,0);
   };
   const continueAfterResults=()=>{
     setLast(null);
@@ -243,7 +253,21 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onActiveChange={setCaptainSchoolActive}/>} 
-    {state.day===8&&mode!=='demo'&&<section className="card weekTwoUnlock"><span className="eyebrow">CAPTAIN SCHOOL COMPLETE</span><h2>Week 2: now you own the decisions.</h2><p>The training wheels are off. Guests want different things, busy season matters, used boats come and go, bills keep showing up, and surprise decisions happen. There is no single right way to build your company now.</p></section>}
+    {mode==='registered'&&state.day>=8&&state.captainSchoolReviewsReset&&!state.captainSchoolFarewellSeen&&<div className="captainSchoolOverlay captainSchoolFarewell" role="dialog" aria-modal="true" aria-label="Captain School complete">
+      <div className="captainSchoolShade"/>
+      <div className="turtleCoach">
+        <div className="coachBubble">
+          <span>CAPTAIN SCHOOL COMPLETE</span>
+          <h3>Good luck, {state.captainName || 'Captain'}.</h3>
+          <p>You made it through your training week and built a real bankroll along the way.</p>
+          <div className="farewellCallout"><b>💵 Your money stays.</b><small>Every dollar you earned in Captain School remains in your company.</small></div>
+          <div className="farewellCallout"><b>⭐ Your training stars are cleared.</b><small>Your first week was practice. From this point forward, customer reviews count for real toward your rating and rankings.</small></div>
+          <p className="farewellHelp">You already know how to earn great reviews. If you ever need a refresher, tap <b>? Help</b> to review the rules you learned in Captain School.</p>
+          <div className="coachActions"><button className="coachNext" onClick={finishCaptainSchoolFarewell}>Let’s Go →</button></div>
+        </div>
+        <div className="turtleCoachAvatar"><img src="/branding/captain-school-turtle-exact-v10.webp?v=10" alt="Captain School turtle wishing the captain good luck"/></div>
+      </div>
+    </div>}
     {setupStarted&&<section className="calendarStrip"><div><span>{calendar.monthName.toUpperCase()} {calendar.dayOfMonth} · WEEK {calendar.week}</span><strong>{calendar.season==='busy'?'BUSY SEASON':calendar.season==='warmup'?'WARMING UP':'SLOW SEASON'}</strong></div><p>{calendar.note}</p><b>{calendar.marketingLabel} marketing · Demand ×{calendar.demandMultiplier.toFixed(2)}</b></section>}
 
     {tab==='dock'&&<>
