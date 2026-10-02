@@ -10,9 +10,6 @@ export type MaintenanceLevel = 'dock' | '100hr' | '300hr';
 export type MaintenanceDecision = 'cheap' | 'premium' | 'replace' | 'defer';
 export type EquipmentSystem = 'engine'|'propeller'|'battery'|'steering'|'pump'|'electronics'|'upholstery'|'safety'|'navigation';
 export type FailurePhase = 'overnight'|'inspection'|'pre-departure'|'charter';
-export type MaintenanceDecision = 'cheap' | 'premium' | 'replace' | 'defer';
-export type EquipmentSystem = 'engine'|'propeller'|'battery'|'steering'|'pump'|'electronics'|'upholstery'|'safety'|'navigation';
-export type FailurePhase = 'overnight'|'inspection'|'pre-departure'|'charter';
 
 export interface Island {
   id:string; name:string; unlockValue:number; tourism:number; adCompetition:number; fuelPrice:number;
