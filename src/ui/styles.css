@@ -1443,3 +1443,45 @@ input:focus,select:focus{
   .captainSchoolV5 .coachBubble{margin-right:72px!important}
   .captainSchoolV5 .coachNext{right:124px!important}
 }
+
+/* 2026-10-01 final mobile splash spacing */
+.splashV4BoatPontoon{
+  right:5%!important;
+  bottom:6%!important;
+  width:clamp(142px,23vw,215px)!important;
+}
+.splashV4BoatCenter{
+  right:5%!important;
+  bottom:27%!important;
+  width:clamp(132px,21vw,195px)!important;
+}
+.splashV4BoatDeck{
+  left:3%!important;
+  bottom:18%!important;
+}
+@media(max-width:520px){
+  .splashV4BoatPontoon{
+    right:4%!important;
+    bottom:5.5%!important;
+    width:132px!important;
+  }
+  .splashV4BoatCenter{
+    right:3%!important;
+    bottom:27%!important;
+    width:118px!important;
+  }
+  .splashV4BoatDeck{
+    left:1%!important;
+    bottom:18%!important;
+    width:138px!important;
+  }
+  .splashV4Tower{
+    left:48%!important;
+  }
+  .captainSchoolV5 .turtleCoachAvatar{
+    width:154px!important;
+    height:154px!important;
+    right:-8px!important;
+    bottom:-2px!important;
+  }
+}
