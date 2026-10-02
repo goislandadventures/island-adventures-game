@@ -126,7 +126,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   </main>;
 
   return <main className="shell">
-    <header className="brand"><div className="logo" style={{background:state.companyColor}}>IA</div><div className="brandText"><h1>{state.companyName}</h1><p>{state.captainName} · {currentIsland.name}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
+    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{state.companyName}</h1><p>{state.captainName} · {currentIsland.name}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {!demoComplete&&<TutorialCard day={state.day}/>}
