@@ -1,15 +1,16 @@
 import { useEffect,useMemo,useState } from 'react';
 import { tutorialForDay } from '../game/data/tutorial';
 
-const KEY='island-adventures-turtle-school-v3';
+const KEY='island-adventures-turtle-school-v4';
+
+export type TutorialTab='dock'|'grow'|'fleet'|'leaders'|'books';
+type CoachMessage={label:string;title?:string;text:string;tab?:TutorialTab;spotlight?:TutorialTab};
 
 function dismissedDays():number[]{
   try{return JSON.parse(localStorage.getItem(KEY)||'[]') as number[];}catch{return [];}
 }
 
-type CoachMessage={label:string;title?:string;text:string};
-
-export default function TutorialCard({day}:{day:number}){
+export default function TutorialCard({day,onNavigate,onSpotlight}:{day:number;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
   const [dismissed,setDismissed]=useState(()=>dismissedDays().includes(day));
@@ -21,15 +22,16 @@ export default function TutorialCard({day}:{day:number}){
 
   const messages=useMemo<CoachMessage[]>(()=>{
     if(!tutorial)return [];
-    const dayOneTour=day===1?[
-      {label:'WELCOME TO CAPTAIN SCHOOL',title:'Meet your guide',text:'Before we touch the boats, I’ll show you the five buttons at the bottom. You do not need to know anything about boats or business to play.'},
-      {label:'BOTTOM BUTTON · 1 OF 5',title:'⚓ Dock',text:'This is home base. Check weather, see today’s bookings, choose what to do with each trip, handle hurricanes, and move the day forward.'},
-      {label:'BOTTOM BUTTON · 2 OF 5',title:'📣 Grow',text:'This is how you get guests. Pick a marketing channel, choose a daily budget, watch how crowded that channel is, and set your trip prices.'},
-      {label:'BOTTOM BUTTON · 3 OF 5',title:'🚤 Fleet',text:'Your boats and crew live here. Check hull and engine age, engine hours, maintenance, insurance, captains, used boats, and island expansion.'},
-      {label:'BOTTOM BUTTON · 4 OF 5',title:'🏆 Rank',text:'See how your company compares with real registered players. Reviews, revenue, profit and company value can all become bragging rights.'},
-      {label:'BOTTOM BUTTON · 5 OF 5',title:'📒 Books',text:'This is the money scoreboard. See what you earned, what you spent, what you owe, and the milestones you are chasing.'},
-      {label:'DAY 1 STARTS NOW',title:tutorial.title,text:tutorial.summary}
-    ]:[{label:`CAPTAIN SCHOOL · DAY ${day} OF 7`,title:tutorial.title,text:tutorial.summary}];
+    const dayOneTour:CoachMessage[]=day===1?[
+      {label:'WELCOME TO CAPTAIN SCHOOL',title:'I’m your deckhand for the week',text:'First, I’ll show you the five buttons at the bottom. You do not need to know boats, money, or business stuff. I’ll teach it as we go.',tab:'dock'},
+      {label:'BOTTOM BUTTON · 1 OF 5',title:'⚓ Dock',text:'This is home base. Check the weather, see who booked, choose what to do with each trip, handle storms, and finish the day.',tab:'dock',spotlight:'dock'},
+      {label:'BOTTOM BUTTON · 2 OF 5',title:'📣 Grow',text:'This is where you find guests. Pick where to advertise, choose how much to spend, watch how crowded each channel is, and change trip prices.',tab:'grow',spotlight:'grow'},
+      {label:'BOTTOM BUTTON · 3 OF 5',title:'🚤 Fleet',text:'Everything with boats and crew lives here: engine hours, service, insurance, captains, used boats, and eventually new islands.',tab:'fleet',spotlight:'fleet'},
+      {label:'BOTTOM BUTTON · 4 OF 5',title:'🏆 Rank',text:'This is the real-player scoreboard. See how your company compares in reviews, revenue, profit, rating, and company value.',tab:'leaders',spotlight:'leaders'},
+      {label:'BOTTOM BUTTON · 5 OF 5',title:'📒 Books',text:'This tells you where the money went. See income, expenses, debt, loan payments, profit, and the goals you are chasing.',tab:'books',spotlight:'books'},
+      {label:'TOUR COMPLETE',title:'Back to the Dock',text:'That’s the whole game in five buttons. Now we’ll build your first charter company one choice at a time.',tab:'dock',spotlight:'dock'},
+      {label:'DAY 1 STARTS NOW',title:tutorial.title,text:tutorial.summary,tab:'dock'}
+    ]:[{label:`CAPTAIN SCHOOL · DAY ${day} OF 7`,title:tutorial.title,text:tutorial.summary,tab:day===2?'grow':day===3||day===4?'fleet':day===5?'books':'dock'}];
 
     return [
       ...dayOneTour,
@@ -38,15 +40,25 @@ export default function TutorialCard({day}:{day:number}){
     ];
   },[tutorial,day]);
 
+  const current=messages[Math.min(step,Math.max(0,messages.length-1))];
+
+  useEffect(()=>{
+    if(dismissed||!current)return;
+    if(current.tab)onNavigate?.(current.tab);
+    onSpotlight?.(current.spotlight??null);
+    return()=>onSpotlight?.(null);
+  },[current,dismissed,onNavigate,onSpotlight]);
+
   if(!tutorial||dismissed||!messages.length)return null;
 
   const last=step===messages.length-1;
   const dismiss=()=>{
     const days=Array.from(new Set([...dismissedDays(),day]));
     try{localStorage.setItem(KEY,JSON.stringify(days));}catch{}
+    onSpotlight?.(null);
+    if(day===1)onNavigate?.('dock');
     setDismissed(true);
   };
-  const current=messages[Math.min(step,messages.length-1)];
 
   return <div className="captainSchoolOverlay" role="dialog" aria-modal="true" aria-label={`Captain School Day ${day}`}>
     <div className="captainSchoolShade"/>
