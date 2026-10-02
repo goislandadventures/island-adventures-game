@@ -1,7 +1,7 @@
 import { useEffect,useMemo,useState } from 'react';
 import { tutorialForDay } from '../game/data/tutorial';
 
-const KEY='island-adventures-turtle-school-v2';
+const KEY='island-adventures-turtle-school-v3';
 
 function dismissedDays():number[]{
   try{return JSON.parse(localStorage.getItem(KEY)||'[]') as number[];}catch{return [];}
@@ -19,8 +19,18 @@ export default function TutorialCard({day}:{day:number}){
 
   const messages=useMemo(()=>{
     if(!tutorial)return [];
+    const dayOneTour=day===1?[
+      {label:'WELCOME TO CAPTAIN SCHOOL',title:'Meet your guide',text:'Before we touch the boats, I’ll show you the five buttons at the bottom. You do not need to know anything about boats or business to play.'},
+      {label:'BOTTOM BUTTON · 1 OF 5',title:'⚓ Dock',text:'This is home base. Check weather, see today’s bookings, choose what to do with each trip, handle hurricanes, and move the day forward.'},
+      {label:'BOTTOM BUTTON · 2 OF 5',title:'📣 Grow',text:'This is how you get guests. Pick a marketing channel, choose a daily budget, watch how crowded that channel is, and set your trip prices.'},
+      {label:'BOTTOM BUTTON · 3 OF 5',title:'🚤 Fleet',text:'Your boats and crew live here. Check hull and engine age, engine hours, maintenance, insurance, captains, used boats, and island expansion.'},
+      {label:'BOTTOM BUTTON · 4 OF 5',title:'🏆 Rank',text:'See how your company compares with real registered players. Reviews, revenue, profit and company value can all become bragging rights.'},
+      {label:'BOTTOM BUTTON · 5 OF 5',title:'📒 Books',text:'This is the money scoreboard. See what you earned, what you spent, what you owe, and the milestones you are chasing.'},
+      {label:'DAY 1 STARTS NOW',title:tutorial.title,text:tutorial.summary}
+    ]:[{label:`CAPTAIN SCHOOL · DAY ${day} OF 7`,title:tutorial.title,text:tutorial.summary}];
+
     return [
-      {label:`CAPTAIN SCHOOL · DAY ${day} OF 7`,text:tutorial.summary},
+      ...dayOneTour,
       ...tutorial.lessons.map((text,index)=>({label:`LESSON ${index+1} OF ${tutorial.lessons.length}`,text})),
       {label:"TODAY'S GOAL",text:tutorial.goal}
     ];
@@ -41,7 +51,7 @@ export default function TutorialCard({day}:{day:number}){
     <div className="turtleCoach">
       <div className="coachBubble">
         <span>{current.label}</span>
-        {step===0&&<h3>{tutorial.title}</h3>}
+        {'title' in current&&current.title&&<h3>{current.title}</h3>}
         <p>{current.text}</p>
         <div className="coachProgress" aria-label={`Step ${step+1} of ${messages.length}`}>
           {messages.map((_,i)=><i key={i} className={i<=step?'done':''}/>)}
@@ -51,7 +61,7 @@ export default function TutorialCard({day}:{day:number}){
         </button>
       </div>
       <div className="turtleCoachAvatar" aria-hidden="true">
-        <img src="/images/island-adventures-charter-game.jpg" alt=""/>
+        <img src="/branding/captain-school-turtle.jpg" alt=""/>
       </div>
     </div>
   </div>;
