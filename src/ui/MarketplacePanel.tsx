@@ -1,4 +1,6 @@
 import { buyUsedBoat, generateUsedBoatMarket } from '../game/engine/depth';
+import { boatTemplates } from '../game/data/content';
+import BoatArt from './BoatArt';
 import type { CompanyState } from '../game/types/models';
 
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
@@ -14,7 +16,7 @@ export default function MarketplacePanel({state,onChange}:{state:CompanyState;on
     <div className="sectionHead"><div><span className="eyebrow">USED-BOAT MARKET</span><h2>Today’s listings</h2></div><strong>Refreshes daily</strong></div>
     <p className="muted">Cheap boats can accelerate growth or turn into repair bills. Inspect condition, hours and reliability before buying.</p>
     {listings.length?listings.map(l=><div className="marketCard" key={l.listingId}>
-      <div className="marketBoat">🚤</div>
+      <div className="marketBoat"><BoatArt kind={boatTemplates.find(b=>b.id===l.templateId)?.class??'deck'}/></div>
       <div className="grow">
         <b>{l.name}</b>
         <small>Hull {l.year} · engine {l.engineYear} · {Math.round(l.engineHours)} hrs</small>
