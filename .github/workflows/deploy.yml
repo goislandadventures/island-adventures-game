@@ -90,14 +90,21 @@ jobs:
             done
             test "$BUILD" = "$GITHUB_SHA"
 
-            curl -fsS -D /tmp/headers.txt -o /tmp/root.html -H "Cache-Control: no-cache" "$BASE/?verify=$GITHUB_SHA"
-            tr -d '\r' < /tmp/headers.txt > /tmp/headers-clean.txt
+            ROOT_BUILD=""
+            for attempt in {1..15}; do
+              curl -fsS -D /tmp/headers.txt -o /tmp/root.html -H "Cache-Control: no-cache" "$BASE/?verify=$GITHUB_SHA&root_attempt=$attempt"
+              tr -d '\r' < /tmp/headers.txt > /tmp/headers-clean.txt
+              ROOT_BUILD=$(awk -F': ' 'tolower($1)=="x-island-build"{print $2}' /tmp/headers-clean.txt | tail -1)
+              echo "Root build attempt $attempt: $ROOT_BUILD"
+              if [ "$ROOT_BUILD" = "$GITHUB_SHA" ]; then break; fi
+              sleep 2
+            done
             echo "--- response headers ---"
             cat /tmp/headers-clean.txt
             echo "--- root build markers ---"
             grep -n 'pageshow\|build-id\|src="/assets/' /tmp/root.html || true
             grep -qi '^cache-control:.*no-store' /tmp/headers-clean.txt
-            grep -qi "^x-island-build: $GITHUB_SHA$" /tmp/headers-clean.txt
+            test "$ROOT_BUILD" = "$GITHUB_SHA"
             grep -q 'window.addEventListener.*pageshow' /tmp/root.html
           }
 
