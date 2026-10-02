@@ -44,6 +44,8 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const [companyColor,setCompanyColor]=useState(state.companyColor||'#f6c453');
   const [demoComplete,setDemoComplete]=useState(mode==='demo'&&state.day>7);
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
+  const [choiceSaved,setChoiceSaved]=useState(false);
+  const choiceSavedTimer=useRef<number|undefined>(undefined);
   const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
   const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
   const [helpOpen,setHelpOpen]=useState(false);
@@ -111,7 +113,14 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     return()=>window.clearTimeout(timer);
   },[state,mode,setupStarted]);
 
-  const commit=(next:CompanyState)=>setState(next);
+  const commit=(next:CompanyState)=>{
+    setState(next);
+    if(state.day<=7&&(tab==='grow'||tab==='fleet')){
+      setChoiceSaved(true);
+      if(choiceSavedTimer.current)window.clearTimeout(choiceSavedTimer.current);
+      choiceSavedTimer.current=window.setTimeout(()=>setChoiceSaved(false),1800);
+    }
+  };
   const begin=()=>{if(!captainName.trim()||!companyName.trim())return;commit(createCompany(captainName.trim(),companyName.trim(),companyColor));};
   const chooseMarina=(id:string)=>{try{commit(rentSlip(state,id));}catch(e){alert((e as Error).message)}};
   const chooseBoat=(id:string)=>{try{commit(buyBoat(state,id));}catch(e){alert((e as Error).message)}};
@@ -269,15 +278,16 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
       {demoComplete&&<section className="card demoComplete"><span className="eyebrow">WEEK 1 COMPLETE</span><h2>You graduated from Captain School.</h2><p>You completed all seven tutorial days. Create a free owner account to keep building boats, reviews, revenue and company value. Registered companies are eligible for the Island leaderboards.</p><button className="primary big" onClick={onUpgrade}>Create Account & Keep Playing →</button><p className="fine">Your demo is intentionally not ranked.</p></section>}
     </>}
 
-    {tab==='grow'&&<><section className="card page"><MarketingPanel state={state} onChange={commit} market={marketingMarket}/><span className="eyebrow">PRICING</span><h2>Your charter menu</h2><p className="muted">Higher prices improve margin but can lower conversion.</p>{state.products.map(p=><div className="priceCard" key={p.type}><div className="tripEmoji">{tripIcon[p.type]}</div><div className="grow"><b>{p.name}</b><small>{p.durationHours} hours · demand {pct(p.baseDemand)}</small></div><label className="priceInput"><span>$</span><input type="number" min="99" step="10" value={p.price} disabled={demoComplete} onChange={e=>changePrice(p.type,Number(e.target.value))}/></label></div>)}</section></>}
+    {tab==='grow'&&<><div className="tutorialAutoSaveBar">✓ Auto-saved as you choose. No Save button needed—tap <b>Dock</b> when you’re finished.</div><section className="card page"><MarketingPanel state={state} onChange={commit} market={marketingMarket}/><span className="eyebrow">PRICING</span><h2>Your charter menu</h2><p className="muted">Higher prices improve margin but can lower conversion.</p>{state.products.map(p=><div className="priceCard" key={p.type}><div className="tripEmoji">{tripIcon[p.type]}</div><div className="grow"><b>{p.name}</b><small>{p.durationHours} hours · demand {pct(p.baseDemand)}</small></div><label className="priceInput"><span>$</span><input type="number" min="99" step="10" value={p.price} disabled={demoComplete} onChange={e=>changePrice(p.type,Number(e.target.value))}/></label></div>)}</section></>}
 
-    {tab==='fleet'&&<><section className="card page"><span className="eyebrow">FLEET</span><h2>{state.boats.length?`${state.boats.length} boat${state.boats.length>1?'s':''}`:'No boat yet'}</h2>{state.boats.map(b=>{const svc=serviceStatus(b);return <div key={b.instanceId} className="fleetSummary"><div className="bigBoat"><BoatArt kind={b.class}/></div><h3>{b.name}</h3><div className="stats"><div><span>Hull year</span><b>{b.year}</b></div><div><span>Engine year</span><b>{b.engineYear}</b></div><div><span>Condition</span><b>{pct(b.condition)}</b></div><div><span>Reliability</span><b>{pct(b.reliability)}</b></div><div><span>Engine hours</span><b>{b.engineHours.toFixed(1)}</b></div><div><span>Next service</span><b className={svc.kind==='ok'?'positive':'negative'}>{svc.label}</b></div><div><span>Insurance</span><b>{b.insured?'Covered':'No coverage'}</b></div></div></div>})}</section><MarketplacePanel state={state} onChange={commit}/><GrowthPanel state={state} onChange={commit}/></>}
+    {tab==='fleet'&&<><div className="tutorialAutoSaveBar">✓ Auto-saved as you choose. No Save button needed—tap <b>Dock</b> when you’re finished.</div><section className="card page"><span className="eyebrow">FLEET</span><h2>{state.boats.length?`${state.boats.length} boat${state.boats.length>1?'s':''}`:'No boat yet'}</h2>{state.boats.map(b=>{const svc=serviceStatus(b);return <div key={b.instanceId} className="fleetSummary"><div className="bigBoat"><BoatArt kind={b.class}/></div><h3>{b.name}</h3><div className="stats"><div><span>Hull year</span><b>{b.year}</b></div><div><span>Engine year</span><b>{b.engineYear}</b></div><div><span>Condition</span><b>{pct(b.condition)}</b></div><div><span>Reliability</span><b>{pct(b.reliability)}</b></div><div><span>Engine hours</span><b>{b.engineHours.toFixed(1)}</b></div><div><span>Next service</span><b className={svc.kind==='ok'?'positive':'negative'}>{svc.label}</b></div><div><span>Insurance</span><b>{b.insured?'Covered':'No coverage'}</b></div></div></div>})}</section><MarketplacePanel state={state} onChange={commit}/><GrowthPanel state={state} onChange={commit}/></>}
 
     {tab==='books'&&<><ProgressGoals state={state}/><section className="card page"><span className="eyebrow">COMPANY BOOKS</span><h2>{state.companyName}</h2><div className="resultGrid"><div><span>Fares + tips earned</span><b>{money(state.lifetimeRevenue)}</b></div><div><span>Lifetime profit</span><b>{money(state.lifetimeProfit)}</b></div><div><span>Debt</span><b>{money(state.debt)}</b></div><div><span>Daily loan payments</span><b>{money((state.loans??[]).reduce((s,l)=>s+l.dailyPayment,0))}</b></div><div><span>Days operated</span><b>{state.daysOperated}</b></div></div><h3>Recent ledger</h3>{state.ledger.slice(-8).reverse().map((x,i)=><div className="ledger" key={`${x.day}-${i}`}><span>Day {x.day} · {x.memo}</span><b className={x.amount>=0?'positive':'negative'}>{x.amount>=0?'+':''}{money(x.amount)}</b></div>)}</section></>}
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
     {menuOpen&&mode!=='registered'&&<GameMenu onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onHelp={openHelpFromMenu}/>}
+    {choiceSaved&&<div className="choiceSavedToast" role="status">✓ Choice saved</div>}
     {!captainSchoolActive&&<button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
