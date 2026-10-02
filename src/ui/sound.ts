@@ -23,7 +23,7 @@ function audioContext(){
   if(!Ctx)return null;
   ctx=new Ctx();
   master=ctx.createGain();
-  master.gain.value=.16;
+  master.gain.value=.26;
   master.connect(ctx.destination);
   return ctx;
 }
@@ -43,14 +43,14 @@ function tone(
   endFrequency?:number
 ){
   const c=unlock(); if(!c||!master)return;
-  const start=c.currentTime+when;
+  const start=c.currentTime+Math.max(0,when);
   const osc=c.createOscillator();
   const amp=c.createGain();
   osc.type=type;
-  osc.frequency.setValueAtTime(Math.max(30,frequency),start);
-  if(endFrequency)osc.frequency.exponentialRampToValueAtTime(Math.max(30,endFrequency),start+duration);
+  osc.frequency.setValueAtTime(Math.max(40,frequency),start);
+  if(endFrequency)osc.frequency.exponentialRampToValueAtTime(Math.max(40,endFrequency),start+duration);
   amp.gain.setValueAtTime(.0001,start);
-  amp.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),start+.012);
+  amp.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),start+.01);
   amp.gain.exponentialRampToValueAtTime(.0001,start+duration);
   osc.connect(amp);amp.connect(master);
   osc.start(start);osc.stop(start+duration+.03);
@@ -66,9 +66,9 @@ function noise(duration:number,when=0,gain=.11,low=250,high=5000){
   const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=low;
   const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=high;
   const amp=c.createGain();
-  const start=c.currentTime+when;
+  const start=c.currentTime+Math.max(0,when);
   amp.gain.setValueAtTime(.0001,start);
-  amp.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),start+.025);
+  amp.gain.exponentialRampToValueAtTime(Math.max(.0002,gain),start+.018);
   amp.gain.exponentialRampToValueAtTime(.0001,start+duration);
   src.connect(hp);hp.connect(lp);lp.connect(amp);amp.connect(master);
   src.start(start);src.stop(start+duration+.03);
@@ -76,69 +76,99 @@ function noise(duration:number,when=0,gain=.11,low=250,high=5000){
 
 function canPlay(name:GameSound){
   const now=performance.now();
-  const min=name==='click'?55:180;
+  const min=name==='click'?55:160;
   if(now-(lastPlayed[name]??0)<min)return false;
   lastPlayed[name]=now;
   return true;
 }
 
-export function playGameSound(name:GameSound){
+/**
+ * All important gameplay sounds are synthesized and scheduled directly on the
+ * Web Audio clock from the player's tap. This is much more reliable on iOS than
+ * setTimeout-driven audio, and the important frequencies are kept above ~140 Hz
+ * so they survive an iPhone speaker.
+ */
+export function playGameSound(name:GameSound,delaySeconds=0){
   if(!canPlay(name))return;
   const c=unlock(); if(!c)return;
+  const d=Math.max(0,delaySeconds);
 
   switch(name){
     case 'click':
-      tone(520,.045,0,.08,'square',330);
+      tone(620,.04,d,.11,'square',390);
       break;
+
     case 'cash':
-      tone(880,.08,0,.13,'square',1040);
-      tone(1320,.11,.08,.12,'square',1560);
-      tone(1760,.07,.17,.08,'triangle');
+      // Drawer clack + bright two-part "ka-ching".
+      noise(.075,d,.15,420,5200);
+      tone(980,.07,d+.035,.17,'square',760);
+      tone(1480,.13,d+.09,.22,'triangle',1860);
+      tone(1980,.18,d+.17,.20,'triangle',2380);
+      tone(2480,.20,d+.24,.12,'sine',2140);
       break;
+
     case 'yay':
-      tone(523,.15,0,.16,'triangle');
-      tone(659,.15,.11,.16,'triangle');
-      tone(784,.16,.22,.17,'triangle');
-      tone(1047,.32,.34,.20,'triangle');
-      noise(.34,.32,.035,650,5200);
+      // Bright arcade celebration that reads clearly as a win on a phone.
+      tone(660,.13,d,.19,'triangle',760);
+      tone(830,.13,d+.09,.20,'triangle',940);
+      tone(1040,.14,d+.18,.21,'triangle',1180);
+      tone(1320,.30,d+.28,.24,'triangle',1540);
+      tone(1760,.22,d+.34,.10,'sine',1980);
+      noise(.28,d+.29,.035,900,6500);
       break;
+
     case 'hmm':
-      tone(247,.24,0,.13,'triangle',220);
-      tone(196,.31,.18,.12,'triangle',174);
+      tone(330,.20,d,.17,'triangle',285);
+      tone(247,.30,d+.16,.16,'triangle',210);
       break;
+
     case 'awww':
-      tone(330,.72,0,.13,'sawtooth',165);
-      tone(247,.70,.05,.07,'triangle',123);
+      tone(440,.62,d,.16,'sawtooth',220);
+      tone(330,.64,d+.04,.09,'triangle',165);
       break;
+
     case 'motor':
-      tone(72,1.05,0,.14,'sawtooth',112);
-      tone(93,1.03,.02,.08,'square',145);
-      noise(1.04,0,.055,55,700);
-      tone(156,.28,.82,.07,'sawtooth',205);
-      break;
-    case 'service':
-      for(let i=0;i<4;i++){
-        tone(620+i*35,.11,i*.12,.08,'square',760+i*45);
-        noise(.10,i*.12,.035,850,6500);
+      // Outboard start, catch and rev. Mid harmonics keep it audible on mobile.
+      noise(.13,d,.13,180,2400);
+      tone(185,.10,d,.18,'square',145);
+      tone(150,.82,d+.08,.20,'sawtooth',315);
+      tone(300,.80,d+.09,.10,'triangle',620);
+      for(let i=0;i<7;i++){
+        const t=d+.12+i*.105;
+        tone(235+i*18,.072,t,.065,'square',300+i*26);
       }
-      for(let i=0;i<3;i++)tone(1600,.025,.53+i*.065,.05,'square',900);
+      noise(.76,d+.09,.075,130,1900);
+      tone(420,.22,d+.76,.10,'sawtooth',610);
       break;
+
+    case 'service':
+      // Short electric drill / ratchet sequence.
+      for(let i=0;i<5;i++){
+        tone(760+i*55,.105,d+i*.105,.10,'square',1120+i*65);
+        noise(.09,d+i*.105,.045,850,7200);
+      }
+      for(let i=0;i<3;i++)tone(1850,.026,d+.58+i*.065,.075,'square',1050);
+      break;
+
     case 'weather':
-      noise(1.18,0,.09,80,1350);
-      tone(82,.48,.30,.15,'sine',42);
-      noise(.34,.31,.13,35,420);
-      tone(58,.42,.42,.10,'triangle',38);
+      // Wind/rain wash plus a phone-audible thunder crack.
+      noise(1.05,d,.12,160,1850);
+      noise(.16,d+.26,.17,220,4200);
+      tone(230,.40,d+.27,.17,'sawtooth',115);
+      tone(345,.22,d+.31,.09,'triangle',170);
       break;
+
     case 'splash':
-      noise(.42,0,.12,500,7000);
-      tone(420,.34,0,.06,'sine',125);
-      tone(190,.22,.08,.05,'sine',90);
+      noise(.40,d,.15,600,7600);
+      tone(520,.30,d,.08,'sine',165);
+      tone(240,.20,d+.08,.06,'sine',120);
       break;
+
     case 'giggle':
-      tone(690,.09,0,.10,'triangle',820);
-      tone(840,.08,.10,.09,'triangle',730);
-      tone(760,.08,.20,.10,'triangle',910);
-      tone(930,.12,.30,.09,'triangle',790);
+      tone(760,.085,d,.12,'triangle',940);
+      tone(960,.075,d+.09,.11,'triangle',810);
+      tone(850,.075,d+.18,.12,'triangle',1060);
+      tone(1080,.11,d+.27,.11,'triangle',880);
       break;
   }
 }
@@ -157,28 +187,49 @@ export function installButtonSounds(){
 
 function hasWeatherIncident(result:DayResult){
   if(result.hurricaneSummary)return true;
-  return result.reviews.some(review=>
-    review.reasons.some(reason=>/storm|wind|rain|rough|weather|lightning/i.test(reason))
-  );
+  if(result.reviews.some(review=>review.reasons.some(reason=>/storm|wind|rain|rough|weather|lightning/i.test(reason))))return true;
+  return result.tripOutcomes.some(outcome=>{
+    if(outcome.decision!=='run')return false;
+    if(result.weather.stormRisk>.23||result.weather.windKts>=18)return true;
+    return outcome.tripType==='snorkel'&&result.weather.windKts>=15;
+  });
 }
 
-export function playDayResultSounds(result:DayResult,dayNumber:number){
-  const timers:number[]=[];
-  const later=(ms:number,sound:GameSound)=>timers.push(window.setTimeout(()=>playGameSound(sound),ms));
+function resultStars(result:DayResult){
+  const completed=result.tripOutcomes
+    .filter(outcome=>outcome.satisfaction>0)
+    .map(outcome=>Math.max(1,Math.min(5,Math.round(outcome.satisfaction*5))));
+  if(completed.length)return Math.min(...completed);
+  if(result.reviews.length)return Math.min(...result.reviews.map(review=>review.stars));
+  return 0;
+}
 
-  if(result.revenue+result.tips>0)later(520,'cash');
+export function playDayResultSounds(result:DayResult,_dayNumber:number){
+  // Schedule the entire result sequence now, while the Run/Close button's
+  // user gesture owns the unlocked AudioContext. No JavaScript timers.
+  let at=result.tripsRun>0?.95:.10;
 
-  if(hasWeatherIncident(result))later(1050,'weather');
-  else if(result.maintenanceEvent)later(1050,'service');
-  else if(result.wildlifeEvent){
-    later(1050,'splash');
-    if(dayNumber%3===0)later(1370,'giggle');
+  if(result.revenue+result.tips>0){
+    playGameSound('cash',at);
+    at+=.58;
   }
 
-  if(result.reviews.length){
-    const worst=Math.min(...result.reviews.map(r=>r.stars));
-    later(1850,worst>=5?'yay':worst===4?'hmm':'awww');
+  if(hasWeatherIncident(result)){
+    playGameSound('weather',at);
+    at+=1.12;
+  }else if(result.maintenanceEvent){
+    playGameSound('service',at);
+    at+=.82;
+  }else if(result.wildlifeEvent){
+    playGameSound('splash',at);
+    playGameSound('giggle',at+.34);
+    at+=.78;
   }
 
-  return ()=>timers.forEach(window.clearTimeout);
+  const stars=resultStars(result);
+  if(stars){
+    playGameSound(stars>=5?'yay':stars===4?'hmm':'awww',at+.08);
+  }
+
+  return ()=>{};
 }
