@@ -14,8 +14,32 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   const [marketing,setMarketing]=useState(false);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
+  const [signedInPlayer,setSignedInPlayer]=useState<Player|undefined>();
+  const [signedInState,setSignedInState]=useState<CompanyState|null>(null);
+  const [checkingSession,setCheckingSession]=useState(true);
 
-  useEffect(()=>{ me().then(async r=>{ if(r.player){ const c=await loadCompany().catch(()=>({state:null})); onStart('registered',r.player,c.state); }}).catch(()=>{}); },[]);
+  useEffect(()=>{
+    let alive=true;
+    me().then(async r=>{
+      if(!alive)return;
+      if(r.player){
+        const company=await loadCompany().catch(()=>({state:null}));
+        if(!alive)return;
+        setSignedInPlayer(r.player);
+        setSignedInState(company.state);
+      }
+    }).catch(()=>{}).finally(()=>{if(alive)setCheckingSession(false)});
+    return()=>{alive=false};
+  },[]);
+
+  const chooseRegistered=()=>{
+    if(checkingSession)return;
+    if(signedInPlayer){
+      onStart('registered',signedInPlayer,signedInState);
+      return;
+    }
+    setView('account');
+  };
 
   const submit=async()=>{
     setBusy(true); setError('');
@@ -44,9 +68,10 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
   return <main className="modeShell"><section className="modeCard">
     <img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="modeLogo"/>
     <h2>How do you want to play?</h2>
-    <button className="modeChoice primary" onClick={()=>setView('account')}><b>🏆 Play & Compete</b><span>Create an account, save in the cloud and chase the leaderboards.</span></button>
+    <button className="modeChoice primary" disabled={checkingSession} onClick={chooseRegistered}><b>🏆 Play & Compete</b><span>{checkingSession?'Checking your account…':signedInPlayer?`Continue as ${signedInPlayer.displayName||signedInPlayer.display_name||signedInPlayer.email}. Cloud save and leaderboards.`:'Create an account, save in the cloud and chase the leaderboards.'}</span></button>
     <button className="modeChoice" onClick={()=>onStart('demo')}><b>🎮 Try One Week</b><span>No account. Play all 7 days of Captain School and learn the core game.</span></button>
     <button className="modeChoice devChoice" onClick={()=>onStart('owner')}><b>🧪 Development Test</b><span>Full local testing with no login. Never enters public rankings.</span></button>
+    {signedInPlayer&&<p className="fine signedInNote">Signed in account detected. You can still choose Demo or Development Test without affecting your online company.</p>}
     <p className="fine">Account email is used for your game account. Marketing email is optional and requires the separate checkbox above. <a href="https://www.goislandadventures.com/privacy-policy-2/" target="_blank" rel="noreferrer">Privacy Policy</a></p>
   </section></main>;
 }
