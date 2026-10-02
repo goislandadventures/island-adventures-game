@@ -179,5 +179,5 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 }
 
 function IslandMap({active,boat=false,companyValue=0}:{active:number;boat?:boolean;companyValue?:number}){
-  return <div className="ocean">{islands.map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''} ${companyValue>=i.unlockValue?'unlocked':'locked'}`}><img src="/images/island-map-3d.webp" className="islandArt" alt="" aria-hidden="true"/><small>{i.name}</small>{companyValue<i.unlockValue&&<em aria-label="Locked">🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤</div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
+  return <div className="ocean">{islands.map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''} ${companyValue>=i.unlockValue?'unlocked':'locked'}`}><img src="/images/island-map-3d.svg" className="islandArt" alt="" aria-hidden="true"/><small>{i.name}</small>{companyValue<i.unlockValue&&<em aria-label="Locked">🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤</div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
 }
