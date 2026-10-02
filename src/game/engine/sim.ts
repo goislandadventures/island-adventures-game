@@ -156,7 +156,7 @@ function operatingBoatCount(state:CompanyState):number{
   if(!state.boats.length)return 0;
   return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
-function generateDemoDemand(state:CompanyState):Booking[]{
+export function generateDemoDemand(state:CompanyState):Booking[]{
   if(!state.boats.length)return [];
   const rng=new RNG((state.seed^0x5f3759df)+(state.day*104729));
   const products=[...state.products];
@@ -364,7 +364,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   state.loans=state.loans??[];
   const weather=generateWeather(state);
   const calendar=calendarForDay(state.day,state,market);
-  const hurricane=hurricaneForDay(state);
+  const hurricane=demoMode&&state.day<=7?null:hurricaneForDay(state);
   const rng=new RNG(state.seed+state.day*12347);
   let revenue=0,tips=0,expenses=0,refunds=0,tripsRun=0,fixedCosts=0;
   const reviews:Review[]=[];
