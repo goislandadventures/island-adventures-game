@@ -9,7 +9,7 @@ import type { GameMode } from './StartMode';
 import type { Player } from './api';
 import { loadMarketingMarket,syncCompany } from './api';
 import Leaderboard from './Leaderboard';
-import TutorialCard from './TutorialCard';
+import TutorialCard,{type TutorialTab} from './TutorialCard';
 import GrowthPanel from './GrowthPanel';
 import MarketingPanel from './MarketingPanel';
 import MarketplacePanel from './MarketplacePanel';
@@ -42,6 +42,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [demoComplete,setDemoComplete]=useState(mode==='demo'&&state.day>7);
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
+  const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
 
   const setupStarted=Boolean(state.captainName&&state.companyName);
   const previousSetupStarted=useRef(setupStarted);
@@ -192,7 +193,13 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
-    <nav className="bottomNav"><button className={tab==='dock'?'active':''} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button><button className={tab==='grow'?'active':''} onClick={()=>setTab('grow')}><span>📣</span>Grow</button><button className={tab==='fleet'?'active':''} onClick={()=>setTab('fleet')}><span>🚤</span>Fleet</button><button className={tab==='leaders'?'active':''} onClick={()=>setTab('leaders')}><span>🏆</span>Rank</button><button className={tab==='books'?'active':''} onClick={()=>setTab('books')}><span>📒</span>Books</button></nav>
+    <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
+      <button className={`${tab==='dock'?'active ':''}${tutorialSpotlight==='dock'?'coachTarget':''}`} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button>
+      <button className={`${tab==='grow'?'active ':''}${tutorialSpotlight==='grow'?'coachTarget':''}`} onClick={()=>setTab('grow')}><span>📣</span>Grow</button>
+      <button className={`${tab==='fleet'?'active ':''}${tutorialSpotlight==='fleet'?'coachTarget':''}`} onClick={()=>setTab('fleet')}><span>🚤</span>Fleet</button>
+      <button className={`${tab==='leaders'?'active ':''}${tutorialSpotlight==='leaders'?'coachTarget':''}`} onClick={()=>setTab('leaders')}><span>🏆</span>Rank</button>
+      <button className={`${tab==='books'?'active ':''}${tutorialSpotlight==='books'?'coachTarget':''}`} onClick={()=>setTab('books')}><span>📒</span>Books</button>
+    </nav>
   </main>;
 }
 
