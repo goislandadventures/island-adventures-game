@@ -1,21 +1,23 @@
 import { useEffect,useMemo,useState } from 'react';
 import { tutorialForDay } from '../game/data/tutorial';
 
-const KEY='island-adventures-turtle-school-v7';
+const KEY='island-adventures-turtle-school-v8';
 
 export type TutorialTab='dock'|'grow'|'fleet'|'leaders'|'books';
 type CoachMessage={label:string;title?:string;text:string;tab?:TutorialTab;spotlight?:TutorialTab};
 
-function dismissedDays():number[]{
-  try{return JSON.parse(localStorage.getItem(KEY)||'[]') as number[];}catch{return [];}
+function storageKey(mode:'demo'|'owner'|'registered',playerId?:string){return mode==='registered'?KEY+':'+(playerId||'account'):KEY+':owner';}
+function dismissedDays(mode:'demo'|'owner'|'registered',playerId?:string):number[]{
+  if(mode==='demo')return [];
+  try{return JSON.parse(localStorage.getItem(storageKey(mode,playerId))||'[]') as number[];}catch{return [];}
 }
 
-export default function TutorialCard({day,onNavigate,onSpotlight}:{day:number;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void}){
+export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
-  const [dismissed,setDismissed]=useState(()=>dismissedDays().includes(day));
+  const [dismissed,setDismissed]=useState(()=>dismissedDays(mode,playerId).includes(day));
 
-  useEffect(()=>{setDismissed(dismissedDays().includes(day));setStep(0)},[day]);
+  useEffect(()=>{setDismissed(dismissedDays(mode,playerId).includes(day));setStep(0)},[day,mode,playerId]);
 
   const messages=useMemo<CoachMessage[]>(()=>{
     if(!tutorial)return [];
@@ -43,10 +45,13 @@ export default function TutorialCard({day,onNavigate,onSpotlight}:{day:number;on
   if(!tutorial||dismissed||!messages.length)return null;
   const last=step===messages.length-1;
   const dismiss=()=>{
-    const days=Array.from(new Set([...dismissedDays(),day]));
-    try{localStorage.setItem(KEY,JSON.stringify(days));}catch{}
+    if(mode!=='demo'){
+      const days=Array.from(new Set([...dismissedDays(mode,playerId),day]));
+      try{localStorage.setItem(storageKey(mode,playerId),JSON.stringify(days));}catch{}
+    }
     onSpotlight?.(null);
     if(day===1)onNavigate?.('dock');
+    if(day===7)onWeekComplete?.();
     setDismissed(true);
   };
 
