@@ -71,7 +71,28 @@ jobs:
 
       - name: Deploy Worker and assets
         if: steps.cf.outputs.ready == 'true'
-        run: npx wrangler deploy
+        run: npx wrangler deploy --var BUILD_ID:$GITHUB_SHA
+
+      - name: Verify live shell freshness
+        if: steps.cf.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          check_live () {
+            BASE="$1"
+            echo "Checking $BASE"
+            BUILD=$(curl -fsS -H "Cache-Control: no-cache" "$BASE/api/build-id?verify=$GITHUB_SHA")
+            test "$BUILD" = "$GITHUB_SHA"
+
+            curl -fsS -D /tmp/headers.txt -o /tmp/root.html -H "Cache-Control: no-cache" "$BASE/?verify=$GITHUB_SHA"
+            tr -d '\r' < /tmp/headers.txt > /tmp/headers-clean.txt
+            grep -qi '^cache-control:.*no-store' /tmp/headers-clean.txt
+            grep -qi "^x-island-build: $GITHUB_SHA$" /tmp/headers-clean.txt
+            grep -q 'window.addEventListener.*pageshow' /tmp/root.html
+          }
+
+          check_live "https://island-adventures-game.goislandadventures.workers.dev"
+          check_live "https://theislandadventures.com"
 
       - name: Live account smoke test
         if: steps.cf.outputs.ready == 'true'
