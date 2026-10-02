@@ -6,13 +6,13 @@ const KEY='island-adventures-turtle-school-v8';
 export type TutorialTab='dock'|'grow'|'fleet'|'leaders'|'books';
 type CoachMessage={label:string;title?:string;text:string;tab?:TutorialTab;spotlight?:TutorialTab};
 
-function storageKey(mode:'demo'|'owner'|'registered',playerId?:string){return mode==='registered'?KEY+':'+(playerId||'account'):KEY+':owner';}
-function dismissedDays(mode:'demo'|'owner'|'registered',playerId?:string):number[]{
+function storageKey(mode:'demo'|'registered',playerId?:string){return KEY+':'+(playerId||'account');}
+function dismissedDays(mode:'demo'|'registered',playerId?:string):number[]{
   if(mode==='demo')return [];
   try{return JSON.parse(localStorage.getItem(storageKey(mode,playerId))||'[]') as number[];}catch{return [];}
 }
 
-export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete,onOpenHelp,onActiveChange}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void;onOpenHelp?:()=>void;onActiveChange?:(active:boolean)=>void}){
+export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete,onOpenHelp,onActiveChange}:{day:number;mode:'demo'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void;onOpenHelp?:()=>void;onActiveChange?:(active:boolean)=>void}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
   const [dismissed,setDismissed]=useState(()=>dismissedDays(mode,playerId).includes(day));
