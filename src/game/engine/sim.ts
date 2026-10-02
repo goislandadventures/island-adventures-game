@@ -21,7 +21,17 @@ export const captainCandidates:StaffMember[]=[
 
 export interface PlanAssessment { experienceScore:number; reasons:string[]; headline:string; }
 
-export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
+function freshCompanySeed(){
+  try{
+    const values=new Uint32Array(1);
+    crypto.getRandomValues(values);
+    return values[0]||1;
+  }catch{
+    return Math.floor(Math.random()*0xffffffff)||1;
+  }
+}
+
+export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=freshCompanySeed()):CompanyState{
   return {day:1,seed,captainName,companyName,companyColor,cash:STARTING_CASH,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:STARTING_CASH,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'search',reviewAsk:true},loans:[],startupLoanTaken:false};
 }
 
@@ -201,16 +211,9 @@ export function generateDemoDemand(state:CompanyState):Booking[]{
 }
 
 export function generateDemand(state:CompanyState,weather=generateWeather(state),market?:MarketingMarketSnapshot,demoMode=false):Booking[]{
-  if(demoMode)return generateDemoDemand(state);
-  if(!state.boats.length||hurricaneForDay(state))return [];
-  if(state.day===1){
-    const sandbar=state.products.find(p=>p.type==='sandbar')!;
-    const snorkel=state.products.find(p=>p.type==='snorkel')!;
-    return [
-      {id:'D1-sandbar-0900',tripType:'sandbar',partySize:5,revenue:sandbar.price,source:'maps',guestExpectation:.72,timeSlot:'morning',customerType:'family',customerLabel:'Family Crew',boatsRequired:1,neverTips:false,tipCeiling:.28},
-      {id:'D1-snorkel-1330',tripType:'snorkel',partySize:4,revenue:snorkel.price,source:'organic',guestExpectation:.82,timeSlot:'afternoon',customerType:'snorkeler',customerLabel:'Serious Snorkelers',boatsRequired:1,neverTips:false,tipCeiling:.32}
-    ];
-  }
+  if(!state.boats.length)return [];
+  if(state.day<=7)return generateDemoDemand(state);
+  if(hurricaneForDay(state))return [];
   const island=islands.find(i=>i.id===state.islandId)!;
   const rng=new RNG(state.seed^(state.day*7919));
   const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
@@ -370,7 +373,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
   state.loans=state.loans??[];
   const weather=generateWeather(state);
   const calendar=calendarForDay(state.day,state,market);
-  const hurricane=demoMode&&state.day<=7?null:hurricaneForDay(state);
+  const hurricane=state.day<=7?null:hurricaneForDay(state);
   const rng=new RNG(state.seed+state.day*12347);
   let revenue=0,tips=0,expenses=0,refunds=0,tripsRun=0,fixedCosts=0;
   const reviews:Review[]=[];
