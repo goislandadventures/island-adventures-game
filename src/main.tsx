@@ -16,7 +16,7 @@ let refreshingForBuild=false;
 async function ensureFreshBuild(){
   if(!BUILD_ID||refreshingForBuild)return;
   try{
-    const res=await fetch('/build-id.txt?ts='+Date.now(),{cache:'no-store'});
+    const res=await fetch('/api/build-id?ts='+Date.now(),{cache:'no-store'});
     if(!res.ok)return;
     const remote=(await res.text()).trim();
     if(remote&&remote!==BUILD_ID){
