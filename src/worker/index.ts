@@ -49,6 +49,25 @@ export default {
       return json({metric,results:rows.results});
     }
 
+    if (url.pathname === '/api/marketing-market' && request.method==='GET') {
+      const cutoff=Date.now()-30*86400000;
+      const rows=await env.DB.prepare('SELECT state_json FROM companies WHERE updated_at>=?').bind(cutoff).all();
+      const channelIds=['search','maps','social','hotel','content'] as const;
+      const counts:Record<string,number>={search:0,maps:0,social:0,hotel:0,content:0};
+      const totalPlayers=rows.results.length;
+      for(const row of rows.results as any[]){
+        try{
+          const state=JSON.parse(String(row.state_json||'{}'));
+          const budget=Number(state?.marketing?.dailyBudget||0);
+          let focus=String(state?.marketing?.focus||'search');
+          if(focus==='organic')focus='search';
+          if(budget>0&&channelIds.includes(focus as any))counts[focus]=(counts[focus]||0)+1;
+        }catch{}
+      }
+      const channels=Object.fromEntries(channelIds.map(id=>[id,{players:counts[id]||0,saturation:totalPlayers?Number(((counts[id]||0)/totalPlayers).toFixed(4)):0}]));
+      return json({totalPlayers,activeWindowDays:30,channels});
+    }
+
     if (url.pathname === '/api/auth/register' && request.method==='POST') {
       const body:any=await request.json();
       const email=String(body.email||'').trim().toLowerCase();
