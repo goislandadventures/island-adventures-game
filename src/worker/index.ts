@@ -1,4 +1,4 @@
-export interface Env { DB: D1Database; }
+export interface Env { DB: D1Database; ASSETS: Fetcher; BUILD_ID?: string; }
 
 const enc = new TextEncoder();
 const SESSION_DAYS = 30;
@@ -43,7 +43,10 @@ function metricSql(metric:string) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'1.0.0' });
+    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'1.0.0', buildId:env.BUILD_ID||null },200,{'Cache-Control':'no-store'});
+    if (url.pathname === '/api/build-id' && request.method==='GET') {
+      return new Response(env.BUILD_ID||'',{status:200,headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store, no-cache, must-revalidate, max-age=0','Pragma':'no-cache','Expires':'0'}});
+    }
 
     if (url.pathname === '/api/leaderboard' && request.method==='GET') {
       const metric=url.searchParams.get('metric')||'value';
@@ -202,6 +205,15 @@ export default {
       return json({ok:true});
     }
 
-    return new Response('Island Adventures API', { status: 200 });
+    const asset=await env.ASSETS.fetch(request);
+    if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'||url.pathname==='/build-id.txt')){
+      const headers=new Headers(asset.headers);
+      headers.set('Cache-Control','no-store, no-cache, must-revalidate, max-age=0');
+      headers.set('Pragma','no-cache');
+      headers.set('Expires','0');
+      if(env.BUILD_ID)headers.set('X-Island-Build',env.BUILD_ID);
+      return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
+    }
+    return asset;
   }
 };
