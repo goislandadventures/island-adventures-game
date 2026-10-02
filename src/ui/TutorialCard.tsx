@@ -31,7 +31,12 @@ export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,o
       {label:'TOUR COMPLETE',title:'Back to the Dock',text:'That’s the whole game in five buttons. Now we’ll build your first charter company one choice at a time.',tab:'dock',spotlight:'dock'},
       {label:'DAY 1 STARTS NOW',title:tutorial.title,text:tutorial.summary,tab:'dock'}
     ]:[{label:`CAPTAIN SCHOOL · DAY ${day} OF 7`,title:tutorial.title,text:tutorial.summary,tab:day===2?'grow':day===3||day===4?'fleet':day===5?'books':'dock'}];
-    return [...dayOneTour,...tutorial.lessons.map((text,index)=>({label:`LESSON ${index+1} OF ${tutorial.lessons.length}`,text})),{label:"TODAY'S GOAL",text:tutorial.goal}];
+    const backToGame:CoachMessage={
+      label:'BACK TO THE GAME',
+      title:'Return to the Dock',
+      text:"Review this tab and make any changes you want. Your choices are saved automatically. When you're finished, tap Got it for today, then tap Dock at the bottom to return to today's bookings and keep playing."
+    };
+    return [...dayOneTour,...tutorial.lessons.map((text,index)=>({label:`LESSON ${index+1} OF ${tutorial.lessons.length}`,text})),{label:"TODAY'S GOAL",text:tutorial.goal},backToGame];
   },[tutorial,day]);
 
   const current=messages[Math.min(step,Math.max(0,messages.length-1))];
