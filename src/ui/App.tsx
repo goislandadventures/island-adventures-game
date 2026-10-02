@@ -18,6 +18,7 @@ import ProgressGoals from './ProgressGoals';
 import HurricaneCard from './HurricaneCard';
 import HelpPanel from './HelpPanel';
 import GameMenu from './GameMenu';
+import { playDayResultSounds,playGameSound } from './sound';
 import BoatArt from './BoatArt';
 import './styles.css';
 
@@ -117,7 +118,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const insure=()=>{try{commit(insureFleet(state));}catch(e){alert((e as Error).message)}};
   const skipInsurance=(id:string)=>commit(declineInsurance(state,id));
   const startupLoan=(amount:number)=>{try{commit(takeStartupLoan(state,amount));}catch(e){alert((e as Error).message)}};
-  const doMaintenance=(instanceId:string,level:'dock'|'100hr'|'300hr')=>{try{commit(maintainBoat(state,instanceId,level));}catch(e){alert((e as Error).message)}};
+  const doMaintenance=(instanceId:string,level:'dock'|'100hr'|'300hr')=>{try{commit(maintainBoat(state,instanceId,level));playGameSound('service');}catch(e){alert((e as Error).message)}};
   const changePrice=(type:TripType,value:number)=>commit(setPrice(state,type,value));
 
   useEffect(()=>{
@@ -143,8 +144,11 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
     if(businessEvent)return;
     if(hurricane&&state.hurricanePlan?.day!==state.day)return;
     if(!hurricane&&todaysBookings.some(b=>!tripDecisions[b.id]))return;
+    const tripsLeavingDock=!hurricane&&todaysBookings.some(b=>(tripDecisions[b.id]??'run')!=='cancel');
+    if(tripsLeavingDock)playGameSound('motor');
     const out=simulateDay(state,tripDecisions,marketingMarket,mode==='demo');
     commit(out.state);setLast(out.result);setTab('dock');
+    playDayResultSounds(out.result,state.day);
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
   };
   const restartDemo=()=>{
