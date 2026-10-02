@@ -1,7 +1,7 @@
 import { boatTemplates, defaultProducts, islands, marinas } from '../data/content';
-import type { Booking, CompanyState, DayResult, MarketingFocus, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
+import type { Booking, CompanyState, DayResult, MarketingFocus, MarketingMarketSnapshot, Marina, OwnedBoat, Review, StaffMember, TripDecision, TripOutcome, TripProduct, WeatherDay } from '../types/models';
 import { RNG } from './rng';
-import { applyLoanPayments, calendarForDay, customerForTrip, customerProfiles, nextHundred, nextThreeHundred, serviceStatus } from './depth';
+import { applyLoanPayments, calendarForDay, canonicalMarketingFocus, customerForTrip, customerProfiles, marketingPerformance, nextHundred, nextThreeHundred, serviceStatus } from './depth';
 import { applyHurricane, hurricaneForDay } from './hurricane';
 
 const clamp = (n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
@@ -22,7 +22,7 @@ export const captainCandidates:StaffMember[]=[
 export interface PlanAssessment { stars:number; reasons:string[]; headline:string; }
 
 export function createCompany(captainName='Captain',companyName='Island Adventures',companyColor='#f6c453',seed=20261001):CompanyState{
-  return {day:1,seed,captainName,companyName,companyColor,cash:STARTING_CASH,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:STARTING_CASH,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'organic',reviewAsk:true},loans:[],startupLoanTaken:false};
+  return {day:1,seed,captainName,companyName,companyColor,cash:STARTING_CASH,debt:0,reputation:.50,rating:0,reviewCount:0,islandId:'harbor',boats:[],products:structuredClone(defaultProducts),bookings:[],ledger:[],companyValue:STARTING_CASH,lifetimeRevenue:0,lifetimeProfit:0,daysOperated:0,staff:[],marketing:{dailyBudget:0,focus:'search',reviewAsk:true},loans:[],startupLoanTaken:false};
 }
 
 export function rentSlip(state:CompanyState,marinaId:string):CompanyState{
@@ -113,7 +113,7 @@ export function setMarketing(state:CompanyState,dailyBudget:number,focus:Marketi
   return {...state,marketing:{...(state.marketing??{reviewAsk:true}),dailyBudget:clamp(Math.round(dailyBudget),0,250),focus}};
 }
 export function setReviewAsk(state:CompanyState,reviewAsk:boolean):CompanyState{
-  return {...state,marketing:{...(state.marketing??{dailyBudget:0,focus:'organic'}),reviewAsk}};
+  return {...state,marketing:{...(state.marketing??{dailyBudget:0,focus:'search'}),reviewAsk}};
 }
 export function setPrice(state:CompanyState,type:TripProduct['type'],price:number):CompanyState{
   return {...state,products:state.products.map(p=>p.type===type?{...p,price:Math.max(99,Math.round(price))}:p)};
@@ -156,7 +156,7 @@ function operatingBoatCount(state:CompanyState):number{
   if(!state.boats.length)return 0;
   return Math.min(state.boats.length,1+(state.staff?.length??0));
 }
-export function generateDemand(state:CompanyState,weather=generateWeather(state)):Booking[]{
+export function generateDemand(state:CompanyState,weather=generateWeather(state),market?:MarketingMarketSnapshot):Booking[]{
   if(!state.boats.length||hurricaneForDay(state))return [];
   if(state.day===1){
     const sandbar=state.products.find(p=>p.type==='sandbar')!;
@@ -170,10 +170,11 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
   const rng=new RNG(state.seed^(state.day*7919));
   const slots:Booking['timeSlot'][]=['morning','afternoon','evening'];
   const bookings:Booking[]=[];
-  const marketing=state.marketing??{dailyBudget:0,focus:'organic' as const,reviewAsk:true};
+  const marketing=state.marketing??{dailyBudget:0,focus:'search' as const,reviewAsk:true};
   const competition=Math.max(.35,island.adCompetition);
-  const paidBoost=1+Math.min(.42,(marketing.dailyBudget/250*.42)/competition);
-  const calendar=calendarForDay(state.day,state);
+  const marketingPerf=marketingPerformance(state,market);
+  const paidBoost=1+(marketingPerf.bookingBoost/competition);
+  const calendar=calendarForDay(state.day,state,market);
   const capacity=operatingBoatCount(state);
   for(const product of state.products){
     const ref=referencePrice[product.type]??product.price;
@@ -184,7 +185,7 @@ export function generateDemand(state:CompanyState,weather=generateWeather(state)
       let source:Booking['source'];
       if(state.reviewCount>=10&&state.reputation>.65&&rng.chance(.20))source=rng.chance(.55)?'repeat':'referral';
       else if(rng.chance(.10))source='marketplace';
-      else if(marketing.dailyBudget>0&&rng.chance(.55))source=marketing.focus==='content'?'content':marketing.focus;
+      else if(marketing.dailyBudget>0&&rng.chance(.55))source=canonicalMarketingFocus(marketing.focus);
       else source=rng.pick<Booking['source']>(['organic','maps','social','hotel','paid']);
       const customer=customerForTrip(rng,product.type,source);
       const largeGroup=capacity>=2&&product.type!=='sunset'&&rng.chance(.16);
@@ -318,13 +319,13 @@ function computeCompanyValue(state:CompanyState):number{
   return Math.round(state.cash+fleet-state.debt+earnedReputation+profitValue);
 }
 
-export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>):{state:CompanyState;result:DayResult}{
+export function simulateDay(input:CompanyState,decisions:Record<string,TripDecision>,market?:MarketingMarketSnapshot):{state:CompanyState;result:DayResult}{
   let state=structuredClone(input);
   state.staff=state.staff??[];
-  state.marketing=state.marketing??{dailyBudget:0,focus:'organic',reviewAsk:true};
+  state.marketing=state.marketing??{dailyBudget:0,focus:'search',reviewAsk:true};
   state.loans=state.loans??[];
   const weather=generateWeather(state);
-  const calendar=calendarForDay(state.day,state);
+  const calendar=calendarForDay(state.day,state,market);
   const hurricane=hurricaneForDay(state);
   const rng=new RNG(state.seed+state.day*12347);
   let revenue=0,tips=0,expenses=0,refunds=0,tripsRun=0,fixedCosts=0;
@@ -358,7 +359,7 @@ export function simulateDay(input:CompanyState,decisions:Record<string,TripDecis
     return {state,result:{weather,calendar,decisions,bookingsGenerated:[],tripsRun:0,reviews:catastrophicReviews,tripOutcomes:[],revenue:0,tips:0,expenses,refunds:0,loanPayment:loanResult.payment,fixedCosts,hurricaneSummary:storm.summary,destroyedBoatNames:storm.destroyedBoatNames,summary:storm.summary}};
   }
 
-  const bookings=generateDemand(state,weather);
+  const bookings=generateDemand(state,weather,market);
   const availableBoats=state.boats.slice(0,operatingBoatCount(state));
   if(!availableBoats.length){
     state.cash-=renew.expense+marketingSpend;
