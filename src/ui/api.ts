@@ -1,4 +1,4 @@
-import type { CompanyState } from '../game/types/models';
+import type { CompanyState,MarketingMarketSnapshot } from '../game/types/models';
 
 export type Player = { id:string; email:string; displayName?:string; display_name?:string; marketingOptIn?:boolean; marketing_opt_in?:number };
 
@@ -15,3 +15,5 @@ export const logout=()=>api<{ok:boolean}>('/api/auth/logout',{method:'POST'});
 export const loadCompany=()=>api<{state:CompanyState|null}>('/api/company');
 export const syncCompany=(state:CompanyState)=>api<{ok:boolean}>('/api/company/sync',{method:'POST',body:JSON.stringify({state})});
 export const loadLeaderboard=(metric:string)=>api<{metric:string;results:any[]}>(`/api/leaderboard?metric=${encodeURIComponent(metric)}`);
+
+export const loadMarketingMarket=()=>api<MarketingMarketSnapshot>('/api/marketing-market');
