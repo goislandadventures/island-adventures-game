@@ -906,3 +906,32 @@ input:focus,select:focus{
   .boatTwo{right:-5%;bottom:7%}
   .boatThree{right:21%;bottom:31%;width:128px}
 }
+
+/* Captain School turtle asset repair */
+.turtleCoachAvatar{
+  width:132px!important;
+  height:132px!important;
+  right:-8px!important;
+  bottom:-24px!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+.turtleCoachAvatar img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  background:transparent!important;
+  border:0!important;
+  filter:drop-shadow(0 8px 5px rgba(23,50,77,.28))!important;
+}
+.coachBubble{margin-right:66px!important}
+.coachNext{right:102px!important}
+@media(max-width:430px){
+  .turtleCoachAvatar{width:118px!important;height:118px!important;right:-5px!important;bottom:-20px!important}
+  .coachBubble{margin-right:58px!important}
+  .coachNext{right:92px!important}
+}
