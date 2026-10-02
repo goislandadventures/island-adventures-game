@@ -4,10 +4,10 @@ import { assessTripPlan,buyBoat,createCompany,declineInsurance,generateDemand,ge
 import { businessEventForDay,calendarForDay,customerProfiles,maintainBoat,serviceStatus } from '../game/engine/depth';
 import { hurricaneForDay } from '../game/engine/hurricane';
 import { clearGame,loadGame,normalizeState,saveGame } from '../game/engine/save';
-import type { CompanyState,DayResult,TripDecision,TripType } from '../game/types/models';
+import type { CompanyState,DayResult,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
 import type { GameMode } from './StartMode';
 import type { Player } from './api';
-import { syncCompany } from './api';
+import { loadMarketingMarket,syncCompany } from './api';
 import Leaderboard from './Leaderboard';
 import TutorialCard from './TutorialCard';
 import GrowthPanel from './GrowthPanel';
@@ -21,7 +21,7 @@ import './styles.css';
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
 const pct=(n:number)=>`${Math.round(n*100)}%`;
 const tripIcon:Record<string,string>={sandbar:'🏝️',snorkel:'🤿',sunset:'🌅',custom:'🧭',eco:'🐬',fishing:'🎣',cruise:'🚤'};
-const sourceFee:Record<string,string>={marketplace:'25% booking-site fee',hotel:'15% hotel referral fee',organic:'Direct · no booking fee',maps:'Direct · no booking fee',social:'Direct · no booking fee',referral:'Direct · no booking fee',repeat:'Direct · no booking fee',paid:'Direct · ad cost already paid',content:'Direct · no booking fee'};
+const sourceFee:Record<string,string>={marketplace:'25% booking-site fee',hotel:'15% hotel referral fee',search:'Google Search · ad cost already paid',organic:'Direct · no booking fee',maps:'Google Maps · ad cost already paid',social:'Social · ad cost already paid',referral:'Direct · no booking fee',repeat:'Direct · no booking fee',paid:'Direct · ad cost already paid',content:'Content/PR · no booking fee'};
 const companyColors=[
   {name:'Sunshine Yellow',value:'#f6c453'},
   {name:'Sunset Coral',value:'#ff8066'},
@@ -33,13 +33,14 @@ const companyColors=[
 export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void}){
   const [state,setState]=useState<CompanyState>(()=>initialState?normalizeState(initialState):(mode==='owner'?loadGame():null)??createCompany('',''));
   const [last,setLast]=useState<DayResult|null>(null);
-  const [tab,setTab]=useState<'dock'|'trips'|'fleet'|'books'|'leaders'>('dock');
+  const [tab,setTab]=useState<'dock'|'grow'|'fleet'|'books'|'leaders'>('dock');
   const [tripDecisions,setTripDecisions]=useState<Record<string,TripDecision>>({});
   const [captainName,setCaptainName]=useState(state.captainName);
   const [companyName,setCompanyName]=useState(state.companyName);
   const [companyColor,setCompanyColor]=useState(state.companyColor||'#f6c453');
   const [demoComplete,setDemoComplete]=useState(mode==='demo'&&state.day>7);
   const [syncStatus,setSyncStatus]=useState<'idle'|'saving'|'saved'|'error'>('idle');
+  const [marketingMarket,setMarketingMarket]=useState<MarketingMarketSnapshot|undefined>();
 
   const setupStarted=Boolean(state.captainName&&state.companyName);
   const previousSetupStarted=useRef(setupStarted);
@@ -62,13 +63,22 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
   const weather=useMemo(()=>generateWeather(state),[state]);
   const forecast=useMemo(()=>weatherLabel(weather),[weather]);
-  const calendar=useMemo(()=>calendarForDay(state.day,state),[state]);
+  const calendar=useMemo(()=>calendarForDay(state.day,state,marketingMarket),[state,marketingMarket]);
   const hurricane=useMemo(()=>hurricaneForDay(state),[state.day,state.seed]);
   const businessEvent=useMemo(()=>hurricane?null:businessEventForDay(state),[state.day,state.seed,state.lastBusinessEventDay,hurricane]);
-  const todaysBookings=useMemo(()=>generateDemand(state,weather),[state,weather]);
+  const todaysBookings=useMemo(()=>generateDemand(state,weather,marketingMarket),[state,weather,marketingMarket]);
   const currentIsland=islands.find(i=>i.id===state.islandId)??islands[0];
   const currentMarina=marinas.find(m=>m.id===state.marinaId);
   const ready=Boolean(currentMarina&&state.boats.length>0);
+
+  useEffect(()=>{
+    if(!setupStarted)return;
+    let alive=true;
+    const refresh=()=>loadMarketingMarket().then(data=>{if(alive)setMarketingMarket(data)}).catch(()=>{});
+    refresh();
+    const timer=window.setInterval(refresh,60000);
+    return()=>{alive=false;window.clearInterval(timer)};
+  },[setupStarted]);
 
   useEffect(()=>{if(mode==='owner'&&setupStarted)saveGame(state);},[state,mode,setupStarted]);
   useEffect(()=>{
@@ -111,7 +121,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
     if(businessEvent)return;
     if(hurricane&&state.hurricanePlan?.day!==state.day)return;
     if(!hurricane&&todaysBookings.some(b=>!tripDecisions[b.id]))return;
-    const out=simulateDay(state,tripDecisions);
+    const out=simulateDay(state,tripDecisions,marketingMarket);
     commit(out.state);setLast(out.result);setTab('dock');
     if(mode==='demo'&&out.state.day>7)setDemoComplete(true);
   };
@@ -173,7 +183,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
       {demoComplete&&<section className="card demoComplete"><span className="eyebrow">WEEK 1 COMPLETE</span><h2>You graduated from Captain School.</h2><p>You completed all seven tutorial days. Create a free owner account to keep building boats, reviews, revenue and company value. Registered companies are eligible for the Island leaderboards.</p><button className="primary big" onClick={onUpgrade}>Create Account & Keep Playing →</button><p className="fine">Your demo is intentionally not ranked.</p></section>}
     </>}
 
-    {tab==='trips'&&<><section className="card page"><MarketingPanel state={state} onChange={commit}/><span className="eyebrow">PRICING</span><h2>Your charter menu</h2><p className="muted">Higher prices improve margin but can lower conversion.</p>{state.products.map(p=><div className="priceCard" key={p.type}><div className="tripEmoji">{tripIcon[p.type]}</div><div className="grow"><b>{p.name}</b><small>{p.durationHours} hours · demand {pct(p.baseDemand)}</small></div><label className="priceInput"><span>$</span><input type="number" min="99" step="10" value={p.price} disabled={demoComplete} onChange={e=>changePrice(p.type,Number(e.target.value))}/></label></div>)}</section></>}
+    {tab==='grow'&&<><section className="card page"><MarketingPanel state={state} onChange={commit} market={marketingMarket}/><span className="eyebrow">PRICING</span><h2>Your charter menu</h2><p className="muted">Higher prices improve margin but can lower conversion.</p>{state.products.map(p=><div className="priceCard" key={p.type}><div className="tripEmoji">{tripIcon[p.type]}</div><div className="grow"><b>{p.name}</b><small>{p.durationHours} hours · demand {pct(p.baseDemand)}</small></div><label className="priceInput"><span>$</span><input type="number" min="99" step="10" value={p.price} disabled={demoComplete} onChange={e=>changePrice(p.type,Number(e.target.value))}/></label></div>)}</section></>}
 
     {tab==='fleet'&&<><section className="card page"><span className="eyebrow">FLEET</span><h2>{state.boats.length?`${state.boats.length} boat${state.boats.length>1?'s':''}`:'No boat yet'}</h2>{state.boats.map(b=>{const svc=serviceStatus(b);return <div key={b.instanceId} className="fleetSummary"><div className="bigBoat">🚤</div><h3>{b.name}</h3><div className="stats"><div><span>Hull year</span><b>{b.year}</b></div><div><span>Engine year</span><b>{b.engineYear}</b></div><div><span>Condition</span><b>{pct(b.condition)}</b></div><div><span>Reliability</span><b>{pct(b.reliability)}</b></div><div><span>Engine hours</span><b>{b.engineHours.toFixed(1)}</b></div><div><span>Next service</span><b className={svc.kind==='ok'?'positive':'negative'}>{svc.kind==='ok'?`${svc.dueAt} hrs`:svc.label}</b></div><div><span>Insurance</span><b>{b.insured?'Covered':'No coverage'}</b></div></div></div>})}</section><MarketplacePanel state={state} onChange={commit}/><GrowthPanel state={state} onChange={commit}/></>}
 
@@ -181,7 +191,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
-    <nav className="bottomNav"><button className={tab==='dock'?'active':''} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button><button className={tab==='trips'?'active':''} onClick={()=>setTab('trips')}><span>🗓️</span>Trips</button><button className={tab==='fleet'?'active':''} onClick={()=>setTab('fleet')}><span>🚤</span>Fleet</button><button className={tab==='leaders'?'active':''} onClick={()=>setTab('leaders')}><span>🏆</span>Rank</button><button className={tab==='books'?'active':''} onClick={()=>setTab('books')}><span>📒</span>Books</button></nav>
+    <nav className="bottomNav"><button className={tab==='dock'?'active':''} onClick={()=>setTab('dock')}><span>⚓</span>Dock</button><button className={tab==='grow'?'active':''} onClick={()=>setTab('grow')}><span>📣</span>Grow</button><button className={tab==='fleet'?'active':''} onClick={()=>setTab('fleet')}><span>🚤</span>Fleet</button><button className={tab==='leaders'?'active':''} onClick={()=>setTab('leaders')}><span>🏆</span>Rank</button><button className={tab==='books'?'active':''} onClick={()=>setTab('books')}><span>📒</span>Books</button></nav>
   </main>;
 }
 
