@@ -42,6 +42,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
       }
     };
     void refreshSession();
+    const sessionTimer=window.setInterval(()=>void refreshSession(),5000);
     const onFocus=()=>void refreshSession();
     const onPageShow=()=>void refreshSession();
     const onVisibility=()=>{if(document.visibilityState==='visible')void refreshSession()};
@@ -53,6 +54,7 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
       window.removeEventListener('focus',onFocus);
       window.removeEventListener('pageshow',onPageShow);
       document.removeEventListener('visibilitychange',onVisibility);
+      window.clearInterval(sessionTimer);
     };
   },[]);
 
