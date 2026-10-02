@@ -7,7 +7,7 @@ import { clearGame,loadGame,normalizeState,saveGame } from '../game/engine/save'
 import type { CompanyState,DayResult,MarketingMarketSnapshot,TripDecision,TripType } from '../game/types/models';
 import type { GameMode } from './StartMode';
 import type { Player } from './api';
-import { completeTutorial,loadMarketingMarket,syncCompany } from './api';
+import { completeTutorial,loadMarketingMarket,logout,syncCompany } from './api';
 import Leaderboard from './Leaderboard';
 import TutorialCard,{type TutorialTab} from './TutorialCard';
 import GrowthPanel from './GrowthPanel';
@@ -17,6 +17,7 @@ import BusinessEventCard from './BusinessEventCard';
 import ProgressGoals from './ProgressGoals';
 import HurricaneCard from './HurricaneCard';
 import HelpPanel from './HelpPanel';
+import GameMenu from './GameMenu';
 import BoatArt from './BoatArt';
 import './styles.css';
 
@@ -32,7 +33,7 @@ const companyColors=[
   {name:'Reef Purple',value:'#9b7de3'}
 ];
 
-export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void}){
+export default function App({mode,player,initialState,onUpgrade,onReturnTitle,onSwitchMode}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void;onReturnTitle:()=>void;onSwitchMode:()=>void}){
   const [state,setState]=useState<CompanyState>(()=>initialState?normalizeState(initialState):(mode==='owner'?loadGame():null)??createCompany('',''));
   const [last,setLast]=useState<DayResult|null>(null);
   const [tab,setTab]=useState<'dock'|'grow'|'fleet'|'books'|'leaders'>('dock');
@@ -46,6 +47,8 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   const [tutorialSpotlight,setTutorialSpotlight]=useState<TutorialTab|null>(null);
   const [helpOpen,setHelpOpen]=useState(false);
   const [captainSchoolActive,setCaptainSchoolActive]=useState(false);
+  const [menuOpen,setMenuOpen]=useState(false);
+  const [signingOut,setSigningOut]=useState(false);
   const [registeredTutorialComplete,setRegisteredTutorialComplete]=useState(
     Boolean(player?.tutorialCompleted||player?.tutorial_completed||(mode==='registered'&&state.day>7))
   );
@@ -149,10 +152,59 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   };
   const reset=()=>{
     if(mode!=='owner')return;
-    clearGame();setLast(null);setState(createCompany('',''));setCaptainName('');setCompanyName('');
+    clearGame();
+    const fresh=createCompany('','');
+    setLast(null);
+    setState(fresh);
+    setCaptainName('');
+    setCompanyName('');
+    setCompanyColor(fresh.companyColor||'#f6c453');
+    setTripDecisions({});
+    setTab('dock');
+    setMenuOpen(false);
+    setHelpOpen(false);
+    window.scrollTo(0,0);
   };
+  const restartDemo=()=>{
+    if(mode!=='demo')return;
+    const fresh=createCompany('','');
+    setLast(null);
+    setState(fresh);
+    setCaptainName('');
+    setCompanyName('');
+    setCompanyColor(fresh.companyColor||'#f6c453');
+    setTripDecisions({});
+    setTab('dock');
+    setDemoComplete(false);
+    setCaptainSchoolActive(false);
+    setMenuOpen(false);
+    setHelpOpen(false);
+    window.scrollTo(0,0);
+  };
+  const signOutAccount=async()=>{
+    if(mode!=='registered'||signingOut)return;
+    setSigningOut(true);
+    try{
+      if(setupStarted)await syncCompany(state).catch(()=>{});
+      await logout();
+      onReturnTitle();
+    }catch(e){
+      alert((e as Error).message||'Could not sign out. Please try again.');
+      setSigningOut(false);
+    }
+  };
+  const openHelpFromMenu=()=>{
+    setMenuOpen(false);
+    setHelpOpen(true);
+  };
+  const modeControl=mode==='registered'
+    ? <button type="button" className="gameHeaderControl signOutControl" disabled={signingOut} onClick={signOutAccount}>{signingOut?'Signing out…':'Sign out'}</button>
+    : <button type="button" className="gameHeaderControl" onClick={()=>setMenuOpen(true)}>☰ Menu</button>;
 
   if(!setupStarted)return <main className="shell onboarding">
+    <div className="onboardingGameControl">{modeControl}</div>
+    {menuOpen&&mode!=='registered'&&<GameMenu mode={mode} onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onResetDevelopment={reset} onHelp={openHelpFromMenu}/>}
+    {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <header className="heroBrand"><img src="/branding/island-adventures-logo-mobile.png" alt="Island Adventures" className="miniBrand"/><div><p>Build your charter company across the islands.</p></div></header>
     <section className="mapCard introMap"><IslandMap active={0} companyValue={0}/></section>
     <section className="card setupCard"><span className="eyebrow">{mode==='demo'?'ONE-WEEK DEMO':mode==='owner'?'DEVELOPMENT TEST':'REGISTERED OWNER'}</span><h2>Start with $10,000 and a dream</h2>
@@ -165,7 +217,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
   </main>;
 
   return <main className="shell">
-    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div></header>
+    <header className="brand"><div className="logo" style={{background:state.companyColor}}><img src="/branding/island-adventures-logo-mobile.png" alt="" aria-hidden="true"/></div><div className="brandText"><h1>{mode==='demo'?'Island Adventures Demo':state.companyName}</h1><p>{mode==='demo'?currentIsland.name:`${state.captainName} · ${currentIsland.name}`}</p></div><div className="headerModeActions"><div className={`modeBadge ${mode}`}>{mode==='registered'?'ONLINE':mode==='demo'?'DEMO':'TEST'}</div>{modeControl}</div></header>
     {mode==='registered'&&<div className={`syncLine ${syncStatus}`}>{syncStatus==='saving'?'Saving…':syncStatus==='saved'?'Cloud saved':syncStatus==='error'?'Save retry needed':''}</div>}
     <section className="hud"><div><span>Cash</span><strong>{money(state.cash)}</strong></div><div><span>Rating</span><strong>{state.reviewCount?`${state.rating} ★`:'New'}</strong></div><div><span>Company</span><strong>{money(state.companyValue)}</strong></div></section>
     {showTutorial&&<TutorialCard day={state.day} mode={mode} playerId={player?.id} onNavigate={tutorialNavigate} onSpotlight={setTutorialSpotlight} onWeekComplete={finishRegisteredTutorial} onOpenHelp={()=>setHelpOpen(true)} onActiveChange={setCaptainSchoolActive}/>} 
@@ -213,6 +265,7 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 
     {tab==='leaders'&&<Leaderboard registered={mode==='registered'}/>}
 
+    {menuOpen&&mode!=='registered'&&<GameMenu mode={mode} onClose={()=>setMenuOpen(false)} onReturnTitle={onReturnTitle} onSwitchMode={onSwitchMode} onRestartDemo={restartDemo} onResetDevelopment={reset} onHelp={openHelpFromMenu}/>}
     {!captainSchoolActive&&<button className="globalHelpBtn" type="button" onClick={()=>setHelpOpen(true)} aria-label="Open help">? Help</button>}
     {helpOpen&&<HelpPanel onClose={()=>setHelpOpen(false)}/>}
     <nav className={`bottomNav ${tutorialSpotlight?'tutorialNav':''}`}>
