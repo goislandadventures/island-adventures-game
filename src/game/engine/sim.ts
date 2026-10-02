@@ -296,7 +296,7 @@ function seasonalWindDirection(seed:number,day:number,month:number):WeatherDay['
   const rng=new RNG((seed^Math.imul(day+101,0x7feb352d)^0x31415926)>>>0);
   if(month>=5&&month<=9)return rng.pick<WeatherDay['windDirection']>(['E','E','SE','SE','E','S','NE']);
   if(month===10||month===11)return rng.pick<WeatherDay['windDirection']>(['E','NE','E','SE','N','NE']);
-  return rng.pick<WeatherDay['windDirection']>(['ENE' as WeatherDay['windDirection'],'NE','E','NE','E','N'].filter((x):x is WeatherDay['windDirection']=>x!=='ENE'));
+  return rng.pick<WeatherDay['windDirection']>(['NE','E','NE','E','N','NE']);
 }
 
 export function generateWeather(state:CompanyState):WeatherDay{
