@@ -1641,3 +1641,30 @@ input:focus,select:focus{
     grid-template-columns:100px minmax(0,1fr);
   }
 }
+
+/* Account password visibility control */
+.passwordWrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.passwordWrap input{
+  width:100%;
+  padding-right:84px!important;
+}
+.showPasswordBtn{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  min-width:62px;
+  min-height:38px;
+  padding:6px 10px;
+  border:2px solid #17324d;
+  border-radius:12px;
+  background:#fff8cf;
+  color:#17324d;
+  font:900 .84rem/1 inherit;
+  box-shadow:0 3px 0 #17324d;
+}
+.showPasswordBtn:active{transform:translateY(calc(-50% + 2px));box-shadow:0 1px 0 #17324d}
