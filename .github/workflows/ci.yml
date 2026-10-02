@@ -17,6 +17,7 @@ jobs:
       - run: npm run test:hidden-rolls
       - run: npm run test:weather-climate
       - run: npm run test:second-boat
+      - run: npm run test:calendar-business-save
       - name: Write build ID
         run: echo "$GITHUB_SHA" > public/build-id.txt
       - name: Build
