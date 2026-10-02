@@ -2,6 +2,7 @@ import { boatTemplates,islands,marinas } from '../game/data/content';
 import { buyBoat,captainCandidates,expandToIsland,hireCaptain,insureFleet } from '../game/engine/sim';
 import { maintainBoat,serviceStatus } from '../game/engine/depth';
 import type { CompanyState } from '../game/types/models';
+import BoatArt from './BoatArt';
 
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
 const pct=(n:number)=>`${Math.round(n*100)}%`;
@@ -20,11 +21,11 @@ export default function GrowthPanel({state,onChange}:{state:CompanyState;onChang
 
     <section className="card growthSection">
       <span className="eyebrow">FLEET GROWTH</span><h2>Boats & maintenance</h2>
-      {state.boats.map(b=>{const svc=serviceStatus(b);return <div className="boatManage" key={b.instanceId}><div className="growthRow"><div><b>{b.name}</b><small>Hull {b.year} · engine {b.engineYear} · {Math.round(b.engineHours)} hrs · condition {pct(b.condition)} · reliability {pct(b.reliability)} · {b.insured?'insured':'UNINSURED'}</small><em className={svc.kind==='ok'?'serviceOk':'serviceDue'}>{svc.label}</em></div></div><div className="maintenanceChoices"><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'dock'))}>Dock check $75</button><button type="button" disabled={svc.kind==='300hr'} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'100hr'))}>100-hour $350</button><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'300hr'))}>300-hour $700</button></div></div>})}
+      {state.boats.map(b=>{const svc=serviceStatus(b);return <div className="boatManage" key={b.instanceId}><div className="growthBoatThumb"><BoatArt kind={b.class}/></div><div className="growthRow"><div><b>{b.name}</b><small>Hull {b.year} · engine {b.engineYear} · {Math.round(b.engineHours)} hrs · condition {pct(b.condition)} · reliability {pct(b.reliability)} · {b.insured?'insured':'UNINSURED'}</small><em className={svc.kind==='ok'?'serviceOk':'serviceDue'}>{svc.label}</em></div></div><div className="maintenanceChoices"><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'dock'))}>Dock check $75</button><button type="button" disabled={svc.kind==='300hr'} onClick={()=>act(()=>maintainBoat(state,b.instanceId,'100hr'))}>100-hour $350</button><button type="button" onClick={()=>act(()=>maintainBoat(state,b.instanceId,'300hr'))}>300-hour $700</button></div></div>})}
       {state.boats.some(b=>!b.insured)&&<><button type="button" className="primary big" onClick={()=>act(()=>insureFleet(state))}>Add Insurance to Uninsured Boat(s)</button><p className="fine">Insurance is optional. It costs more at premium marinas, but it can save the company if a hurricane destroys a boat.</p></>}
       <h3>Add another boat</h3>
       <p className="fine">Extra boats only earn money when you have captains to run them. A 7–12 guest booking needs two boats and two captains.</p>
-      {boatTemplates.filter(b=>b.lengthFt<=(currentMarina?.maxBoatFt??0)).map(b=><div className="growthRow" key={b.id}><div><b>{b.name}</b><small>Hull {b.hullYear} · engine {b.engineYear} · {b.startingEngineHours} hrs · {b.lengthFt}′ · reliability {pct(b.reliability)}</small></div><button type="button" disabled={state.cash<b.basePrice} onClick={()=>act(()=>buyBoat(state,b.id))}>{money(b.basePrice)}</button></div>)}
+      {boatTemplates.filter(b=>b.lengthFt<=(currentMarina?.maxBoatFt??0)).map(b=><div className="growthRow boatPurchaseRow" key={b.id}><div className="growthBoatThumb"><BoatArt kind={b.class}/></div><div><b>{b.name}</b><small>Hull {b.hullYear} · engine {b.engineYear} · {b.startingEngineHours} hrs · {b.lengthFt}′ · reliability {pct(b.reliability)}</small></div><button type="button" disabled={state.cash<b.basePrice} onClick={()=>act(()=>buyBoat(state,b.id))}>{money(b.basePrice)}</button></div>)}
     </section>
 
     <section className="card growthSection">
