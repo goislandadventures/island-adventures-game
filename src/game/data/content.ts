@@ -27,7 +27,7 @@ export const boatTemplates: BoatTemplate[] = [
   { id: 'deck-24', name: '2006 Coastal Deck 21', class: 'deck', lengthFt: 21, seats: 6, basePrice: 14000, fuelBurnGph: 5.8, cruiseMph: 26, reliability: 0.74, comfort: 0.76, appeal: 0.68, offshore: 0.52, hullYear: 2006, engineYear: 2015, startingEngineHours: 400 },
   { id: 'pontoon-24', name: '2004 Sandbar Cruiser 22', class: 'pontoon', lengthFt: 22, seats: 6, basePrice: 16500, fuelBurnGph: 5.7, cruiseMph: 20, reliability: 0.76, comfort: 0.84, appeal: 0.74, offshore: 0.28, hullYear: 2004, engineYear: 2018, startingEngineHours: 310 },
   { id: 'cc-25', name: '2008 Reef Runner 23', class: 'center-console', lengthFt: 23, seats: 6, basePrice: 19500, fuelBurnGph: 7.8, cruiseMph: 31, reliability: 0.81, comfort: 0.68, appeal: 0.80, offshore: 0.84, hullYear: 2008, engineYear: 2020, startingEngineHours: 290 },
-  { id: 'cat-28', name: '2010 Island Cat 26', class: 'catamaran', lengthFt: 26, seats: 6, basePrice: 24000, fuelBurnGph: 9.2, cruiseMph: 29, reliability: 0.83, comfort: 0.88, appeal: 0.88, offshore: 0.88, hullYear: 2010, engineYear: 2017, startingEngineHours: 550 }
+  { id: 'cat-28', name: '2010 Island Pontoon 26', class: 'pontoon', lengthFt: 26, seats: 6, basePrice: 24000, fuelBurnGph: 8.4, cruiseMph: 24, reliability: 0.83, comfort: 0.91, appeal: 0.88, offshore: 0.42, hullYear: 2010, engineYear: 2017, startingEngineHours: 550 }
 ];
 
 export const defaultProducts: TripProduct[] = [
