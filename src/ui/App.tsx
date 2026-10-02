@@ -21,7 +21,6 @@ import './styles.css';
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
 const pct=(n:number)=>`${Math.round(n*100)}%`;
 const tripIcon:Record<string,string>={sandbar:'🏝️',snorkel:'🤿',sunset:'🌅',custom:'🧭',eco:'🐬',fishing:'🎣',cruise:'🚤'};
-const islandIcon:Record<string,string>={harbor:'⚓',sunset:'🌅',sandbar:'🏖️',reef:'🪸',mangrove:'🌿',pelican:'🐦',lighthouse:'🗼',captains:'🛠️'};
 const sourceFee:Record<string,string>={marketplace:'25% booking-site fee',hotel:'15% hotel referral fee',organic:'Direct · no booking fee',maps:'Direct · no booking fee',social:'Direct · no booking fee',referral:'Direct · no booking fee',repeat:'Direct · no booking fee',paid:'Direct · ad cost already paid',content:'Direct · no booking fee'};
 
 export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;player?:Player;initialState?:CompanyState;onUpgrade:()=>void}){
@@ -180,5 +179,5 @@ export default function App({mode,player,initialState,onUpgrade}:{mode:GameMode;
 }
 
 function IslandMap({active,boat=false,companyValue=0}:{active:number;boat?:boolean;companyValue?:number}){
-  return <div className="ocean">{islands.map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''} ${companyValue>=i.unlockValue?'unlocked':'locked'}`}><span className="islandIcon" aria-hidden="true">{islandIcon[i.id]??'📍'}</span><small>{i.name}</small>{companyValue<i.unlockValue&&<em aria-label="Locked">🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤</div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
+  return <div className="ocean">{islands.map((i,idx)=><div key={i.id} className={`island i${idx} ${idx===active?'active':''} ${companyValue>=i.unlockValue?'unlocked':'locked'}`}><img src="/images/island-map-3d.webp" className="islandArt" alt="" aria-hidden="true"/><small>{i.name}</small>{companyValue<i.unlockValue&&<em aria-label="Locked">🔒</em>}</div>)}{boat&&<div className="mapBoat">🚤</div>}<div className="wave w1">≈≈≈</div><div className="wave w2">≈≈</div></div>;
 }
