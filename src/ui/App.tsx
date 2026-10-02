@@ -78,7 +78,7 @@ export default function App({mode,player,initialState,onUpgrade,onReturnTitle,on
   const weather=useMemo(()=>generateWeather(state),[state]);
   const forecast=useMemo(()=>weatherLabel(weather),[weather]);
   const calendar=useMemo(()=>calendarForDay(state.day,state,marketingMarket),[state,marketingMarket]);
-  const hurricane=useMemo(()=>hurricaneForDay(state),[state.day,state.seed]);
+  const hurricane=useMemo(()=>mode==='demo'&&state.day<=7?null:hurricaneForDay(state),[mode,state.day,state.seed]);
   const businessEvent=useMemo(()=>hurricane?null:businessEventForDay(state),[state.day,state.seed,state.lastBusinessEventDay,hurricane]);
   const todaysBookings=useMemo(()=>generateDemand(state,weather,marketingMarket,mode==='demo'),[state,weather,marketingMarket,mode]);
   const currentIsland=islands.find(i=>i.id===state.islandId)??islands[0];
