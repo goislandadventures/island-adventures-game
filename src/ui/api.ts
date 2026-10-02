@@ -23,13 +23,12 @@ async function passwordProof(password:string,saltB64:string){
 }
 function newSalt(){return bytesToB64(crypto.getRandomValues(new Uint8Array(16)));}
 
-export async function register(payload:{email:string;displayName:string;password:string;marketingOptIn:boolean}){
+export async function register(payload:{email:string;password:string;marketingOptIn:boolean}){
   if(payload.password.length<10) throw new Error('Password must be at least 10 characters.');
   const passwordSalt=newSalt();
   const proof=await passwordProof(payload.password,passwordSalt);
   return api<{player:Player}>('/api/auth/register',{method:'POST',body:JSON.stringify({
     email:payload.email,
-    displayName:payload.displayName,
     passwordProof:proof,
     passwordSalt,
     marketingOptIn:payload.marketingOptIn
