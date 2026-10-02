@@ -12,7 +12,7 @@ function dismissedDays(mode:'demo'|'owner'|'registered',playerId?:string):number
   try{return JSON.parse(localStorage.getItem(storageKey(mode,playerId))||'[]') as number[];}catch{return [];}
 }
 
-export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void}){
+export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,onWeekComplete,onOpenHelp}:{day:number;mode:'demo'|'owner'|'registered';playerId?:string;onNavigate?:(tab:TutorialTab)=>void;onSpotlight?:(tab:TutorialTab|null)=>void;onWeekComplete?:()=>void;onOpenHelp?:()=>void}){
   const tutorial=tutorialForDay(day);
   const [step,setStep]=useState(0);
   const [dismissed,setDismissed]=useState(()=>dismissedDays(mode,playerId).includes(day));
@@ -42,6 +42,13 @@ export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,o
     return()=>onSpotlight?.(null);
   },[current,dismissed,onNavigate,onSpotlight]);
 
+  const nextStep=()=>{
+    const next=messages[Math.min(step+1,messages.length-1)];
+    if(next?.tab)onNavigate?.(next.tab);
+    onSpotlight?.(next?.spotlight??null);
+    setStep(s=>Math.min(s+1,messages.length-1));
+  };
+
   if(!tutorial||dismissed||!messages.length)return null;
   const last=step===messages.length-1;
   const dismiss=()=>{
@@ -63,7 +70,10 @@ export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,o
         {current.title&&<h3>{current.title}</h3>}
         <p>{current.text}</p>
         <div className="coachProgress" aria-label={`Step ${step+1} of ${messages.length}`}>{messages.map((_,i)=><i key={i} className={i<=step?'done':''}/>)}</div>
-        <button className="coachNext" onClick={last?dismiss:()=>setStep(s=>s+1)}>{last?'Got it for today':'Next'}</button>
+        <div className="coachActions">
+          <button className="coachHelp" type="button" onClick={onOpenHelp}>Full Guide</button>
+          <button className="coachNext" onClick={last?dismiss:nextStep}>{last?'Got it for today':'Next'}</button>
+        </div>
       </div>
       <div className="turtleCoachAvatar"><img src="/branding/captain-school-turtle-exact-v10.webp?v=10" alt="Captain School turtle guide"/></div>
     </div>
