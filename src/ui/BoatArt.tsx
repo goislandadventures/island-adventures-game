@@ -6,7 +6,8 @@ export default function BoatArt({kind='deck',className=''}:{kind?:BoatClass;clas
 
   if(type==='pontoon')return <svg className={`boatArt ${className}`} viewBox="0 0 240 150" aria-hidden="true">
     <defs>
-      <linearGradient id="pontoonHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#f8f0d8"/><stop offset=".55" stopColor="#d8d2bf"/><stop offset="1" stopColor="#788794"/></linearGradient>
+      <linearGradient id="pontoonHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fffdf1"/><stop offset=".34" stopColor="#f4ead1"/><stop offset=".7" stopColor="#c6c5bc"/><stop offset="1" stopColor="#566b78"/></linearGradient>
+      <radialGradient id="pontoonGlow" cx=".28" cy=".12" r=".9"><stop stopColor="#fff" stopOpacity=".92"/><stop offset=".44" stopColor="#fff" stopOpacity=".12"/><stop offset="1" stopColor="#fff" stopOpacity="0"/></radialGradient>
       <linearGradient id="pontoonDeck" x1="0" x2="1"><stop stopColor="#efd39b"/><stop offset="1" stopColor="#b98a4d"/></linearGradient>
       <linearGradient id="pontoonGlass" x1="0" x2="1"><stop stopColor="#79d8f0"/><stop offset="1" stopColor="#197eab"/></linearGradient>
       <filter id="pontoonShadow"><feDropShadow dx="0" dy="7" stdDeviation="5" floodOpacity=".28"/></filter>
@@ -21,13 +22,16 @@ export default function BoatArt({kind='deck',className=''}:{kind?:BoatClass;clas
       <rect x="93" y="34" width="54" height="28" rx="7" fill="#f5ebd1"/>
       <rect x="102" y="38" width="36" height="18" rx="5" fill="#d6e6e8"/>
       <rect x="194" y="46" width="24" height="50" rx="9" fill="#424c54"/>
-      <path d="M28 94 Q20 104 29 112 H211 Q220 104 212 94 Z" fill="none" stroke="rgba(255,255,255,.72)" strokeWidth="5"/>
+      <path d="M28 94 Q20 104 29 112 H211 Q220 104 212 94 Z" fill="none" stroke="rgba(255,255,255,.84)" strokeWidth="5"/>
+      <path d="M38 96 Q88 86 197 91" fill="none" stroke="url(#pontoonGlow)" strokeWidth="8" strokeLinecap="round" opacity=".78"/>
+      <ellipse cx="96" cy="63" rx="44" ry="11" fill="#fff" opacity=".16"/>
     </g>
   </svg>;
 
   if(type==='center-console')return <svg className={`boatArt ${className}`} viewBox="0 0 240 150" aria-hidden="true">
     <defs>
-      <linearGradient id="ccHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fff9e9"/><stop offset=".62" stopColor="#dad7c9"/><stop offset="1" stopColor="#455969"/></linearGradient>
+      <linearGradient id="ccHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fffef4"/><stop offset=".34" stopColor="#f5ead3"/><stop offset=".72" stopColor="#c8c8c0"/><stop offset="1" stopColor="#425968"/></linearGradient>
+      <radialGradient id="ccGlow" cx=".22" cy=".08" r=".85"><stop stopColor="#fff" stopOpacity=".95"/><stop offset=".48" stopColor="#fff" stopOpacity=".1"/><stop offset="1" stopColor="#fff" stopOpacity="0"/></radialGradient>
       <linearGradient id="ccGlass" x1="0" x2="1"><stop stopColor="#73d9f1"/><stop offset="1" stopColor="#1b729f"/></linearGradient>
       <linearGradient id="ccDeck" x1="0" x2="1"><stop stopColor="#eacb8d"/><stop offset="1" stopColor="#c18e52"/></linearGradient>
       <filter id="ccShadow"><feDropShadow dx="0" dy="7" stdDeviation="5" floodOpacity=".28"/></filter>
@@ -40,13 +44,16 @@ export default function BoatArt({kind='deck',className=''}:{kind?:BoatClass;clas
       <path d="M99 57 H137 L145 78 H92 Z" fill="url(#ccGlass)"/>
       <path d="M89 50 Q92 28 103 26 M146 50 Q143 28 132 26 M102 26 H133" fill="none" stroke="#596873" strokeWidth="7" strokeLinecap="round"/>
       <rect x="198" y="54" width="25" height="48" rx="9" fill="#3d4850"/>
-      <path d="M23 100 Q55 109 192 108" fill="none" stroke="rgba(255,255,255,.75)" strokeWidth="5"/>
+      <path d="M23 100 Q55 109 192 108" fill="none" stroke="rgba(255,255,255,.84)" strokeWidth="5"/>
+      <path d="M31 94 Q90 79 192 88" fill="none" stroke="url(#ccGlow)" strokeWidth="8" strokeLinecap="round" opacity=".82"/>
+      <ellipse cx="118" cy="66" rx="28" ry="8" fill="#fff" opacity=".18"/>
     </g>
   </svg>;
 
   return <svg className={`boatArt ${className}`} viewBox="0 0 240 150" aria-hidden="true">
     <defs>
-      <linearGradient id="deckHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fff9e7"/><stop offset=".58" stopColor="#ddd8c7"/><stop offset="1" stopColor="#495d6a"/></linearGradient>
+      <linearGradient id="deckHull" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#fffef2"/><stop offset=".32" stopColor="#f4e8ce"/><stop offset=".7" stopColor="#c8c6ba"/><stop offset="1" stopColor="#465d6b"/></linearGradient>
+      <radialGradient id="deckGlow" cx=".24" cy=".08" r=".88"><stop stopColor="#fff" stopOpacity=".96"/><stop offset=".46" stopColor="#fff" stopOpacity=".12"/><stop offset="1" stopColor="#fff" stopOpacity="0"/></radialGradient>
       <linearGradient id="deckGlass" x1="0" x2="1"><stop stopColor="#7bdef2"/><stop offset="1" stopColor="#267fa5"/></linearGradient>
       <linearGradient id="deckFloor" x1="0" x2="1"><stop stopColor="#eed19a"/><stop offset="1" stopColor="#c18b4c"/></linearGradient>
       <filter id="deckShadow"><feDropShadow dx="0" dy="7" stdDeviation="5" floodOpacity=".28"/></filter>
@@ -59,7 +66,9 @@ export default function BoatArt({kind='deck',className=''}:{kind?:BoatClass;clas
       <path d="M79 55 H151 L163 80 H72 Z" fill="url(#deckGlass)"/>
       <path d="M86 48 Q90 30 102 28 M155 48 Q151 30 139 28 M101 28 H140" fill="none" stroke="#5a6871" strokeWidth="7" strokeLinecap="round"/>
       <rect x="196" y="50" width="25" height="49" rx="9" fill="#3f4a52"/>
-      <path d="M24 99 Q55 109 191 108" fill="none" stroke="rgba(255,255,255,.75)" strokeWidth="5"/>
+      <path d="M24 99 Q55 109 191 108" fill="none" stroke="rgba(255,255,255,.86)" strokeWidth="5"/>
+      <path d="M31 93 Q82 77 193 84" fill="none" stroke="url(#deckGlow)" strokeWidth="8" strokeLinecap="round" opacity=".82"/>
+      <ellipse cx="118" cy="64" rx="39" ry="10" fill="#fff" opacity=".17"/>
     </g>
   </svg>;
 }
