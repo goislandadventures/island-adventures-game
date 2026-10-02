@@ -43,7 +43,7 @@ function metricSql(metric:string) {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'0.4.0' });
+    if (url.pathname === '/api/health') return json({ ok:true, service:'island-adventures', version:'1.0.0' });
 
     if (url.pathname === '/api/leaderboard' && request.method==='GET') {
       const metric=url.searchParams.get('metric')||'value';
