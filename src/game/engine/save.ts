@@ -10,6 +10,8 @@ export function normalizeState(parsed:CompanyState):CompanyState{
     loans:parsed.loans??[],
     debt:parsed.debt??0,
     startupLoanTaken:parsed.startupLoanTaken??false,
+    captainSchoolReviewsReset:parsed.captainSchoolReviewsReset??false,
+    captainSchoolFarewellSeen:parsed.captainSchoolFarewellSeen??false,
     boats:(parsed.boats??[]).map(b=>({
       ...b,
       insuranceDeclined:b.insuranceDeclined??false,
