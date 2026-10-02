@@ -11,6 +11,29 @@ import { installButtonSounds } from './ui/sound';
 
 installButtonSounds();
 
+const BUILD_ID=import.meta.env.VITE_BUILD_ID||'';
+let refreshingForBuild=false;
+async function ensureFreshBuild(){
+  if(!BUILD_ID||refreshingForBuild)return;
+  try{
+    const res=await fetch('/build-id.txt?ts='+Date.now(),{cache:'no-store'});
+    if(!res.ok)return;
+    const remote=(await res.text()).trim();
+    if(remote&&remote!==BUILD_ID){
+      refreshingForBuild=true;
+      const url=new URL(window.location.href);
+      url.searchParams.set('_build',remote.slice(0,12));
+      window.location.replace(url.toString());
+    }
+  }catch{}
+}
+window.addEventListener('pageshow',()=>{void ensureFreshBuild()});
+window.addEventListener('focus',()=>{void ensureFreshBuild()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void ensureFreshBuild()});
+window.setInterval(()=>void ensureFreshBuild(),60000);
+void ensureFreshBuild();
+
+
 function Root(){
   const [entered,setEntered]=useState(false);
   const [mode,setMode]=useState<GameMode|null>(null);
