@@ -65,6 +65,7 @@ export interface CompanyState {
   products:TripProduct[]; bookings:Booking[]; ledger:LedgerEntry[]; companyValue:number; lifetimeRevenue:number;
   lifetimeProfit:number; daysOperated:number; staff:StaffMember[]; marketing:MarketingSettings; loans:Loan[];
   lastBusinessEventDay?:number; hurricanePlan?:HurricanePlan; startupLoanTaken?:boolean;
+  captainSchoolReviewsReset?:boolean; captainSchoolFarewellSeen?:boolean;
 }
 export interface TripOutcome {
   bookingId:string; tripType:TripType; timeSlot:TimeSlot; decision:TripDecision; revenue:number; expenses:number;
