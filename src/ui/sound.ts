@@ -9,7 +9,8 @@ export type GameSound =
   | 'motor'
   | 'service'
   | 'weather'
-  | 'splash';
+  | 'splash'
+  | 'giggle';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -26,7 +27,8 @@ const samplePaths:Partial<Record<GameSound,string>>={
   motor:'/sfx/engine.wav',
   service:'/sfx/service.flac',
   weather:'/sfx/thunder.flac',
-  splash:'/sfx/splash.wav'
+  splash:'/sfx/splash.wav',
+  giggle:'/sfx/giggle.wav'
 };
 
 function audioContext(){
@@ -172,7 +174,8 @@ export function playDayResultSounds(result:DayResult,_dayNumber:number){
     at+=1.15;
   }else if(result.wildlifeEvent){
     playGameSound('splash',at);
-    at+=1.05;
+    playGameSound('giggle',at+.42);
+    at+=1.45;
   }
 
   if(result.revenue+result.tips>0){
