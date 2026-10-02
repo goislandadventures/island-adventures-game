@@ -5,10 +5,7 @@ export const islands: Island[] = [
   { id: 'sunset', name: 'Sunset Key', unlockValue: 22000, tourism: 0.95, adCompetition: 0.65, fuelPrice: 6.15, weatherExposure: 'protected', description: 'Resorts, restaurants and premium evening demand.' },
   { id: 'sandbar', name: 'Sandbar Key', unlockValue: 35000, tourism: 1.05, adCompetition: 0.72, fuelPrice: 6.05, weatherExposure: 'moderate', description: 'Families and party groups chase shallow turquoise water.' },
   { id: 'reef', name: 'Reef Key', unlockValue: 52000, tourism: 1.12, adCompetition: 0.78, fuelPrice: 6.30, weatherExposure: 'exposed', description: 'Premium snorkeling demand with real offshore weather risk.' },
-  { id: 'mangrove', name: 'Mangrove Key', unlockValue: 70000, tourism: 0.82, adCompetition: 0.42, fuelPrice: 5.95, weatherExposure: 'protected', description: 'Wildlife, protected water and eco-charter opportunities.' },
-  { id: 'pelican', name: 'Pelican Key', unlockValue: 95000, tourism: 1.30, adCompetition: 0.95, fuelPrice: 6.55, weatherExposure: 'moderate', description: 'Heavy tourism, expensive ads and huge upside.' },
-  { id: 'lighthouse', name: 'Lighthouse Key', unlockValue: 130000, tourism: 1.18, adCompetition: 0.70, fuelPrice: 6.70, weatherExposure: 'exposed', description: 'Long offshore runs, iconic destinations and high-paying guests.' },
-  { id: 'captains', name: "Captain's Key", unlockValue: 175000, tourism: 0.65, adCompetition: 0.25, fuelPrice: 5.75, weatherExposure: 'protected', description: 'Boat yards, mechanics and the best used-boat deals.' }
+  { id: 'mangrove', name: 'Mangrove Key', unlockValue: 70000, tourism: 0.82, adCompetition: 0.42, fuelPrice: 5.95, weatherExposure: 'protected', description: 'Wildlife, protected water and eco-charter opportunities.' }
 ];
 
 export const marinas: Marina[] = [
