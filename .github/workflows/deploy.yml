@@ -81,8 +81,13 @@ jobs:
           check_live () {
             BASE="$1"
             echo "Checking $BASE"
-            BUILD=$(curl -fsS -H "Cache-Control: no-cache" "$BASE/api/build-id?verify=$GITHUB_SHA")
-            echo "Live build: $BUILD"
+            BUILD=""
+            for attempt in {1..15}; do
+              BUILD=$(curl -fsS -H "Cache-Control: no-cache" "$BASE/api/build-id?verify=$GITHUB_SHA&attempt=$attempt" || true)
+              echo "Live build attempt $attempt: $BUILD"
+              if [ "$BUILD" = "$GITHUB_SHA" ]; then break; fi
+              sleep 2
+            done
             test "$BUILD" = "$GITHUB_SHA"
 
             curl -fsS -D /tmp/headers.txt -o /tmp/root.html -H "Cache-Control: no-cache" "$BASE/?verify=$GITHUB_SHA"
