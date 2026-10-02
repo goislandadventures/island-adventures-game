@@ -7,6 +7,9 @@ import StartMode,{type GameMode} from './ui/StartMode';
 import type { Player } from './ui/api';
 import type { CompanyState } from './game/types/models';
 import './ui/styles.css';
+import { installButtonSounds } from './ui/sound';
+
+installButtonSounds();
 
 function Root(){
   const [entered,setEntered]=useState(false);
