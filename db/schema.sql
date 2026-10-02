@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS players (
   password_salt TEXT NOT NULL,
   marketing_opt_in INTEGER NOT NULL DEFAULT 0,
   marketing_opt_in_at INTEGER,
+  tutorial_completed INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
   last_seen_at INTEGER NOT NULL
 );
