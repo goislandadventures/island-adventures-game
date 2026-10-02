@@ -673,3 +673,55 @@ input:focus,select:focus{
   .boatPurchaseRow{grid-template-columns:78px 1fr!important}.boatPurchaseRow button{grid-column:1/-1}
   .turtleCoachAvatar{width:108px;height:108px}.coachBubble{margin-right:52px}.coachNext{right:84px}
 }
+
+/* Splash final visual pass */
+.splashOcean:before{
+  content:"";position:absolute;inset:34% 0 0;z-index:2;pointer-events:none;
+  background:
+    linear-gradient(112deg,transparent 0 18%,rgba(255,255,255,.10) 22%,transparent 28% 46%,rgba(255,255,255,.08) 50%,transparent 57%),
+    radial-gradient(ellipse at 55% 8%,rgba(255,255,255,.22),transparent 38%);
+  mix-blend-mode:screen;animation:surfaceSweep 8s ease-in-out infinite alternate;
+}
+@keyframes surfaceSweep{to{transform:translate3d(3%,1%,0) scale(1.04);opacity:.72}}
+
+.splashHero{top:max(2px,env(safe-area-inset-top));padding-top:0}
+.splashLogoImage{width:min(62vw,360px)!important;max-height:18svh}
+.splashTag{margin-bottom:6px!important}
+.splashSunArt{top:14svh;right:3vw;width:clamp(74px,13vw,118px)}
+.splashCloudArt.cloudOne{top:19svh;left:1vw}
+.splashCloudArt.cloudTwo{top:25svh;left:31vw}
+.splashCloudArt.cloudThree{top:31svh;right:22vw}
+
+.reefFloor{opacity:.58}
+.reefFloor:after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 18% 72%,rgba(255,199,117,.52) 0 2px,transparent 3px 12px),
+    radial-gradient(circle at 77% 76%,rgba(255,151,115,.36) 0 2px,transparent 3px 10px),
+    radial-gradient(circle at 48% 58%,rgba(92,137,98,.46) 0 3px,transparent 4px 13px);
+  background-size:52px 48px,64px 58px,72px 66px;filter:blur(.35px);opacity:.58
+}
+.waterCaustics{opacity:.52;animation:causticDrift 8s linear infinite}
+.waterShimmer{height:3px;filter:blur(.2px)}
+
+.splashBoat .boatArt{
+  filter:drop-shadow(0 10px 6px rgba(23,50,77,.23)) drop-shadow(0 1px 0 rgba(255,255,255,.72));
+}
+.boatOne{left:12%;bottom:16%}
+.boatTwo{right:4%;bottom:10%}
+.boatThree{right:28%;bottom:29%}
+
+@media(max-width:520px){
+  .splashLogoImage{width:min(66vw,300px)!important;max-height:16svh}
+  .splashTag{font-size:.76rem;padding:4px 9px}
+  .enterGame{padding:10px 18px!important;font-size:.9rem}
+  .soundPrompt{padding:7px 10px!important;font-size:.8rem}
+  .splashSunArt{top:15svh;right:0;width:76px}
+  .splashCloudArt.cloudOne{top:20svh;left:-7vw}
+  .splashCloudArt.cloudTwo{top:27svh;left:30vw}
+  .splashCloudArt.cloudThree{top:33svh;right:20vw}
+  .splashBoat{width:122px}
+  .boatOne{left:3%;bottom:19%}
+  .boatTwo{right:-3%;bottom:9%}
+  .boatThree{right:25%;bottom:30%;width:110px}
+}
