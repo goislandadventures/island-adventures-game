@@ -1,7 +1,7 @@
 import { useEffect,useMemo,useState } from 'react';
 import { tutorialForDay } from '../game/data/tutorial';
 
-const KEY='island-adventures-tutorial-dismissed';
+const KEY='island-adventures-turtle-school-v2';
 
 function dismissedDays():number[]{
   try{return JSON.parse(localStorage.getItem(KEY)||'[]') as number[];}catch{return [];}
