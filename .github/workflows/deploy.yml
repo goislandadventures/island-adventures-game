@@ -96,6 +96,18 @@ jobs:
             STATUS=$(curl -sS -o /tmp/login-response.json -w "%{http_code}" -c /tmp/login-cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/auth/login" --data-binary @/tmp/login.json)
             echo "$BASE login -> $STATUS $(cat /tmp/login-response.json)"
             test "$STATUS" = "200"
+
+            cat > /tmp/company.json <<'JSON'
+            {"state":{"companyName":"Smoke Charter Co","day":1,"cash":10000,"debt":0,"reputation":0.5,"rating":0,"reviewCount":0,"companyValue":10000,"lifetimeRevenue":0,"lifetimeProfit":0,"islandId":"harbor","boats":[]}}
+JSON
+            STATUS=$(curl -sS -o /tmp/company-save.json -w "%{http_code}" -b /tmp/login-cookies.txt -H "Content-Type: application/json" -X POST "$BASE/api/company/sync" --data-binary @/tmp/company.json)
+            echo "$BASE company save -> $STATUS $(cat /tmp/company-save.json)"
+            test "$STATUS" = "200"
+
+            STATUS=$(curl -sS -o /tmp/company-load.json -w "%{http_code}" -b /tmp/login-cookies.txt "$BASE/api/company")
+            echo "$BASE company load -> $STATUS $(cat /tmp/company-load.json)"
+            test "$STATUS" = "200"
+            node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('/tmp/company-load.json','utf8'));if(j.state?.companyName!=='Smoke Charter Co')process.exit(1)"
           }
 
           test_auth "https://island-adventures-game.goislandadventures.workers.dev" "worker"
