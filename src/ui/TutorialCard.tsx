@@ -75,6 +75,7 @@ export default function TutorialCard({day,mode,playerId,onNavigate,onSpotlight,o
         <span>{current.label}</span>
         {current.title&&<h3>{current.title}</h3>}
         <p>{current.text}</p>
+        {(current.tab==='grow'||current.tab==='fleet')&&<div className="coachAutoSave">✓ Your choices save automatically. There is no Save button—when you’re finished here, just go back to Dock.</div>}
         <div className="coachProgress" aria-label={`Step ${step+1} of ${messages.length}`}>{messages.map((_,i)=><i key={i} className={i<=step?'done':''}/>)}</div>
         <div className="coachActions">
           <button className="coachNext" onClick={last?dismiss:nextStep}>{last?'Got it for today':'Next'}</button>
