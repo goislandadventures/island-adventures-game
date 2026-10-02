@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { loadCompany, login, me, register, type Player } from './api';
+import { loadCompany, login, logout, me, register, type Player } from './api';
 import type { CompanyState } from '../game/types/models';
 
 export type GameMode='demo'|'registered';
@@ -86,6 +86,18 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     }
   };
 
+  const signOut=async()=>{
+    setBusy(true);
+    try{await logout().catch(()=>({ok:false}));}finally{
+      setSignedInPlayer(undefined);
+      setSignedInState(null);
+      setView('choose');
+      setKind('register');
+      setError('');
+      setBusy(false);
+    }
+  };
+
   const submit=async()=>{
     setBusy(true);setError('');
     try{
@@ -121,7 +133,10 @@ export default function StartMode({onStart}:{onStart:(mode:GameMode,player?:Play
     <h2>How do you want to play?</h2>
     <button className="modeChoice primary" disabled={checkingSession} onClick={chooseRegistered}><b>🏆 Play & Compete</b><span>{checkingSession?'Checking your account…':signedInPlayer?`Continue as ${signedInState?.captainName||signedInPlayer.displayName||signedInPlayer.display_name||signedInPlayer.email}. Cloud save and leaderboards.`:'Create an account, save in the cloud and chase the leaderboards.'}</span></button>
     <button className="modeChoice" onClick={()=>onStart('demo')}><b>🎮 Try One Week</b><span>No account. Play all 7 days of Captain School and learn the core game.</span></button>
-    {signedInPlayer&&<p className="fine signedInNote">Signed in account detected. You can still choose the Demo without affecting your online company.</p>}
+    {signedInPlayer&&<>
+      <p className="fine signedInNote">Signed in account detected. You can still choose the Demo without affecting your online company.</p>
+      <button className="textBtn" type="button" disabled={busy} onClick={signOut}>Sign Out</button>
+    </>}
     <p className="fine">Account email is used for your game account. Marketing email is optional and requires the separate checkbox above. <a href="https://www.goislandadventures.com/privacy-policy-2/" target="_blank" rel="noreferrer">Privacy Policy</a></p>
   </section></main>;
 }
